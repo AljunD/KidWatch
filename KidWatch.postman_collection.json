@@ -1,0 +1,177 @@
+{
+    "info": {
+        "_postman_id": "kidwatch-api-v1-collection",
+        "name": "KidWatch API v1",
+        "description": "Complete Postman collection for KidWatch Laravel 11 API.\n\n✅ Reflects corrected permissions and platform restrictions.\n🔑 Uses Sanctum Bearer tokens.\n📍 Base URL: {{base_url}}/api/v1\n\nSeeded data ready to use:\n• Admin Teacher → admin.teacher@kidwatch.ph / password (login via Laravel web)\n• Guardians → guardian1@kidwatch.ph to guardian5@kidwatch.ph / password (login via React Native mobile)\n• Students → IDs 1 to 5\n\n⚠️ Only Teacher/Admin can create, update, soft delete, and force delete students.\n⚠️ Guardians can only view their own student, progress, and summaries.\n⚠️ Teachers/Admins login via web, Guardians login via mobile.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        { "key": "base_url", "value": "http://127.0.0.1:8000", "type": "string" },
+        { "key": "token", "value": "", "type": "string" },
+        { "key": "student_id", "value": "1", "type": "string" },
+        { "key": "week", "value": "1", "type": "string" }
+    ],
+    "item": [{
+            "name": "🔑 Auth",
+            "item": [{
+                    "name": "Login (Teacher/Admin via Web or Guardian via Mobile)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin.teacher@kidwatch.ph\",\n    \"password\": \"password\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/login",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/logout",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "logout"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "👦 Students",
+            "item": [{
+                    "name": "List All Students",
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                        "url": { "raw": "{{base_url}}/api/v1/students", "host": ["{{base_url}}"], "path": ["api", "v1", "students"] }
+                    }
+                },
+                {
+                    "name": "Create Student (Teacher/Admin only, via Web)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}" },
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"first_name\": \"Liam\",\n    \"middle_name\": null,\n    \"last_name\": \"Cruz\",\n    \"gender\": \"male\",\n    \"date_of_birth\": \"2021-03-15\",\n    \"nationality\": \"Filipino\",\n    \"religion\": \"Catholic\",\n    \"guardians\": [\n        {\n            \"first_name\": \"Maria\",\n            \"middle_name\": \"Luz\",\n            \"last_name\": \"Cruz\",\n            \"relationship_to_child\": \"Mother\",\n            \"email\": \"guardian1@kidwatch.ph\",\n            \"password\": \"password\",\n            \"contact_number\": \"09182345678\",\n            \"address\": \"Brgy. Balite, Quezon City\"\n        },\n        {\n            \"first_name\": \"Jose\",\n            \"middle_name\": null,\n            \"last_name\": \"Santos\",\n            \"relationship_to_child\": \"Father\",\n            \"email\": \"guardian2@kidwatch.ph\",\n            \"password\": \"password\",\n            \"contact_number\": \"09193456789\",\n            \"address\": \"Brgy. Balite, Quezon City\"\n        }\n    ]\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/api/v1/students", "host": ["{{base_url}}"], "path": ["api", "v1", "students"] }
+                    }
+                },
+                {
+                    "name": "Get Single Student (Guardian sees own only, via Mobile)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                        "url": { "raw": "{{base_url}}/api/v1/students/{{student_id}}", "host": ["{{base_url}}"], "path": ["api", "v1", "students", "{{student_id}}"] }
+                    }
+                },
+                {
+                    "name": "Update Student (Teacher/Admin only, via Web)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}" },
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": { "mode": "raw", "raw": "{\n    \"first_name\": \"Updated\",\n    \"middle_name\": \"Test\",\n    \"last_name\": \"Student\"\n}" },
+                        "url": { "raw": "{{base_url}}/api/v1/students/{{student_id}}", "host": ["{{base_url}}"], "path": ["api", "v1", "students", "{{student_id}}"] }
+                    }
+                },
+                {
+                    "name": "Delete Student (Teacher/Admin only, via Web)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                        "url": { "raw": "{{base_url}}/api/v1/students/{{student_id}}", "host": ["{{base_url}}"], "path": ["api", "v1", "students", "{{student_id}}"] }
+                    }
+                },
+                {
+                    "name": "Force Delete Student (Teacher/Admin only, via Web)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                        "url": { "raw": "{{base_url}}/api/v1/students/{{student_id}}/force", "host": ["{{base_url}}"], "path": ["api", "v1", "students", "{{student_id}}", "force"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📊 Progress Records",
+            "item": [{
+                    "name": "List Progress (Guardian sees own only, via Mobile)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                        "url": { "raw": "{{base_url}}/api/v1/students/{{student_id}}/progress?week={{week}}", "host": ["{{base_url}}"], "path": ["api", "v1", "students", "{{student_id}}", "progress"] }
+                    }
+                },
+                {
+                    "name": "Add Progress Record (Teacher/Admin only, via Web)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}" },
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": { "mode": "raw", "raw": "{\n    \"week_number\": {{week}},\n    \"subject\": \"Math\",\n    \"rating\": \"Very Good\"\n}" },
+                        "url": { "raw": "{{base_url}}/api/v1/students/{{student_id}}/progress", "host": ["{{base_url}}"], "path": ["api", "v1", "students", "{{student_id}}", "progress"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📝 Weekly Summaries",
+            "item": [{
+                    "name": "Get Weekly Summary (Guardian sees own only, via Mobile)",
+                    "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/students/{{student_id}}/summaries/{{week}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "students", "{{student_id}}", "summaries", "{{week}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Regenerate Summary (Teacher/Admin only, via Web)",
+                    "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/students/{{student_id}}/summaries/{{week}}/regenerate",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "students", "{{student_id}}", "summaries", "{{week}}", "regenerate"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🧠 Recommendations (Expert System)",
+            "item": [{
+                "name": "Get All Recommendation Configs",
+                "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                    "url": {
+                        "raw": "{{base_url}}/api/v1/recommendations",
+                        "host": ["{{base_url}}"],
+                        "path": ["api", "v1", "recommendations"]
+                    }
+                }
+            }]
+        }
+    ]
+}
