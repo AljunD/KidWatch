@@ -15,9 +15,10 @@ class ProgressRecord extends Model
 
     protected $fillable = [
         'student_id',
-        'week_number',
+        'week_id',       // must be here
         'subject',
-        'rating_level', // Updated column name
+        'rating_level',
+        'remarks',       // optional if you added this column
     ];
 
     /**

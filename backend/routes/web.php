@@ -8,6 +8,7 @@ use App\Http\Middleware\ContentSecurityPolicy;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProgressController; // Added this
+use App\Http\Controllers\WeekController; // <-- Add this at the top
 
 // Authentication (CSP + rate limiting)
 Route::middleware([ContentSecurityPolicy::class])->group(function () {
@@ -72,18 +73,26 @@ Route::middleware([TeacherAuthMiddleware::class, 'throttle:60,1', 'verified'])->
 
 // Progress Tracking Routes (Protected + CSP + verified)
 Route::middleware([TeacherAuthMiddleware::class, ContentSecurityPolicy::class, 'verified'])->group(function () {
-    // List & Form
-    Route::get('/progress', [ProgressController::class, 'index'])->name('students.progress');
+    // Progress Records
+    Route::get('/progress', [ProgressController::class, 'index'])->name('progress');
+    Route::get('/progress/create', [ProgressController::class, 'create'])->name('progress.create');
+    Route::post('/progress', [ProgressController::class, 'store'])->name('progress.store');
 
-    // Store Progress
-    Route::post('/progress', [ProgressController::class, 'store'])->name('students.progress.store');
+    Route::get('/progress/{progressRecord}/edit', [ProgressController::class, 'edit'])->name('progress.edit');
+    Route::put('/progress/{progressRecord}', [ProgressController::class, 'update'])->name('progress.update');
+    Route::delete('/progress/{progressRecord}', [ProgressController::class, 'destroy'])->name('progress.destroy');
 
-    // Update Progress
-    Route::put('/progress/{progressRecord}', [ProgressController::class, 'update'])->name('students.progress.update');
+    // View all progress records for a student in a week
+    Route::get('/progress/{student_id}/{week_id}/view', [ProgressController::class, 'view'])->name('progress.view');
 
-    // Delete Progress
-    Route::delete('/progress/{progressRecord}', [ProgressController::class, 'destroy'])->name('students.progress.destroy');
+    // NEW: Global view of all students across all weeks
+    Route::get('/progress/view-all', [ProgressController::class, 'viewAll'])->name('progress.viewAll');
 
-    // Weekly Summary
-    Route::get('/progress/{student}/{week}/summary', [ProgressController::class, 'summary'])->name('students.progress.summary');
+    // Weekly Summary (JSON response)
+    Route::get('/progress/{student}/{week}/summary', [ProgressController::class, 'summary'])->name('progress.summary');
+
+    // Weeks CRUD
+    Route::get('/weeks', [WeekController::class, 'index'])->name('weeks.index');
+    Route::post('/weeks', [WeekController::class, 'store'])->name('weeks.store');
+    Route::delete('/weeks/{week}', [WeekController::class, 'destroy'])->name('weeks.destroy');
 });

@@ -1,6 +1,6 @@
 {{-- resources/views/components/layout.blade.php --}}
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,165 +8,247 @@
 
     <title>{{ $title ?? 'KidWatch' }}</title>
 
+    {{-- Tailwind CSS (Vite / compiled in production - you already have this in your app) --}}
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    {{-- Font Awesome 6 (matches your existing pages) --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+          integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap');
 
-        body {
-            background-color: #f1f5f9;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            -webkit-font-smoothing: antialiased;
+        :root {
+            --tw-color-primary: #003366;
         }
 
-        /* New Modern Sidebar */
-        .modern-sidebar {
-            background: rgba(255, 255, 255, 0.97);
-            backdrop-filter: blur(16px);
-            box-shadow: 10px 0 30px -10px rgb(0 51 102 / 0.1);
-            border-right: 1px solid rgba(0, 51, 102, 0.08);
+        * {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
         }
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .sidebar-link {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        [x-cloak] { display: none !important; }
-
-        /* Active nav pill style (matches new dashboard) */
-        .nav-link-active {
-            background: linear-gradient(90deg, #003366, #0077cc);
+        .sidebar-link.active {
+            background-color: #003366;
             color: white;
             box-shadow: 0 10px 15px -3px rgb(0 51 102 / 0.2);
         }
+
+        .main-content {
+            scrollbar-width: thin;
+            scrollbar-color: #0077cc #f1f5f9;
+        }
     </style>
 </head>
-<body class="min-h-screen text-slate-900" x-data="{ sidebarOpen: false }" @keydown.escape="sidebarOpen = false">
+<body class="bg-slate-100 font-sans">
+    @php
+        $user = Auth::user();
+        $role = $user?->role ?? 'guest';
+        $profile = $role === 'teacher'
+            ? ($user?->teacher ?? (object)['first_name' => 'User'])
+            : ($user?->guardian ?? (object)['first_name' => 'User']);
+        $displayName = trim(($profile->first_name ?? '') . ' ' . ($profile->last_name ?? ''));
+        $initials = strtoupper(substr($profile->first_name ?? '', 0, 1) . substr($profile->last_name ?? '', 0, 1));
+    @endphp
 
-    {{-- Mobile Top Bar (unchanged) --}}
-    <header class="lg:hidden bg-white/70 backdrop-blur-lg border-b border-slate-200/50 p-4 flex items-center justify-between fixed top-0 w-full z-[60]">
-        <div class="flex items-center gap-3">
-            <button @click="sidebarOpen = true" class="text-[#003366] bg-blue-50 w-10 h-10 rounded-3xl flex items-center justify-center active:scale-90 transition-all">
-                <i class="fas fa-bars-staggered"></i>
-            </button>
-            <span class="text-lg font-extrabold text-[#003366] tracking-tighter uppercase italic">Kidwatch</span>
-        </div>
+    <div class="flex min-h-screen bg-slate-100">
 
-        @auth
-        <div class="w-10 h-10 bg-[#003366] rounded-3xl flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-900/20">
-            {{ substr(Auth::user()->email, 0, 1) }}
-        </div>
-        @endauth
-    </header>
+        {{-- SIDEBAR NAVIGATION --}}
+        <aside id="sidebar"
+               class="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl flex flex-col 
+                      -translate-x-full lg:translate-x-0 lg:static lg:w-64 lg:shadow-none
+                      transition-transform duration-300 ease-in-out border-r border-slate-200">
 
-    {{-- Backdrop Overlay (unchanged) --}}
-    <div x-show="sidebarOpen"
-         x-cloak
-         x-transition:enter="transition opacity-ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition opacity-ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         @click="sidebarOpen = false"
-         class="fixed inset-0 bg-[#001a33]/60 z-[70] lg:hidden backdrop-blur-sm"></div>
-
-    {{-- NEW SIDE NAV --}}
-    <aside
-        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-        class="fixed inset-y-0 left-0 w-72 modern-sidebar p-6 flex flex-col transition-transform duration-300 ease-in-out z-[80] lg:m-4 lg:h-[calc(100vh-2rem)] lg:rounded-3xl overflow-y-auto no-scrollbar">
-
-        {{-- Branding - fresh & modern --}}
-        <div class="flex justify-between items-center mb-10 px-2">
-            <div class="flex items-center gap-4">
-                <div class="bg-[#003366] w-12 h-12 rounded-3xl flex items-center justify-center shadow-xl shadow-blue-900/30 rotate-6">
-                    <i class="fas fa-child-reaching text-white text-2xl"></i>
+            {{-- Logo Header --}}
+            <div class="px-6 py-8 border-b border-slate-100 flex items-center gap-3">
+                <div class="w-10 h-10 bg-[#003366] text-white rounded-3xl flex items-center justify-center text-3xl shadow-inner flex-shrink-0">
+                    📖
                 </div>
                 <div>
-                    <h2 class="text-3xl font-black text-[#003366] tracking-[-1px] uppercase italic">Kidwatch</h2>
-                    <p class="text-[10px] font-black text-[#003366]/50 uppercase tracking-[1.5px] -mt-1">Daycare Pro</p>
+                    <h1 class="text-3xl font-black tracking-[-2px] text-[#003366]">KidWatch</h1>
+                    <p class="text-[10px] font-bold uppercase text-slate-400 -mt-1 tracking-[1px]">Progress • Together</p>
                 </div>
             </div>
-            <button @click="sidebarOpen = false" class="lg:hidden text-[#003366] bg-white w-10 h-10 rounded-3xl hover:bg-slate-100 transition-colors flex items-center justify-center shadow-sm">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
 
-        {{-- Nav Links - new pill style to match dashboard --}}
-        <nav class="flex-1 space-y-2">
-            @php
-                $navItems = [
-                    ['route' => 'dashboard', 'icon' => 'fa-chart-pie', 'label' => 'Overview'],
-                    ['route' => 'students', 'icon' => 'fa-user-graduate', 'label' => 'Students'],
-                    ['route' => 'students.progress', 'icon' => 'fa-star', 'label' => 'Progress Log'],
-                ];
-            @endphp
+            {{-- Navigation Links --}}
+            <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
 
-            @foreach($navItems as $item)
-            <a href="{{ route($item['route']) }}"
-               class="flex items-center gap-4 px-6 py-5 rounded-3xl transition-all duration-300 group text-base font-semibold
-                      {{ request()->routeIs($item['route']) ? 'nav-link-active' : 'text-[#003366]/70 hover:bg-white hover:shadow hover:text-[#003366]' }}">
-                <i class="fas {{ $item['icon'] }} w-6 text-xl"></i>
-                <span>{{ $item['label'] }}</span>
+                {{-- Dashboard --}}
+                <a href="{{ route('dashboard') }}"
+                   class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
+                          {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <i class="fas fa-tachometer-alt w-5 h-5"></i>
+                    <span>Dashboard</span>
+                </a>
 
-                @if(request()->routeIs($item['route']))
-                    <div class="ml-auto w-3 h-3 bg-white/30 rounded-full animate-ping"></div>
-                @endif
-            </a>
-            @endforeach
-        </nav>
+                {{-- Students (for student.blade.php) --}}
+                <a href="{{ route('students') ?? route('students.index') }}"
+                   class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
+                          {{ request()->routeIs('students*') ? 'active' : '' }}">
+                    <i class="fas fa-user-graduate w-5 h-5"></i>
+                    <span>Students</span>
+                    @if($role === 'teacher')
+                        <span class="ml-auto bg-emerald-100 text-emerald-700 text-xs font-black px-2.5 h-5 rounded-3xl flex items-center">28</span>
+                    @endif
+                </a>
 
-        {{-- Profile Card - redesigned to match dashboard aesthetic --}}
-        <div class="mt-auto pt-8">
-            <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
-                <div class="flex items-center gap-4">
-                    @php
-                        $user = Auth::user();
-                        $displayName = in_array($user->role, ['admin', 'teacher'])
-                            ? ($user->teacher->first_name ?? 'Staff')
-                            : ($user->guardian->first_name ?? 'Parent');
-                    @endphp
+                {{-- Progress --}}
+                <a href="{{ route('progress') }}"
+                   class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
+                          {{ request()->routeIs('progress') ? 'active' : '' }}">
+                    <i class="fas fa-chart-line w-5 h-5"></i>
+                    <span>Progress Log</span>
+                </a>
 
-                    <div class="w-11 h-11 bg-gradient-to-br from-[#003366] to-blue-700 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-inner">
-                        {{ substr($displayName, 0, 1) }}
+                {{-- Optional extra links (you can remove if not needed) --}}
+                <div class="pt-6 mt-6 border-t border-slate-100 px-5 text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Tools</div>
+
+                <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold">
+                    <i class="fas fa-calendar-week w-5 h-5"></i>
+                    <span>Weeks</span>
+                </a>
+
+                <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold">
+                    <i class="fas fa-lightbulb w-5 h-5"></i>
+                    <span>Recommendations</span>
+                </a>
+
+                {{-- Divider --}}
+                <div class="h-px bg-slate-100 my-6 mx-5"></div>
+
+                {{-- Settings --}}
+                <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold">
+                    <i class="fas fa-cog w-5 h-5"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            {{-- Sidebar Footer - User Info --}}
+            <div class="p-6 border-t border-slate-100 mt-auto">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-[#003366] text-white rounded-3xl flex items-center justify-center font-black text-lg shadow-inner">
+                        {{ $initials ?: '👤' }}
                     </div>
-
                     <div class="flex-1 min-w-0">
-                        <p class="font-bold text-[#003366] truncate">{{ $displayName }}</p>
-                        <span class="inline-block text-[10px] font-black uppercase tracking-widest bg-blue-100 text-[#003366] px-3 py-px rounded-3xl">
-                            {{ $user->role }}
-                        </span>
+                        <p class="font-semibold text-[#003366] truncate">{{ $displayName ?: 'Welcome' }}</p>
+                        <p class="text-xs text-slate-400 uppercase font-medium">
+                            {{ $role === 'teacher' ? 'Teacher' : 'Parent / Guardian' }}
+                        </p>
                     </div>
-                </div>
 
-                <div class="grid grid-cols-2 gap-3 mt-8">
-                    <a href="{{ route('students.trash') }}"
-                       class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 py-4 rounded-3xl transition-all text-sm font-semibold">
-                        <i class="fas fa-trash-can"></i>
-                        <span>Trash</span>
-                    </a>
-                    <form method="POST" action="{{ route('logout') }}" class="w-full">
+                    {{-- Logout --}}
+                    <form method="POST" action="{{ route('logout') }}" class="inline">
                         @csrf
                         <button type="submit"
-                                class="w-full flex items-center justify-center gap-2 bg-[#003366] hover:bg-red-600 text-white py-4 rounded-3xl transition-all text-sm font-semibold active:scale-95">
-                            <i class="fas fa-power-off"></i>
-                            <span>Logout</span>
+                                onclick="return confirm('Log out of KidWatch?')"
+                                class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-3xl">
+                            <i class="fas fa-sign-out-alt"></i>
                         </button>
                     </form>
                 </div>
             </div>
-        </div>
-    </aside>
+        </aside>
 
-    {{-- Main Content Area - updated for new sidebar width --}}
-    <main class="lg:ml-72 transition-all duration-300">
-        <div class="p-4 sm:p-8 lg:p-12 pt-28 lg:pt-12 min-h-screen">
-            <div class="max-w-7xl mx-auto">
-                {{ $slot }}
+        {{-- MAIN CONTENT AREA --}}
+        <div class="flex-1 flex flex-col min-w-0 lg:ml-0">
+
+            {{-- MOBILE TOP BAR (Hamburger + Logo + User) --}}
+            <div class="lg:hidden bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+
+                {{-- Hamburger + Logo --}}
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()"
+                            class="text-[#003366] p-2 -ml-2 hover:bg-slate-100 rounded-3xl">
+                        <i class="fas fa-bars text-3xl"></i>
+                    </button>
+
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-[#003366] text-white rounded-3xl flex items-center justify-center text-2xl">
+                            📖
+                        </div>
+                        <h1 class="text-2xl font-black tracking-[-1px] text-[#003366]">KidWatch</h1>
+                    </div>
+                </div>
+
+                {{-- Mobile User Info --}}
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <p class="text-sm font-semibold text-[#003366]">{{ $displayName ?: 'Hi there' }}</p>
+                        <p class="text-[10px] text-slate-400 uppercase">{{ $role === 'teacher' ? 'Teacher' : 'Parent' }}</p>
+                    </div>
+                    <div class="w-8 h-8 bg-[#003366] text-white rounded-3xl flex items-center justify-center font-black shadow-inner">
+                        {{ $initials ?: '👤' }}
+                    </div>
+                </div>
             </div>
-        </div>
-    </main>
 
+            {{-- PAGE CONTENT SLOT --}}
+            <main class="flex-1 p-6 md:p-8 lg:p-10 main-content overflow-auto">
+                {{ $slot }}
+            </main>
+        </div>
+    </div>
+
+    {{-- MOBILE OVERLAY --}}
+    <div onclick="if(event.target.id === 'sidebar-overlay') toggleSidebar()"
+         id="sidebar-overlay"
+         class="hidden lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"></div>
+
+    {{-- Tailwind script (only needed if you are not using Vite / compiled Tailwind) --}}
+    <script>
+        function initializeTailwind() {
+            tailwind.config = {
+                content: [],
+                theme: {
+                    extend: {}
+                }
+            }
+        }
+
+        {{-- Sidebar Toggle (Hamburger) --}}
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar')
+            const overlay = document.getElementById('sidebar-overlay')
+
+            if (sidebar.classList.contains('-translate-x-full')) {
+                // Open
+                sidebar.classList.remove('-translate-x-full')
+                overlay.classList.remove('hidden')
+                overlay.classList.add('block')
+            } else {
+                // Close
+                sidebar.classList.add('-translate-x-full')
+                overlay.classList.add('hidden')
+                overlay.classList.remove('block')
+            }
+        }
+
+        {{-- Close sidebar when clicking any nav link on mobile --}}
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTailwind()
+
+            const links = document.querySelectorAll('#sidebar a')
+            links.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 1024) { // lg breakpoint
+                        setTimeout(() => {
+                            const sidebar = document.getElementById('sidebar')
+                            const overlay = document.getElementById('sidebar-overlay')
+                            sidebar.classList.add('-translate-x-full')
+                            overlay.classList.add('hidden')
+                            overlay.classList.remove('block')
+                        }, 150)
+                    }
+                })
+            })
+
+            console.log('%c✅ KidWatch sidebar navigation ready (fully responsive + mobile hamburger)', 'color:#003366; font-size:13px; font-weight:700')
+        })
+    </script>
 </body>
 </html>

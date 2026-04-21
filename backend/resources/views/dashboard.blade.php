@@ -1,233 +1,328 @@
-{{-- Updated resources/views/dashboard.blade.php (responsiveness matched to new sidenav) --}}
+{{-- resources/views/dashboard.blade.php --}}
 <x-layout>
-    <x-slot:title>KidWatch | Admin Dashboard</x-slot>
+    <div class="space-y-10">
+        {{-- Page Header + Greeting --}}
+        @php
+            $user = Auth::user();
+            $role = $user->role;
+            $profile = $role === 'teacher'
+                ? ($user->teacher ?? (object)['first_name' => 'Teacher'])
+                : ($user->guardian ?? (object)['first_name' => 'Parent']);
+            $displayName = $profile->first_name . ' ' . ($profile->last_name ?? '');
+            $greetingTime = now()->hour < 12 ? 'morning' : (now()->hour < 17 ? 'afternoon' : 'evening');
 
-    {{-- Top Header --}}
-    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
-        <div>
-            <h1 class="text-4xl lg:text-5xl font-black text-[#003366] tracking-tighter leading-none">
-                Good morning, {{ Auth::user()->teacher->first_name ?? 'Admin' }}! 👋
-            </h1>
-            <p class="text-slate-500 mt-3 text-lg font-medium">
-                Here's what's happening at <span class="font-semibold text-[#003366]">Barangay Balite Day Care</span> today
-            </p>
-        </div>
+            // Demo data (in real app this comes from Controller)
+            $totalStudents = $role === 'teacher' ? 28 : 2;
+            $childrenLabel = $role === 'teacher' ? 'Total Students' : 'My Children';
+            $weeksTracked = 12;
+            $avgRating = 3.4;
+            $currentWeek = 12; // from Weeks table
+            $currentWeekLabel = 'Apr 14 – Apr 20, 2026';
+        @endphp
 
-        <div class="flex items-center gap-x-8 text-sm">
-            <div class="flex items-center gap-3 bg-white px-6 py-3 rounded-3xl shadow-sm border border-slate-100">
-                <i class="fas fa-calendar text-[#003366]"></i>
-                <span id="currentDate" class="font-semibold text-[#003366]"></span>
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+            <div>
+                <h1 class="text-5xl font-black tracking-[-2px] text-[#003366]">Dashboard</h1>
+                <p class="mt-2 text-xl text-slate-600">Good {{ $greetingTime }}, <span class="font-semibold">{{ $displayName }}</span> 👋</p>
+                <p class="text-slate-500">Here's what's happening with your kids this week</p>
             </div>
 
-            <div class="flex items-center gap-3 bg-white px-6 py-3 rounded-3xl shadow-sm border border-slate-100">
-                <i class="fas fa-clock text-[#003366]"></i>
-                <span id="currentTime" class="font-semibold text-[#003366] tabular-nums"></span>
-            </div>
-
-            <span class="px-6 py-3 rounded-3xl bg-[#003366] text-white text-sm font-black uppercase tracking-widest shadow-inner flex items-center gap-2">
-                <i class="fas fa-shield-halved"></i>
-                {{ Auth::user()->role }} ACCOUNT
-            </span>
-        </div>
-    </div>
-
-    {{-- KPI Stats Grid (unchanged - already responsive) --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-blue-900/5 border border-white hover:border-blue-200 transition-all group">
-            <div class="flex justify-between items-start">
-                <div>
-                    <span class="uppercase text-xs font-black tracking-[1px] text-blue-600">Total Enrolled</span>
-                    <div id="studentsCount" class="text-6xl font-black text-[#003366] mt-2 tracking-tighter">{{ $studentsCount ?? 0 }}</div>
+            <div class="flex items-center gap-x-4 bg-white rounded-3xl px-6 py-4 shadow-sm border border-slate-100">
+                <div class="text-right">
+                    <p class="text-xs font-bold uppercase tracking-widest text-[#0077cc]">Week {{ $currentWeek }}</p>
+                    <p class="text-lg font-semibold text-[#003366]">{{ $currentWeekLabel }}</p>
                 </div>
-                <div class="w-12 h-12 bg-blue-50 rounded-3xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform">
-                    👦
+                <div class="w-px h-12 bg-slate-200"></div>
+                <div class="flex items-center justify-center w-12 h-12 bg-[#003366] text-white rounded-3xl text-3xl shadow-inner">
+                    📅
                 </div>
-            </div>
-            <div class="mt-6 text-emerald-500 flex items-center gap-1 text-sm font-semibold">
-                <i class="fas fa-arrow-trend-up"></i>
-                <span>+3 this week</span>
             </div>
         </div>
 
-        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-blue-900/5 border border-white hover:border-blue-200 transition-all group">
-            <div class="flex justify-between items-start">
-                <div>
-                    <span class="uppercase text-xs font-black tracking-[1px] text-blue-600">Active Teachers</span>
-                    <div id="teachersCount" class="text-6xl font-black text-[#003366] mt-2 tracking-tighter">{{ $teachersCount ?? 0 }}</div>
-                </div>
-                <div class="w-12 h-12 bg-amber-50 rounded-3xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform">
-                    👩‍🏫
-                </div>
-            </div>
-            <div class="mt-6 text-emerald-500 flex items-center gap-1 text-sm font-semibold">
-                <i class="fas fa-arrow-trend-up"></i>
-                <span>All online today</span>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-blue-900/5 border border-white hover:border-blue-200 transition-all group">
-            <div class="flex justify-between items-start">
-                <div>
-                    <span class="uppercase text-xs font-black tracking-[1px] text-blue-600">Present Today</span>
-                    <div class="text-6xl font-black text-emerald-600 mt-2 tracking-tighter">{{ $presentToday ?? 37 }}</div>
-                </div>
-                <div class="w-12 h-12 bg-emerald-50 rounded-3xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform">
-                    ✅
-                </div>
-            </div>
-            <div class="mt-6 flex items-center text-xs font-medium text-slate-400">
-                <span class="flex-1 h-2 bg-emerald-200 rounded-full relative">
-                    <span class="absolute left-0 top-0 h-2 bg-emerald-500 rounded-full" style="width: 92%"></span>
-                </span>
-                <span class="ml-3">92% of total</span>
-            </div>
-        </div>
-
-        <div class="bg-gradient-to-br from-[#003366] to-blue-700 text-white rounded-3xl p-8 shadow-2xl shadow-blue-900/30 flex flex-col justify-between">
-            <div class="flex justify-between">
-                <div>
-                    <span class="uppercase text-xs font-black tracking-[1px] opacity-75">Avg. Attendance</span>
-                    <div class="text-6xl font-black mt-1">{{ $attendanceRate ?? '94' }}<span class="text-3xl">%</span></div>
-                </div>
-                <i class="fas fa-chart-line text-5xl opacity-30"></i>
-            </div>
-            <div class="text-blue-200 text-sm font-medium mt-auto pt-8 border-t border-white/20 flex justify-between items-center">
-                <span>This month</span>
-                <span class="flex items-center gap-1">
-                    <i class="fas fa-caret-up"></i> +4%
-                </span>
-            </div>
-        </div>
-    </div>
-
-    {{-- Rest of dashboard content (unchanged - already perfectly responsive) --}}
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        <div class="xl:col-span-8 bg-white rounded-3xl p-8 shadow-xl shadow-blue-900/5">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl font-bold text-[#003366]">Today's Attendance • {{ date('l, M d') }}</h2>
-                <a href="#" class="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-2">
-                    Full report
-                    <i class="fas fa-arrow-right text-xs"></i>
-                </a>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div class="bg-slate-50 rounded-3xl p-6 hover:bg-blue-50 transition-colors">
-                    <div class="flex justify-between mb-4">
-                        <div class="font-semibold">🐣 Starfish Room (Ages 3-4)</div>
-                        <span class="text-xs font-black bg-emerald-100 text-emerald-700 px-3 py-1 rounded-3xl">12 / 14</span>
+        {{-- Stats Cards --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {{-- Card 1: Students / Children --}}
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">{{ $childrenLabel }}</p>
+                        <p class="text-5xl font-black text-[#003366] mt-2">{{ $totalStudents }}</p>
                     </div>
-                    <div class="flex -space-x-3">
-                        <div class="w-8 h-8 bg-white border-2 border-slate-50 rounded-3xl flex items-center justify-center text-lg shadow-sm">🧸</div>
-                        <div class="w-8 h-8 bg-white border-2 border-slate-50 rounded-3xl flex items-center justify-center text-lg shadow-sm">🦋</div>
-                        <div class="w-8 h-8 bg-white border-2 border-slate-50 rounded-3xl flex items-center justify-center text-lg shadow-sm">🐢</div>
+                    <div class="w-12 h-12 bg-blue-50 text-[#0077cc] rounded-3xl flex items-center justify-center text-3xl">
+                        @if($role === 'teacher')
+                            <i class="fas fa-user-graduate"></i>
+                        @else
+                            <i class="fas fa-child-reaching"></i>
+                        @endif
                     </div>
-                    <div class="text-xs text-slate-400 mt-4">2 absent • Checked in at 7:42 AM</div>
                 </div>
-
-                <div class="bg-slate-50 rounded-3xl p-6 hover:bg-blue-50 transition-colors">
-                    <div class="flex justify-between mb-4">
-                        <div class="font-semibold">🌈 Rainbow Room (Ages 4-5)</div>
-                        <span class="text-xs font-black bg-emerald-100 text-emerald-700 px-3 py-1 rounded-3xl">18 / 19</span>
-                    </div>
-                    <div class="flex -space-x-3">
-                        <div class="w-8 h-8 bg-white border-2 border-slate-50 rounded-3xl flex items-center justify-center text-lg shadow-sm">🚀</div>
-                        <div class="w-8 h-8 bg-white border-2 border-slate-50 rounded-3xl flex items-center justify-center text-lg shadow-sm">🌟</div>
-                    </div>
-                    <div class="text-xs text-slate-400 mt-4">1 absent • All checked in</div>
-                </div>
-
-                <div class="bg-slate-50 rounded-3xl p-6 hover:bg-blue-50 transition-colors">
-                    <div class="flex justify-between mb-4">
-                        <div class="font-semibold">🐳 Ocean Room (Ages 2-3)</div>
-                        <span class="text-xs font-black bg-amber-100 text-amber-700 px-3 py-1 rounded-3xl">9 / 11</span>
-                    </div>
-                    <div class="flex -space-x-3">
-                        <div class="w-8 h-8 bg-white border-2 border-slate-50 rounded-3xl flex items-center justify-center text-lg shadow-sm">🐠</div>
-                    </div>
-                    <div class="text-xs text-slate-400 mt-4">2 late • Last check-in 8:11 AM</div>
+                <div class="flex items-center gap-2 text-emerald-600 text-sm font-medium mt-6">
+                    <i class="fas fa-arrow-trend-up"></i>
+                    <span>+2 this month</span>
                 </div>
             </div>
-        </div>
 
-        <div class="xl:col-span-4 flex flex-col gap-8">
-            <div class="flex-1 bg-white rounded-3xl p-8 shadow-xl shadow-blue-900/5">
-                <h3 class="font-bold text-[#003366] mb-6 flex items-center gap-2">
-                    <i class="fas fa-bolt"></i> Live Activity
-                </h3>
-                <div class="space-y-6 text-sm">
-                    <div class="flex gap-4">
-                        <div class="w-2 h-2 mt-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
-                        <div class="flex-1">
-                            <div><span class="font-semibold">Maria Santos</span> checked in at 7:38 AM</div>
-                            <div class="text-xs text-slate-400">Starfish Room • Guardian: Ana Santos</div>
+            {{-- Card 2: Weeks Tracked --}}
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">Weeks Tracked</p>
+                        <p class="text-5xl font-black text-[#003366] mt-2">{{ $weeksTracked }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center text-3xl">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-400 mt-8 flex items-center gap-1">
+                    <span class="font-mono">12/52</span>
+                    <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full w-[23%] bg-[#003366]"></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Card 3: Average Rating --}}
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">Avg. Rating</p>
+                        <p class="text-5xl font-black text-[#003366] mt-2">{{ number_format($avgRating, 1) }}</p>
+                        <div class="flex text-amber-400 text-xl mt-1">
+                            @for($i = 1; $i <= 4; $i++)
+                                <i class="fas fa-star {{ $i <= floor($avgRating) ? 'text-amber-400' : 'text-slate-200' }}"></i>
+                            @endfor
                         </div>
-                        <span class="text-[10px] text-emerald-500 font-medium">just now</span>
                     </div>
-                    <!-- more activity items unchanged -->
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center text-3xl">
+                        <i class="fas fa-star"></i>
+                    </div>
                 </div>
+                <p class="text-xs text-emerald-600 mt-6 font-medium">↑ 0.3 from last week</p>
             </div>
 
-            <div class="bg-gradient-to-br from-[#003366] to-blue-700 text-white rounded-3xl p-8 shadow-2xl flex flex-col">
-                <h3 class="font-bold mb-6">Quick Actions</h3>
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <button onclick="alert('📍 Check-in flow would open here')"
-                            class="bg-white/10 hover:bg-white/20 transition-colors py-6 rounded-3xl flex flex-col items-center gap-2">
-                        <i class="fas fa-door-open text-2xl"></i>
-                        <span class="font-semibold text-sm">Mark Check-in</span>
-                    </button>
-                    <button onclick="alert('📤 Check-out flow would open here')"
-                            class="bg-white/10 hover:bg-white/20 transition-colors py-6 rounded-3xl flex flex-col items-center gap-2">
-                        <i class="fas fa-door-closed text-2xl"></i>
-                        <span class="font-semibold text-sm">Mark Check-out</span>
-                    </button>
-                    <button onclick="alert('📸 Photo upload would open here')"
-                            class="bg-white/10 hover:bg-white/20 transition-colors py-6 rounded-3xl flex flex-col items-center gap-2">
-                        <i class="fas fa-camera text-2xl"></i>
-                        <span class="font-semibold text-sm">Upload Daily Photos</span>
-                    </button>
-                    <a href="{{ route('students') }}"
-                       class="bg-white/10 hover:bg-white/20 transition-colors py-6 rounded-3xl flex flex-col items-center gap-2">
-                        <i class="fas fa-user-graduate text-2xl"></i>
-                        <span class="font-semibold text-sm">Manage Students</span>
+            {{-- Card 4: Smart Recommendations --}}
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">Recommendations</p>
+                        <p class="text-5xl font-black text-[#003366] mt-2">7</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-3xl flex items-center justify-center text-3xl">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                </div>
+                <div class="absolute bottom-6 right-6 text-[10px] font-black uppercase bg-purple-100 text-purple-700 px-4 h-7 rounded-3xl flex items-center">
+                    Ready to apply
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+
+            {{-- LEFT COLUMN: Recent Progress Log --}}
+            <div class="xl:col-span-7 bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-semibold text-[#003366]">Recent Progress</h2>
+                    <a href="{{ route('progress') }}"
+                       class="text-sm font-semibold text-[#0077cc] hover:underline flex items-center gap-1">
+                        View full log <i class="fas fa-arrow-right text-xs"></i>
                     </a>
                 </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[600px]">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-xs font-medium text-slate-400">
+                                <th class="text-left pb-4">Student</th>
+                                <th class="text-left pb-4">Subject</th>
+                                <th class="text-left pb-4">Week</th>
+                                <th class="text-center pb-4">Rating</th>
+                                <th class="w-28 pb-4"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm divide-y">
+                            {{-- Demo rows - in real app loop through progress_records with eager loading --}}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-5 font-medium">Emma Thompson</td>
+                                <td class="py-5">Language</td>
+                                <td class="py-5 text-slate-500">Week 12</td>
+                                <td class="py-5 text-center">
+                                    <div class="inline-flex items-center justify-center px-4 h-8 bg-emerald-100 text-emerald-700 rounded-3xl text-sm font-semibold">Excellent (4)</div>
+                                </td>
+                                <td class="py-5 text-right">
+                                    <button onclick="viewProgressDetail(1)"
+                                            class="text-[#0077cc] hover:text-[#003366] text-xs font-semibold">Details →</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-5 font-medium">Liam Santos</td>
+                                <td class="py-5">Math</td>
+                                <td class="py-5 text-slate-500">Week 12</td>
+                                <td class="py-5 text-center">
+                                    <div class="inline-flex items-center justify-center px-4 h-8 bg-amber-100 text-amber-700 rounded-3xl text-sm font-semibold">Good (2)</div>
+                                </td>
+                                <td class="py-5 text-right">
+                                    <button onclick="viewProgressDetail(2)"
+                                            class="text-[#0077cc] hover:text-[#003366] text-xs font-semibold">Details →</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-5 font-medium">Mia Reyes</td>
+                                <td class="py-5">Arts</td>
+                                <td class="py-5 text-slate-500">Week 11</td>
+                                <td class="py-5 text-center">
+                                    <div class="inline-flex items-center justify-center px-4 h-8 bg-red-100 text-red-700 rounded-3xl text-sm font-semibold">Poor (1)</div>
+                                </td>
+                                <td class="py-5 text-right">
+                                    <button onclick="viewProgressDetail(3)"
+                                            class="text-[#0077cc] hover:text-[#003366] text-xs font-semibold">Details →</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-5 font-medium">Noah Cruz</td>
+                                <td class="py-5">Science</td>
+                                <td class="py-5 text-slate-500">Week 12</td>
+                                <td class="py-5 text-center">
+                                    <div class="inline-flex items-center justify-center px-4 h-8 bg-blue-100 text-blue-700 rounded-3xl text-sm font-semibold">Very Good (3)</div>
+                                </td>
+                                <td class="py-5 text-right">
+                                    <button onclick="viewProgressDetail(4)"
+                                            class="text-[#0077cc] hover:text-[#003366] text-xs font-semibold">Details →</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- RIGHT COLUMN: Weekly Summary + Recommendations --}}
+            <div class="xl:col-span-5 space-y-8">
+
+                {{-- Weekly Summary Card --}}
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 h-full">
+                    <h2 class="text-2xl font-semibold text-[#003366] mb-4">This Week’s Summary</h2>
+                    <div class="bg-slate-50 rounded-3xl p-5 text-slate-600 text-[15px] leading-relaxed">
+                        Emma is showing excellent language skills and creativity. Liam needs extra support in Math — consider using blocks for visual learning. Mia continues to shine in Arts. Overall group energy is high!
+                    </div>
+                    <div class="flex justify-between items-center mt-6 text-xs">
+                        <span class="font-medium text-slate-400">Generated from weekly_summaries table</span>
+                        <a href="{{ route('progress') }}" class="text-[#0077cc] hover:underline font-semibold">Edit summary →</a>
+                    </div>
+                </div>
+
+                {{-- Smart Recommendations (tied to recommendation_engine_configs) --}}
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                    <div class="flex justify-between mb-6">
+                        <h2 class="text-2xl font-semibold text-[#003366]">Smart Interventions</h2>
+                        <span class="px-4 py-1 text-xs font-black bg-purple-100 text-purple-700 rounded-3xl">Based on rating_level &lt; 2</span>
+                    </div>
+
+                    <div class="space-y-5">
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 bg-red-100 text-red-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-xl">📐</div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Liam – Math (Rating 1)</p>
+                                <p class="text-sm text-slate-600 mt-px">Use physical blocks and counting games. Intervention: “Pair with a buddy for hands-on practice.”</p>
+                                <a href="#" class="text-[#0077cc] text-xs mt-2 inline-flex items-center gap-1 hover:underline">Apply now <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 bg-red-100 text-red-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-xl">🎨</div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Mia – Arts (Rating 1)</p>
+                                <p class="text-sm text-slate-600 mt-px">Encourage free drawing time. Intervention: “Provide larger paper and bright colors to spark confidence.”</p>
+                                <a href="#" class="text-[#0077cc] text-xs mt-2 inline-flex items-center gap-1 hover:underline">Apply now <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Performance by Subject Chart --}}
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-semibold text-[#003366]">Subject Performance (Last 4 Weeks)</h2>
+                <select id="subject-filter" class="bg-white border border-slate-200 text-sm rounded-3xl px-5 py-2 focus:outline-none">
+                    <option>All Subjects</option>
+                    <option>Language</option>
+                    <option>Math</option>
+                    <option>Science</option>
+                    <option>Arts</option>
+                </select>
+            </div>
+
+            <div class="h-80">
+                <canvas id="subjectChart"></canvas>
             </div>
         </div>
     </div>
 
+    {{-- Chart.js + Script --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
+        // Progress Chart
         document.addEventListener('DOMContentLoaded', () => {
-            function updateClock() {
-                const now = new Date();
-                const dateEl = document.getElementById('currentDate');
-                const timeEl = document.getElementById('currentTime');
+            const ctx = document.getElementById('subjectChart');
 
-                const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
-                dateEl.textContent = now.toLocaleDateString('en-US', dateOptions);
-
-                let hours = now.getHours();
-                let minutes = now.getMinutes();
-                let ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12 || 12;
-                timeEl.textContent = `${hours}:${minutes < 10 ? '0' : ''}${minutes} ${ampm}`;
-            }
-            updateClock();
-            setInterval(updateClock, 60000);
-
-            if (typeof Echo !== 'undefined') {
-                try {
-                    Echo.channel('dashboard')
-                        .listen('DashboardUpdated', (e) => {
-                            const studentsEl = document.getElementById('studentsCount');
-                            const teachersEl = document.getElementById('teachersCount');
-                            if (studentsEl) studentsEl.textContent = e.studentsCount ?? studentsEl.textContent;
-                            if (teachersEl) teachersEl.textContent = e.teachersCount ?? teachersEl.textContent;
-                        });
-                } catch (error) {
-                    console.log('%c🔧 Echo realtime skipped (safe mode)', 'color:#10b981;font-weight:600');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Week 9', 'Week 10', 'Week 11', 'Week 12'],
+                    datasets: [
+                        {
+                            label: 'Language',
+                            data: [4, 3, 4, 4],
+                            backgroundColor: '#0077cc',
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        },
+                        {
+                            label: 'Math',
+                            data: [2, 2, 1, 3],
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        },
+                        {
+                            label: 'Science',
+                            data: [3, 4, 3, 4],
+                            backgroundColor: '#10b981',
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        },
+                        {
+                            label: 'Arts',
+                            data: [4, 3, 2, 1],
+                            backgroundColor: '#8b5cf6',
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', align: 'end', labels: { usePointStyle: true, padding: 25, boxWidth: 8 } },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        y: {
+                            min: 1,
+                            max: 4,
+                            ticks: { stepSize: 1, callback: (v) => ['Poor','Good','Very Good','Excellent'][v-1] }
+                        },
+                        x: { grid: { color: '#f1f5f9' } }
+                    }
                 }
-            }
+            });
+
+            // Demo: Clickable progress rows
+            window.viewProgressDetail = function(id) {
+                alert(`🔍 Opening detailed progress record #${id} (student_id + week_id + subject from progress_records table)`);
+                // In real app: Livewire / Inertia / AJAX modal with full record + recommendation_engine_configs lookup
+            };
         });
     </script>
 </x-layout>

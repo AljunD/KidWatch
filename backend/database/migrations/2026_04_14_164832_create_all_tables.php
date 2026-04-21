@@ -87,32 +87,43 @@ return new class extends Migration
             $table->unique(['subject', 'rating_level'], 'idx_subject_rating');
         });
 
+        // 6a. Weeks table (new)
+        Schema::create('weeks', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedTinyInteger('week_number')->unique(); // still keep week_number here
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->timestamps();
+        });
+
         // 6. Weekly progress tracking
         Schema::create('progress_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
-            $table->unsignedTinyInteger('week_number');
+            $table->foreignId('week_id')->constrained('weeks')->onDelete('cascade'); // normalized link to weeks
             $table->string('subject', 50);
-            $table->unsignedTinyInteger('rating_level');
+            $table->unsignedTinyInteger('rating_level')->default(0); // ✅ allow 0 for "No Classes"
+            $table->text('remarks')->nullable();   // ✅ individual remarks per subject
             $table->timestamps();
             $table->softDeletes();
 
-            // Composite index for rapid dashboard loading and data integrity
-            $table->index(['student_id', 'week_number', 'deleted_at'], 'idx_student_weekly_perf');
-            $table->unique(['student_id', 'week_number', 'subject'], 'unique_progress_entry');
+            // Indexes for performance
+            $table->index(['student_id', 'week_id', 'deleted_at'], 'idx_student_week_perf');
+            $table->unique(['student_id', 'week_id', 'subject'], 'unique_progress_entry');
         });
 
         // 7. Weekly summaries
         Schema::create('weekly_summaries', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
-            $table->unsignedTinyInteger('week_number');
+            $table->foreignId('week_id')->constrained('weeks')->onDelete('cascade'); // NEW
             $table->text('summary_text');
             $table->timestamps();
             $table->softDeletes();
 
-            $table->unique(['student_id', 'week_number'], 'unique_weekly_summary');
+            $table->unique(['student_id', 'week_id'], 'unique_weekly_summary'); // updated unique constraint
         });
+
 
         // 8. Password reset tokens
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -143,6 +154,7 @@ return new class extends Migration
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('weekly_summaries');
         Schema::dropIfExists('progress_records');
+        Schema::dropIfExists('weeks'); // NEW
         Schema::dropIfExists('recommendation_engine_configs');
         Schema::dropIfExists('students');
         Schema::dropIfExists('guardians');

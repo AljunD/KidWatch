@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Database\Seeders;
@@ -9,6 +8,7 @@ use App\Models\Teacher;
 use App\Models\Guardian;
 use App\Models\Student;
 use App\Models\RecommendationEngineConfig;
+use App\Models\Week;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,11 +18,11 @@ class SystemSeeder extends Seeder
     {
         // ======================
         // 1. Expert System Knowledge Base (Numeric Rating Levels)
-        // 1: Poor, 2: Good, 3: Very Good, 4: Excellent 5,
         // ======================
         $subjects = ['Mathematics', 'Science', 'English', 'Filipino'];
 
         $interventions = [
+            0 => 'No classes held for this subject/day.', // ✅ NEW
             1 => 'Needs significant support and foundational review.',
             2 => 'Demonstrates basic understanding; continue practicing core skills.',
             3 => 'Strong performance; encourage exploration of complex topics.',
@@ -32,8 +32,8 @@ class SystemSeeder extends Seeder
         foreach ($subjects as $subject) {
             foreach ($interventions as $level => $text) {
                 RecommendationEngineConfig::create([
-                    'subject'      => $subject,
-                    'rating_level' => $level, // Numeric level for database performance
+                    'subject'           => $subject,
+                    'rating_level'      => $level,
                     'intervention_text' => $text,
                 ]);
             }
@@ -59,7 +59,7 @@ class SystemSeeder extends Seeder
         ]);
 
         // ======================
-        // 3. Guardians + Students (Direct Relationship)
+        // 3. Guardians + Students
         // ======================
         $guardianData = [
             ['first_name' => 'Maria', 'middle_name' => 'Luz', 'last_name' => 'Cruz', 'relationship_to_child' => 'Mother', 'contact_number' => '09182345678', 'address' => 'Brgy. Balite, Quezon City'],
@@ -78,7 +78,6 @@ class SystemSeeder extends Seeder
         ];
 
         foreach ($guardianData as $i => $gData) {
-            // Create Authentication Entry
             $user = User::create([
                 'email'     => 'guardian' . ($i + 1) . '@kidwatch.ph',
                 'password'  => Hash::make('password'),
@@ -86,13 +85,24 @@ class SystemSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            // Create Guardian Profile
             $guardian = Guardian::create(array_merge($gData, ['user_id' => $user->id]));
 
-            // Create Student Profile linked to Guardian
             Student::create(array_merge($studentsData[$i], [
                 'guardian_id' => $guardian->id
             ]));
+        }
+
+        // ======================
+        // 4. Seed Weeks (new)
+        // ======================
+        $weeks = [
+            ['week_number' => 1, 'start_date' => '2026-03-30', 'end_date' => '2026-04-03'],
+            ['week_number' => 2, 'start_date' => '2026-04-06', 'end_date' => '2026-04-10'],
+            ['week_number' => 3, 'start_date' => '2026-04-13', 'end_date' => '2026-04-17'],
+        ];
+
+        foreach ($weeks as $week) {
+            Week::create($week);
         }
     }
 }

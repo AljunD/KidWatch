@@ -1,59 +1,52 @@
 <x-layout>
     <x-slot:title>KidWatch | Trash</x-slot>
 
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight">Trash</h1>
-            <p class="text-gray-500 mt-1">Manage soft-deleted students</p>
+            <h1 class="text-4xl font-extrabold text-[#003366] tracking-tight">Trash</h1>
+            <p class="text-slate-500 mt-1">Manage soft-deleted students</p>
         </div>
         <a href="{{ route('students') }}"
-           class="bg-gray-200 text-gray-700 px-6 py-2 rounded-xl font-bold shadow-md hover:bg-gray-300 transition flex items-center">
-            <i class="fas fa-arrow-left mr-2 text-sm"></i> Back to Students
+           class="flex items-center gap-2 bg-white text-[#003366] px-6 py-3 rounded-3xl font-bold border border-slate-200 hover:border-blue-200 transition-all">
+            <i class="fas fa-arrow-left"></i> Back to Students
         </a>
     </div>
 
-    <!-- Table Card -->
-    <div class="bg-white rounded-[2rem] p-8 shadow-md hover:shadow-lg transition">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-[#f1f5f9]">
+    <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+        <table class="min-w-full">
+            <thead class="bg-slate-50">
                 <tr>
-                    <th class="text-left text-[#003366] font-bold px-6 py-3 uppercase text-sm tracking-wide">Name of students</th>
-                    <th class="text-center text-[#003366] font-bold px-6 py-3 uppercase text-sm tracking-wide">Actions</th>
+                    <th class="px-8 py-6 text-left text-xs font-black uppercase tracking-widest text-[#003366]">Student Name</th>
+                    <th class="px-8 py-6 text-center text-xs font-black uppercase tracking-widest text-[#003366]">Actions</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-slate-100">
                 @forelse ($students as $student)
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 font-medium text-gray-800">
+                    <tr class="hover:bg-blue-50/30 transition-colors">
+                        <td class="px-8 py-6 font-semibold text-slate-800">
                             {{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}
                         </td>
-                        <td class="px-6 py-4 flex items-center justify-center space-x-3">
-                            <!-- Restore -->
-                            <form method="POST" action="{{ route('students.restore', $student->id) }}">
-                                @csrf
-                                <button type="submit"
-                                        class="flex items-center space-x-1 px-4 py-1.5 rounded-lg border border-green-400 text-green-500 hover:bg-green-50 transition text-sm font-bold">
-                                    <i class="fas fa-undo"></i> <span>Restore</span>
-                                </button>
-                            </form>
-
-                            <!-- Force Delete -->
-                            <form method="POST" action="{{ route('students.forceDelete', $student->id) }}">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="flex items-center space-x-1 px-4 py-1.5 rounded-lg border border-red-400 text-red-500 hover:bg-red-50 transition text-sm font-bold">
-                                    <i class="fas fa-trash"></i> <span>Delete Permanently</span>
-                                </button>
-                            </form>
+                        <td class="px-8 py-6 text-center">
+                            <div class="flex items-center justify-center gap-4">
+                                <form method="POST" action="{{ route('students.restore', $student->id) }}">
+                                    @csrf
+                                    <button type="submit" class="flex items-center gap-2 px-5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-3xl text-sm font-bold transition-all">
+                                        <i class="fas fa-undo"></i> Restore
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('students.forceDelete', $student->id) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="flex items-center gap-2 px-5 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-3xl text-sm font-bold transition-all">
+                                        <i class="fas fa-trash"></i> Delete Permanently
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="2" class="px-6 py-20 text-center text-gray-400 italic">
-                            No students in trash.
-                        </td>
+                        <td colspan="2" class="px-8 py-20 text-center text-slate-400 italic">No students in trash.</td>
                     </tr>
                 @endforelse
             </tbody>

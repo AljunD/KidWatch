@@ -15,12 +15,23 @@ class WeeklySummary extends Model
 
     protected $fillable = [
         'student_id',
-        'week_number',
+        'week_id',
         'summary_text',
     ];
 
+    /**
+     * A weekly summary belongs to a student.
+     */
     public function student(): BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Student::class, 'student_id');
+    }
+
+    /**
+     * A weekly summary belongs to a week.
+     */
+    public function week(): BelongsTo
+    {
+        return $this->belongsTo(Week::class, 'week_id');
     }
 }
