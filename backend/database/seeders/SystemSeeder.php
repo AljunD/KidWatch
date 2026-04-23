@@ -17,30 +17,94 @@ class SystemSeeder extends Seeder
     public function run(): void
     {
         // ======================
-        // 1. Expert System Knowledge Base (Numeric Rating Levels)
+        // 1. Expert System Knowledge Base (625 combinations)
         // ======================
-        $subjects = ['Mathematics', 'Science', 'English', 'Filipino'];
-
-        $interventions = [
-            0 => 'No classes held for this subject/day.', // ✅ NEW
-            1 => 'Needs significant support and foundational review.',
-            2 => 'Demonstrates basic understanding; continue practicing core skills.',
-            3 => 'Strong performance; encourage exploration of complex topics.',
-            4 => 'Outstanding mastery; provide advanced enrichment activities.'
+        $labels = [
+            0 => 'No Classes',
+            1 => 'Poor',
+            2 => 'Good',
+            3 => 'Very Good',
+            4 => 'Excellent',
         ];
 
-        foreach ($subjects as $subject) {
-            foreach ($interventions as $level => $text) {
-                RecommendationEngineConfig::create([
-                    'subject'           => $subject,
-                    'rating_level'      => $level,
-                    'intervention_text' => $text,
-                ]);
+        for ($math = 0; $math <= 4; $math++) {
+            for ($science = 0; $science <= 4; $science++) {
+                for ($english = 0; $english <= 4; $english++) {
+                    for ($filipino = 0; $filipino <= 4; $filipino++) {
+
+                        $ratings = [
+                            'Math' => $math,
+                            'Science' => $science,
+                            'English' => $english,
+                            'Filipino' => $filipino,
+                        ];
+
+                        // 1. Compute average
+                        $average = array_sum($ratings) / count($ratings);
+
+                        // 2. Detect weak and strong subjects
+                        $weakSubjects = [];
+                        $strongSubjects = [];
+
+                        foreach ($ratings as $subject => $score) {
+                            if ($score <= 1) {
+                                $weakSubjects[] = $subject;
+                            } elseif ($score >= 3) {
+                                $strongSubjects[] = $subject;
+                            }
+                        }
+
+                        // 3. Overall classification
+                        if ($average <= 1.5) {
+                            $level = "needs immediate intervention";
+                            $generalAdvice = "The learner requires close monitoring, structured remediation, and consistent guidance across all learning areas.";
+                        } elseif ($average <= 2.5) {
+                            $level = "is developing foundational skills";
+                            $generalAdvice = "The learner shows emerging understanding and would benefit from guided practice and reinforcement activities.";
+                        } elseif ($average <= 3.5) {
+                            $level = "is progressing well";
+                            $generalAdvice = "The learner demonstrates good understanding and should be supported with enrichment and continuous practice.";
+                        } else {
+                            $level = "is highly proficient";
+                            $generalAdvice = "The learner consistently performs at a high level and should be challenged with advanced and creative tasks.";
+                        }
+
+                        // 4. Convert arrays to readable text
+                        $weakText = empty($weakSubjects)
+                            ? "no major areas of concern"
+                            : implode(', ', $weakSubjects);
+
+                        $strongText = empty($strongSubjects)
+                            ? "no standout strengths yet"
+                            : implode(', ', $strongSubjects);
+
+                        // 5. FINAL ONE PARAGRAPH SUMMARY
+                        $intervention = sprintf(
+                            "Overall, the learner %s across the four subject areas (Math: %s, Science: %s, English: %s, Filipino: %s). Strengths are observed in %s, while attention is needed in %s. %s",
+                            $level,
+                            $labels[$math],
+                            $labels[$science],
+                            $labels[$english],
+                            $labels[$filipino],
+                            $strongText,
+                            $weakText,
+                            $generalAdvice
+                        );
+
+                        RecommendationEngineConfig::create([
+                            'math_rating'     => $math,
+                            'science_rating'  => $science,
+                            'english_rating'  => $english,
+                            'filipino_rating' => $filipino,
+                            'intervention_text' => $intervention,
+                        ]);
+                    }
+                }
             }
         }
 
         // ======================
-        // 2. Initial Teacher Account (Aljun Dalman)
+        // 2. Initial Teacher Account
         // ======================
         $teacherUser = User::create([
             'email'     => 'aljundalman12@gmail.com',
@@ -93,12 +157,10 @@ class SystemSeeder extends Seeder
         }
 
         // ======================
-        // 4. Seed Weeks (new)
+        // 4. Seed Weeks
         // ======================
         $weeks = [
             ['week_number' => 1, 'start_date' => '2026-03-30', 'end_date' => '2026-04-03'],
-            ['week_number' => 2, 'start_date' => '2026-04-06', 'end_date' => '2026-04-10'],
-            ['week_number' => 3, 'start_date' => '2026-04-13', 'end_date' => '2026-04-17'],
         ];
 
         foreach ($weeks as $week) {

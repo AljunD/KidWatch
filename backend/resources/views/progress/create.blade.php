@@ -8,6 +8,13 @@
                 {{ $student->first_name }} {{ $student->last_name }}
             </span>
         </h1>
+                {{-- Back Button --}}
+        <div class="mb-6">
+            <a href="{{ route('progress') }}"
+               class="inline-flex items-center gap-2 bg-gray-200 text-[#003366] px-5 py-2 rounded-lg font-bold hover:bg-gray-300 transition">
+                <i class="fas fa-arrow-left"></i> Back to Progress Management
+            </a>
+        </div>
 
         <form action="{{ route('progress.store') }}" method="POST" class="space-y-6">
             @csrf
@@ -69,12 +76,7 @@
             </div>
 
             {{-- Action Buttons --}}
-            <div class="flex justify-between items-center mt-8">
-                <a href="{{ route('progress') }}"
-                   class="inline-flex items-center gap-2 bg-gray-200 text-[#003366] px-5 py-2 rounded-lg font-bold hover:bg-gray-300 transition">
-                    <i class="fas fa-arrow-left"></i> Back
-                </a>
-
+            <div class="flex justify-center items-center mt-8">
                 <button type="submit"
                         class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition">
                     ✅ Save Progress

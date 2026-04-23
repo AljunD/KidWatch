@@ -74,17 +74,27 @@ return new class extends Migration
             $table->index(['last_name', 'first_name']);
         });
 
-        // 5. Recommendation Engine Configs
+        // 5. Recommendation Engine Configs (multi-subject combinations)
         Schema::create('recommendation_engine_configs', function (Blueprint $table) {
             $table->id();
-            $table->string('subject', 50);
-            // Numeric rating for faster logic (1: Poor, 2: Good, 3: Very Good, 4: Excellent)
-            $table->unsignedTinyInteger('rating_level');
+
+            // Ratings per subject (0–4)
+            $table->unsignedTinyInteger('math_rating');
+            $table->unsignedTinyInteger('science_rating');
+            $table->unsignedTinyInteger('english_rating');
+            $table->unsignedTinyInteger('filipino_rating');
+
+            // Intervention text for this specific combination
             $table->text('intervention_text');
+
             $table->timestamps();
             $table->softDeletes();
 
-            $table->unique(['subject', 'rating_level'], 'idx_subject_rating');
+            // Ensure uniqueness of each combination
+            $table->unique(
+                ['math_rating', 'science_rating', 'english_rating', 'filipino_rating'],
+                'unique_subject_combination'
+            );
         });
 
         // 6a. Weeks table (new)

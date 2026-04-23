@@ -15,7 +15,7 @@ class AdminSeeder extends Seeder   // ✅ use proper class name convention
     public function run(): void
     {
         $adminUser = User::create([
-            'email'     => 'admin.teacher@kidwatch.ph',
+            'email'     => 'aljundalman12@gmail.com',
             'password'  => Hash::make('password'), // ✅ now resolves
             'role'      => 'admin',
             'is_active' => true,
@@ -23,11 +23,11 @@ class AdminSeeder extends Seeder   // ✅ use proper class name convention
 
         Teacher::create([
             'user_id'        => $adminUser->id,
-            'first_name'     => 'Elena',
-            'middle_name'    => 'Santos',
-            'last_name'      => 'Reyes',
-            'contact_number' => '09171234567',
-            'address'        => 'Brgy. Balite, Quezon City, Philippines',
+            'first_name'     => 'Aljun',
+            'middle_name'    => 'Bequillos',
+            'last_name'      => 'Dalman',
+            'contact_number' => '09192888483',
+            'address'        => 'Brgy. Socorro, Cubao, Quezon City, Philippines',
         ]);
     }
 }

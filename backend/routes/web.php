@@ -7,33 +7,26 @@ use App\Http\Middleware\TeacherAuthMiddleware;
 use App\Http\Middleware\ContentSecurityPolicy;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProgressController; // Added this
-use App\Http\Controllers\WeekController; // <-- Add this at the top
+use App\Http\Controllers\ProgressController;
+use App\Http\Controllers\WeekController;
+use App\Http\Controllers\RecommendationController; // <-- Add this
 
 // Authentication (CSP + rate limiting)
 Route::middleware([ContentSecurityPolicy::class])->group(function () {
-    // Show login form (GET)
     Route::get('/login', [TeacherLoginController::class, 'showLoginForm'])->name('login.form');
-
-    // Handle login submission (POST)
     Route::post('/login', [TeacherLoginController::class, 'login'])
         ->middleware('throttle:5,1')
         ->name('login');
-
     Route::post('/logout', [TeacherLoginController::class, 'logout'])->name('logout');
 
-    // Forgot Password
     Route::get('/forgot-password', [TeacherLoginController::class, 'showForgotPasswordForm'])
         ->name('password.request');
-
     Route::post('/forgot-password', [TeacherLoginController::class, 'sendResetLink'])
         ->name('password.email');
 
-    // Reset Password
     Route::get('/reset-password/{token}', function ($token) {
         return view('reset-password', ['token' => $token]);
     })->name('password.reset');
-
     Route::post('/reset-password', [TeacherLoginController::class, 'resetPassword'])
         ->name('password.update');
 });
@@ -85,7 +78,7 @@ Route::middleware([TeacherAuthMiddleware::class, ContentSecurityPolicy::class, '
     // View all progress records for a student in a week
     Route::get('/progress/{student_id}/{week_id}/view', [ProgressController::class, 'view'])->name('progress.view');
 
-    // NEW: Global view of all students across all weeks
+    // Global view of all students across all weeks
     Route::get('/progress/view-all', [ProgressController::class, 'viewAll'])->name('progress.viewAll');
 
     // Weekly Summary (JSON response)
@@ -94,5 +87,10 @@ Route::middleware([TeacherAuthMiddleware::class, ContentSecurityPolicy::class, '
     // Weeks CRUD
     Route::get('/weeks', [WeekController::class, 'index'])->name('weeks.index');
     Route::post('/weeks', [WeekController::class, 'store'])->name('weeks.store');
-    Route::delete('/weeks/{week}', [WeekController::class, 'destroy'])->name('weeks.destroy');
+
+    // Recommendation Routes
+    Route::get('/recommendation', [RecommendationController::class, 'index'])->name('recommendation');
+    Route::get('/recommendation/{student}/{week}', [RecommendationController::class, 'show'])->name('recommendation.detail');
+    Route::post('/recommendation/{student}/{week}/generate', [RecommendationController::class, 'generateSummary'])->name('recommendation.generate');
+
 });

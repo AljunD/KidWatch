@@ -159,10 +159,12 @@
                                                 <td class="px-6 py-6 text-center" data-subject="{{ $subject }}">
                                                     @if($record)
                                                         <span class="inline-block px-5 py-2 rounded-3xl font-black text-xs uppercase shadow-sm
-                                                            @if($record->rating_level == 1) bg-red-100 text-red-700
+                                                            @if($record->rating_level == 0) bg-gray-200 text-gray-600
+                                                            @elseif($record->rating_level == 1) bg-red-100 text-red-700
                                                             @elseif($record->rating_level == 2) bg-amber-100 text-amber-700
                                                             @elseif($record->rating_level == 3) bg-blue-100 text-blue-700
-                                                            @elseif($record->rating_level == 4) bg-emerald-100 text-emerald-700 @endif">
+                                                            @elseif($record->rating_level == 4) bg-emerald-100 text-emerald-700
+                                                            @endif">
                                                             {{ $ratings[$record->rating_level] ?? 'Lvl '.$record->rating_level }}
                                                         </span>
                                                     @else
@@ -171,7 +173,7 @@
                                                 </td>
                                             @endforeach
 
-                                            {{-- NEW ACTIONS COLUMN - View / Add / Edit / Delete --}}
+                                            {{-- NEW ACTIONS COLUMN - View / Add / Edit --}}
                                             <td class="px-8 py-6 text-right">
                                                 <div class="flex justify-end gap-2">
 
@@ -205,7 +207,7 @@
                                                         </a>
                                                     @endif
 
-                                                    {{-- Edit/Delete Progress --}}
+                                                    {{-- Edit Progress --}}
                                                     @php
                                                         $firstRecord = $student->progressRecords
                                                             ->where('week_id', $week->id)
@@ -218,17 +220,6 @@
                                                         title="Edit Progress">
                                                             <i class="fas fa-edit text-sm"></i>
                                                         </a>
-
-                                                        <form action="{{ route('progress.destroy', $firstRecord->id) }}" method="POST"
-                                                            onsubmit="return confirm('Delete this progress record?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit"
-                                                                    class="w-9 h-9 bg-white border border-red-200 hover:bg-red-600 hover:text-white rounded-2xl flex items-center justify-center transition-all text-red-600"
-                                                                    title="Delete Progress">
-                                                                <i class="fas fa-trash text-sm"></i>
-                                                            </button>
-                                                        </form>
                                                     @endif
 
                                                 </div>

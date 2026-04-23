@@ -25,11 +25,17 @@ class ProgressRecord extends Model
      * Map numeric ratings to labels.
      */
     public const RATINGS = [
+        0 => 'No Classes',
         1 => 'Poor',
         2 => 'Good',
         3 => 'Very Good',
         4 => 'Excellent',
     ];
+
+    public function week(): BelongsTo
+    {
+        return $this->belongsTo(Week::class);
+    }
 
     public function getRatingLabelAttribute(): string
     {

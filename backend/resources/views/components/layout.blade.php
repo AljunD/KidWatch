@@ -92,9 +92,6 @@
                           {{ request()->routeIs('students*') ? 'active' : '' }}">
                     <i class="fas fa-user-graduate w-5 h-5"></i>
                     <span>Students</span>
-                    @if($role === 'teacher')
-                        <span class="ml-auto bg-emerald-100 text-emerald-700 text-xs font-black px-2.5 h-5 rounded-3xl flex items-center">28</span>
-                    @endif
                 </a>
 
                 {{-- Progress --}}
@@ -104,29 +101,24 @@
                     <i class="fas fa-chart-line w-5 h-5"></i>
                     <span>Progress Log</span>
                 </a>
-
-                {{-- Optional extra links (you can remove if not needed) --}}
-                <div class="pt-6 mt-6 border-t border-slate-100 px-5 text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Tools</div>
-
-                <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold">
-                    <i class="fas fa-calendar-week w-5 h-5"></i>
-                    <span>Weeks</span>
-                </a>
-
-                <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold">
+                 {{-- Recommendations --}}
+                <a href="{{ route('recommendation') }}"
+                   class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
+                          {{ request()->routeIs('recommendation') ? 'active' : '' }}">
                     <i class="fas fa-lightbulb w-5 h-5"></i>
-                    <span>Recommendations</span>
+                    <span>Recommendation</span>
                 </a>
 
                 {{-- Divider --}}
                 <div class="h-px bg-slate-100 my-6 mx-5"></div>
-
-                {{-- Settings --}}
-                <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold">
-                    <i class="fas fa-cog w-5 h-5"></i>
-                    <span>Settings</span>
-                </a>
             </nav>
+            {{-- Trash (Student Records) --}}
+            <a href="{{ route('students.trash') }}"
+            class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
+            {{ request()->routeIs('students.trash') ? 'active' : '' }}">
+                <i class="fas fa-trash-alt w-5 h-5 text-red-500"></i>
+                <span>Trash</span>
+            </a>
 
             {{-- Sidebar Footer - User Info --}}
             <div class="p-6 border-t border-slate-100 mt-auto">

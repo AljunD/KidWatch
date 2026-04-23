@@ -15,13 +15,44 @@ class RecommendationEngineConfig extends Model
     protected $table = 'recommendation_engine_configs';
 
     protected $fillable = [
-        'subject',
-        'rating_level', // Updated column name
+        'math_rating',
+        'science_rating',
+        'english_rating',
+        'filipino_rating',
         'intervention_text',
     ];
 
-    public function getRatingLabelAttribute(): string
+    /**
+     * Map numeric ratings to labels for readability.
+     */
+    public const RATINGS = [
+        0 => 'No Classes',
+        1 => 'Poor',
+        2 => 'Good',
+        3 => 'Very Good',
+        4 => 'Excellent',
+    ];
+
+    /**
+     * Helper to get human-readable labels for each subject rating.
+     */
+    public function getMathLabelAttribute(): string
     {
-        return ProgressRecord::RATINGS[$this->rating_level] ?? 'Unknown';
+        return self::RATINGS[$this->math_rating] ?? 'Unknown';
+    }
+
+    public function getScienceLabelAttribute(): string
+    {
+        return self::RATINGS[$this->science_rating] ?? 'Unknown';
+    }
+
+    public function getEnglishLabelAttribute(): string
+    {
+        return self::RATINGS[$this->english_rating] ?? 'Unknown';
+    }
+
+    public function getFilipinoLabelAttribute(): string
+    {
+        return self::RATINGS[$this->filipino_rating] ?? 'Unknown';
     }
 }
