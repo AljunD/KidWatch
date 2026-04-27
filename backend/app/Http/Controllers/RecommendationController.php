@@ -16,13 +16,34 @@ class RecommendationController extends Controller
     // ======================
     public function index()
     {
-        // Load all students with guardians
         $students = Student::with('guardian')->get();
-
-        // Load all weeks
         $weeks = Week::all();
 
-        return view('recommendation.index', compact('students', 'weeks'));
+        // Preload summaries for quick lookup
+        $summaries = WeeklySummary::all()->groupBy(function ($summary) {
+            return $summary->student_id . '-' . $summary->week_id;
+        });
+
+        // Sort students: those without summaries first, those with summaries last
+        $students = $students->sortBy(function ($student) use ($weeks, $summaries) {
+            foreach ($weeks as $week) {
+                if (isset($summaries[$student->id . '-' . $week->id])) {
+                    return 1; // push down
+                }
+            }
+            return 0; // keep at top
+        });
+
+        // Sort weeks: current week first, then others by week_number ascending
+        $today = now();
+        $weeks = $weeks->sortBy(function ($week) use ($today) {
+            if ($today->between($week->start_date, $week->end_date)) {
+                return -1; // current week goes to top
+            }
+            return $week->week_number; // order by week number
+        });
+
+        return view('recommendation.index', compact('students', 'weeks', 'summaries'));
     }
 
     // ======================
