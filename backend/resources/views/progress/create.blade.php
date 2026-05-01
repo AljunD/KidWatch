@@ -60,7 +60,6 @@
                 <label class="block text-sm font-bold text-[#003366] mb-2">Rating</label>
                 <select name="rating_level" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400" required>
                     <option value="" disabled selected>Select rating</option>
-                    <option value="0">No Classes</option> {{-- ✅ allow no classes --}}
                     @foreach(\App\Models\ProgressRecord::RATINGS as $level => $label)
                         <option value="{{ $level }}">{{ $label }}</option>
                     @endforeach

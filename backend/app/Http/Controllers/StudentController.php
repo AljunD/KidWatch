@@ -13,9 +13,9 @@ class StudentController extends Controller
     // Show all active students
     public function index()
     {
-        $students = Student::whereNull('trashed_at') // ✅ only active students
+        $students = Student::whereNull('trashed_at')
             ->whereHas('guardian', function ($query) {
-                $query->whereNull('trashed_at'); // ✅ only if guardian is active
+                $query->whereNull('trashed_at');
             })
             ->with(['guardian'])
             ->paginate(20);
@@ -47,7 +47,7 @@ class StudentController extends Controller
         try {
             $student = Student::findOrFail($id);
 
-            // ✅ Handle photo upload
+            // Handle photo upload
             if ($request->hasFile('student_photo')) {
                 if ($student->photo_path && Storage::disk('public')->exists($student->photo_path)) {
                     Storage::disk('public')->delete($student->photo_path);
@@ -90,31 +90,50 @@ class StudentController extends Controller
         }
     }
 
-    // Soft delete student
+    // ✅ Dedicated trash method for /students/{id}/trash
+    public function trash($id)
+    {
+        try {
+            $student = Student::findOrFail($id);
+            $student->trashed_at = now();
+            $student->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student moved to trash.',
+                'student_id' => $student->id
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Trash failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to trash student.'
+            ], 422);
+        }
+    }
+
+    // Soft delete student (legacy destroy)
     public function destroy($id)
     {
         try {
             $student = Student::findOrFail($id);
             $student->trash();
 
-            if (request()->ajax()) {
-                return response()->json(['success' => true]);
-            }
-
-            return redirect()->route('students')->with('success', 'Student moved to trash successfully.');
+            return request()->ajax()
+                ? response()->json(['success' => true])
+                : redirect()->route('students')->with('success', 'Student moved to trash successfully.');
         } catch (\Throwable $e) {
             Log::error('Delete failed', ['error' => $e->getMessage()]);
 
-            if (request()->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Delete failed. Please try again.'], 422);
-            }
-
-            return redirect()->route('students')->with('error', 'Delete failed. Please try again.');
+            return request()->ajax()
+                ? response()->json(['success' => false, 'message' => 'Delete failed. Please try again.'], 422)
+                : redirect()->route('students')->with('error', 'Delete failed. Please try again.');
         }
-}
+    }
 
     // Trash list (students + guardians)
-    public function trash()
+    public function trashList()
     {
         $students = Student::whereNotNull('trashed_at')->paginate(20);
         $guardians = Guardian::whereNotNull('trashed_at')->paginate(20);
@@ -126,7 +145,7 @@ class StudentController extends Controller
     public function restore($id)
     {
         $student = Student::whereNotNull('trashed_at')->findOrFail($id);
-        $student->restoreFromTrash(); // ✅ custom helper
+        $student->restoreFromTrash();
         return redirect()->route('students.trash')->with('success', 'Student restored successfully.');
     }
 
@@ -134,7 +153,7 @@ class StudentController extends Controller
     public function forceDelete($id)
     {
         $student = Student::whereNotNull('trashed_at')->findOrFail($id);
-        $student->hardDelete(); // ✅ custom helper
+        $student->hardDelete();
         return redirect()->route('students.trash')->with('success', 'Student permanently deleted.');
     }
 
@@ -142,9 +161,8 @@ class StudentController extends Controller
     public function restoreGuardian($id)
     {
         $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
-        $guardian->restoreFromTrash(); // ✅ custom helper
+        $guardian->restoreFromTrash();
 
-        // Cascade restore linked students
         foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
             $student->restoreFromTrash();
         }
@@ -157,12 +175,11 @@ class StudentController extends Controller
     {
         $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
 
-        // Cascade delete linked students
         foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
             $student->hardDelete();
         }
 
-        $guardian->hardDelete(); // ✅ custom helper
+        $guardian->hardDelete();
 
         return redirect()->route('students.trash')->with('success', 'Guardian and linked students permanently deleted.');
     }

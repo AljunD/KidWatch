@@ -63,6 +63,7 @@ class ProgressController extends Controller
         $exists = ProgressRecord::where('student_id', $validated['student_id'])
             ->where('week_id', $validated['week_id'])
             ->where('subject', $validated['subject'])
+            ->whereNull('trashed_at')
             ->exists();
 
         if ($exists) {
@@ -99,17 +100,36 @@ class ProgressController extends Controller
         return redirect()->route('progress')->with('success', 'Progress record updated successfully.');
     }
 
+    /** Soft delete a progress record */
     public function destroy(ProgressRecord $progressRecord)
     {
-        $progressRecord->delete();
+        $progressRecord->trash();
 
-        return redirect()->route('progress')->with('success', 'Progress record deleted successfully.');
+        return redirect()->route('progress')->with('success', 'Progress record moved to trash successfully.');
+    }
+
+    /** Restore a trashed progress record */
+    public function restore($id)
+    {
+        $record = ProgressRecord::whereNotNull('trashed_at')->findOrFail($id);
+        $record->restoreFromTrash();
+
+        return redirect()->route('progress')->with('success', 'Progress record restored successfully.');
+    }
+
+    /** Permanently delete a trashed progress record */
+    public function forceDelete($id)
+    {
+        $record = ProgressRecord::whereNotNull('trashed_at')->findOrFail($id);
+        $record->hardDelete();
+
+        return redirect()->route('progress')->with('success', 'Progress record permanently deleted.');
     }
 
     public function view($studentId, $weekId)
     {
         $student = Student::with(['progressRecords' => function ($query) use ($weekId) {
-            $query->where('week_id', $weekId);
+            $query->where('week_id', $weekId)->whereNull('trashed_at');
         }])->findOrFail($studentId);
 
         $week = Week::findOrFail($weekId);
@@ -118,6 +138,25 @@ class ProgressController extends Controller
         $ratings = ProgressRecord::RATINGS;
 
         return view('progress.view', compact('student', 'week', 'subjects', 'ratings'));
+    }
+
+    /** ✅ NEW: View all progress records for a student */
+    public function viewAll(Request $request)
+    {
+        $studentId = $request->query('student_id');
+
+        $student = Student::with(['progressRecords' => function ($query) {
+            $query->whereNull('trashed_at');
+        }])->findOrFail($studentId);
+
+        $weeks = Week::with(['progressRecords' => function ($query) use ($studentId) {
+            $query->where('student_id', $studentId)->whereNull('trashed_at');
+        }])->orderBy('week_number')->get();
+
+        $subjects = ['Math', 'Science', 'English', 'Filipino'];
+        $ratings = ProgressRecord::RATINGS;
+
+        return view('progress.view-all', compact('student', 'weeks', 'subjects', 'ratings'));
     }
 
     public function showRecommendation($studentId = null, $weekId = null)
@@ -131,6 +170,7 @@ class ProgressController extends Controller
 
         $summary = WeeklySummary::where('student_id', $studentId)
             ->where('week_id', $weekId)
+            ->whereNull('trashed_at')
             ->first();
 
         return view('recommendation', compact('student', 'week', 'summary'));

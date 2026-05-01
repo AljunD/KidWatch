@@ -14,10 +14,10 @@ class ProgressRecord extends Model
 
     protected $fillable = [
         'student_id',
-        'week_id',       // must be here
+        'week_id',
         'subject',
         'rating_level',
-        'remarks',       // optional if you added this column
+        'remarks',
         'trashed_at',
         'deleted_at',
     ];
@@ -80,6 +80,6 @@ class ProgressRecord extends Model
     {
         $this->deleted_at = now();
         $this->save();
-        parent::delete(); // permanently remove from DB
+        parent::delete(); 
     }
 }

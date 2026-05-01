@@ -10,6 +10,7 @@ use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\WeekController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\GuardianController;
+use App\Http\Controllers\TrashController; // ✅ Add TrashController
 
 // Swagger docs
 Route::view('/api/swagger', 'swagger');
@@ -42,9 +43,9 @@ Route::middleware([TeacherAuthMiddleware::class,'throttle:60,1','verified'])->gr
     Route::get('/students', [StudentController::class, 'index'])->name('students');
     Route::put('/students/{id}', [StudentController::class, 'update'])->name('students.update');
     Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('students.destroy');
+    Route::post('/students/{id}/trash', [StudentController::class, 'trash'])->name('students.trash');
     Route::post('/students/{id}/restore', [StudentController::class, 'restore'])->name('students.restore');
     Route::delete('/students/{id}/force-delete', [StudentController::class, 'forceDelete'])->name('students.forceDelete');
-
 
     // Guardians
     Route::get('/guardians', [GuardianController::class, 'index'])->name('guardians.index');
@@ -88,4 +89,11 @@ Route::middleware([TeacherAuthMiddleware::class, 'verified'])->group(function ()
     Route::get('/recommendation', [RecommendationController::class, 'index'])->name('recommendation');
     Route::get('/recommendation/{student}/{week}', [RecommendationController::class, 'show'])->name('recommendation.detail');
     Route::post('/recommendation/{student}/{week}/generate', [RecommendationController::class, 'generateSummary'])->name('recommendation.generate');
+});
+
+// ✅ Unified TrashController routes
+Route::middleware([TeacherAuthMiddleware::class,'verified'])->group(function () {
+    Route::get('/trash', [TrashController::class, 'index'])->name('trash.index');
+    Route::post('/trash/{type}/{id}/restore', [TrashController::class, 'restore'])->name('trash.restore');
+    Route::delete('/trash/{type}/{id}/force-delete', [TrashController::class, 'forceDelete'])->name('trash.forceDelete');
 });

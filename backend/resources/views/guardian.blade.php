@@ -496,7 +496,6 @@
 </div>
 
 <script>
-
 /* ===== VIEW GUARDIAN MODAL ===== */
 function closeViewGuardianModal() {
   const modal = document.getElementById('viewGuardianModal');
@@ -507,70 +506,46 @@ function openViewGuardianModal(button) {
   const row = button.closest('tr');
   const guardian = JSON.parse(row.dataset.guardian || '{}');
 
-  // Guardian basic info
-  const fullName = [guardian.first_name, guardian.middle_name, guardian.last_name]
-    .filter(Boolean)
-    .join(' ');
+  const fullName = [guardian.first_name, guardian.middle_name, guardian.last_name].filter(Boolean).join(' ');
   document.getElementById('viewGuardianName').textContent = fullName || 'N/A';
   document.getElementById('viewGuardianEmail').textContent = guardian.email || 'N/A';
-  document.getElementById('viewGuardianContact').textContent = guardian.contact_number || 'N/A';
   document.getElementById('viewGuardianAddress').textContent = guardian.address || 'N/A';
   document.getElementById('viewGuardianRelationship').textContent = guardian.relationship_to_child || 'N/A';
+  document.getElementById('viewGuardianCreatedAt').textContent = guardian.created_at || 'N/A';
 
-  // Email verification status
   const emailStatusEl = document.getElementById('viewGuardianEmailStatus');
   if (emailStatusEl) {
-    if (guardian.email_verified_at) {
-      emailStatusEl.innerHTML = `<i class="fas fa-check-circle text-green-500"></i>
-                                 <span class="text-green-500 text-sm font-semibold">Verified</span>`;
-    } else {
-      emailStatusEl.innerHTML = `<i class="fas fa-times-circle text-red-500"></i>
-                                 <span class="text-red-500 text-sm font-semibold">Not Verified</span>`;
-    }
+    emailStatusEl.innerHTML = guardian.email_verified_at
+      ? `<i class="fas fa-check-circle text-green-500"></i><span class="text-green-500 text-sm font-semibold">Verified</span>`
+      : `<i class="fas fa-times-circle text-red-500"></i><span class="text-red-500 text-sm font-semibold">Not Verified</span>`;
   }
 
-  // Linked students
   const studentsList = document.getElementById('viewGuardianStudents');
   studentsList.innerHTML = '';
   if (guardian.students && guardian.students.length > 0) {
     guardian.students.forEach(student => {
       const li = document.createElement('li');
       li.className = "flex items-center gap-3";
-
       if (student.photo_path) {
-        const img = document.createElement('img');
-        img.src = '/storage/' + student.photo_path;
-        img.alt = "Student Photo";
-        img.className = "w-10 h-10 object-cover rounded-full border";
-        li.appendChild(img);
+        li.innerHTML = `<img src="/storage/${student.photo_path}" class="w-10 h-10 object-cover rounded-full border">
+                        <span>${student.full_name} (${student.gender}, ${student.date_of_birth.split('T')[0]})</span>`;
       } else {
-        const placeholder = document.createElement('div');
-        placeholder.className = "w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500";
-        placeholder.textContent = "N/A";
-        li.appendChild(placeholder);
+        li.innerHTML = `<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">N/A</div>
+                        <span>${student.full_name} (${student.gender}, ${student.date_of_birth.split('T')[0]})</span>`;
       }
-
-      let dob = student.date_of_birth ? student.date_of_birth.split('T')[0] : 'N/A';
-      const span = document.createElement('span');
-      span.textContent = `${student.full_name} (${student.gender}, ${dob})`;
-      li.appendChild(span);
-
       studentsList.appendChild(li);
     });
   } else {
     studentsList.innerHTML = '<li class="text-gray-400 italic">No students linked</li>';
   }
 
-  document.getElementById('viewGuardianCreatedAt').textContent = guardian.created_at || 'N/A';
   document.getElementById('viewGuardianModal').classList.remove('hidden');
 }
 
 /* ===== EDIT GUARDIAN MODAL ===== */
 function closeEditGuardianModal() {
-  const modal = document.getElementById('editGuardianModal');
-  const form = document.getElementById('editGuardianForm');
-  if (modal) modal.classList.add('hidden');
-  if (form) form.reset();
+  document.getElementById('editGuardianModal').classList.add('hidden');
+  document.getElementById('editGuardianForm').reset();
 }
 
 function openEditGuardianModal(button) {
@@ -586,23 +561,22 @@ function openEditGuardianModal(button) {
   document.getElementById('edit_guardian_contact').value = guardian.contact_number || '';
   document.getElementById('edit_guardian_address').value = guardian.address || '';
   document.getElementById('edit_guardian_relationship').value = guardian.relationship_to_child || '';
+
   const emailInput = document.getElementById('edit_guardian_email');
   if (emailInput) {
     emailInput.value = '';
     emailInput.placeholder = guardian.email ? `Current: ${guardian.email}` : 'guardian@example.ph';
   }
+
   document.getElementById('editGuardianModal').classList.remove('hidden');
 }
 
 /* ===== ADD STUDENT MODAL ===== */
 function openAddStudentModal(guardianId) {
   const form = document.getElementById('enrollStudentForm');
-  const guardianInput = document.getElementById('guardianIdInput');
-  if (guardianInput) guardianInput.value = guardianId;
-  if (form) {
-    form.action = `/guardians/${guardianId}/students`;
-    document.getElementById('addStudentModal').classList.remove('hidden');
-  }
+  document.getElementById('guardianIdInput').value = guardianId;
+  form.action = `/guardians/${guardianId}/students`;
+  document.getElementById('addStudentModal').classList.remove('hidden');
 }
 function closeAddStudentModal() {
   document.getElementById('addStudentModal').classList.add('hidden');
@@ -621,26 +595,14 @@ function openTrashStudentModal(guardianId, guardianName) {
     guardian.students.forEach(student => {
       const li = document.createElement('li');
       li.className = "flex items-center justify-between gap-3";
-
-      const infoDiv = document.createElement('div');
-      infoDiv.className = "flex items-center gap-3";
-
-      const span = document.createElement('span');
-      span.textContent = `${student.full_name} (${student.gender}, ${student.date_of_birth.split('T')[0]})`;
-      infoDiv.appendChild(span);
-
-      li.appendChild(infoDiv);
-
-      // ✅ AJAX Trash Student button
-      const btn = document.createElement('button');
-      btn.type = "button";
-      btn.className = "trash-student-btn p-2.5 rounded-xl border border-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-90";
-      btn.title = "Trash Student";
-      btn.dataset.id = student.id;
-      btn.dataset.name = student.full_name;
-      btn.innerHTML = '<i class="fas fa-user-graduate"></i>';
-      li.appendChild(btn);
-
+      li.innerHTML = `<div class="flex items-center gap-3">
+                        <span>${student.full_name} (${student.gender}, ${student.date_of_birth.split('T')[0]})</span>
+                      </div>
+                      <button type="button"
+                              class="trash-student-btn p-2.5 rounded-xl border border-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-90"
+                              data-id="${student.id}" data-name="${student.full_name}">
+                        <i class="fas fa-user-graduate"></i>
+                      </button>`;
       studentsList.appendChild(li);
     });
   } else {
@@ -649,9 +611,24 @@ function openTrashStudentModal(guardianId, guardianName) {
 
   document.getElementById('trashStudentModal').classList.remove('hidden');
 }
-
 function closeTrashStudentModal() {
   document.getElementById('trashStudentModal').classList.add('hidden');
+}
+
+/* ===== REFRESH GUARDIAN TABLE ===== */
+async function refreshGuardianTable() {
+  try {
+    const response = await fetch('/guardians', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    const html = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const newTable = doc.querySelector('.overflow-x-auto');
+    if (newTable) {
+      document.querySelector('.overflow-x-auto').innerHTML = newTable.innerHTML;
+    }
+  } catch (err) {
+    console.error('Failed to refresh guardian table:', err);
+  }
 }
 
 /* ===== AJAX TRASH STUDENT HANDLER ===== */
@@ -664,27 +641,21 @@ document.addEventListener('click', async function(e) {
 
   if (confirm(`Move ${studentName} to trash?`)) {
     try {
-      const response = await fetch(`/students/${studentId}`, {
-        method: 'DELETE',
+      const response = await fetch(`/students/${studentId}/trash`, {
+        method: 'POST',
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
           'Accept': 'application/json'
         }
       });
+      const data = await response.json();
 
-      if (response.ok) {
-        // Remove student from modal instantly
+      if (response.ok && data.success) {
         btn.closest('li').remove();
-
-        // If no students left, show placeholder
-        const ul = document.getElementById('trashGuardianStudents');
-        if (ul && ul.querySelectorAll('li').length === 0) {
-          ul.innerHTML = '<li class="text-gray-400 italic">No students linked</li>';
-        }
-
+        refreshGuardianTable(); // ✅ auto-update guardian table
         alert(`${studentName} moved to trash.`);
       } else {
-        alert(`Failed to trash ${studentName}.`);
+        alert(data.message || `Failed to trash ${studentName}.`);
       }
     } catch (error) {
       console.error(error);
@@ -695,16 +666,12 @@ document.addEventListener('click', async function(e) {
 
 /* ===== ADD STUDENT + GUARDIAN MODAL ===== */
 function openAddStudentGuardianModal() {
-  const modal = document.getElementById('addStudentGuardianModal');
-  if (modal) modal.classList.remove('hidden');
+  document.getElementById('addStudentGuardianModal').classList.remove('hidden');
 }
 function closeAddStudentGuardianModal() {
   const modal = document.getElementById('addStudentGuardianModal');
-  if (modal) {
-    modal.classList.add('hidden');
-    const form = document.getElementById('addStudentGuardianForm');
-    if (form) form.reset();
-  }
+  modal.classList.add('hidden');
+  document.getElementById('addStudentGuardianForm').reset();
 }
 
 /* ===== AJAX SUBMISSION FOR ADD STUDENT + GUARDIAN ===== */
@@ -732,10 +699,10 @@ document.addEventListener('DOMContentLoaded', () => {
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
       });
-
       const data = await response.json();
 
       if (data.success) {
+        // Close modal
         closeAddStudentGuardianModal();
 
         // Success popup
@@ -749,39 +716,39 @@ document.addEventListener('DOMContentLoaded', () => {
               ? `<p class="mt-2 text-sm text-gray-600">Generated Password: <span class="font-mono">${data.default_password}</span></p>`
               : ""}
             <button onclick="this.closest('.fixed').remove()"
-              class="mt-6 px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
+                    class="mt-6 px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
               OK
             </button>
           </div>
         `;
         document.body.appendChild(popup);
 
-        // Optional: refresh guardian list without full reload
-        if (typeof refreshGuardianTable === 'function') {
-          refreshGuardianTable();
-        }
+        // ✅ Refresh guardian table automatically
+        refreshGuardianTable();
       } else {
         // Validation errors
-        let errorHtml = '<ul class="text-red-600 text-sm text-left">';
-        for (const field in data.errors) {
-          data.errors[field].forEach(msg => {
-            errorHtml += `<li>${msg}</li>`;
+        let errorHtml = `<div class="error-messages bg-red-100 text-red-700 p-4 rounded-xl mt-4">
+                           <ul class="list-disc list-inside">`;
+        if (data.errors) {
+          Object.values(data.errors).forEach(errArr => {
+            errArr.forEach(err => {
+              errorHtml += `<li>${err}</li>`;
+            });
           });
+        } else {
+          errorHtml += `<li>${data.message || 'An error occurred.'}</li>`;
         }
-        errorHtml += '</ul>';
-
-        const errorBox = document.createElement('div');
-        errorBox.className = "mt-4 p-3 bg-red-50 border border-red-200 rounded-xl error-messages";
-        errorBox.innerHTML = errorHtml;
-        form.prepend(errorBox);
+        errorHtml += `</ul></div>`;
+        form.insertAdjacentHTML('beforeend', errorHtml);
       }
-    } catch (err) {
-      alert("Error creating guardian: " + err.message);
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred while saving guardian and student.');
     } finally {
       // Reset button state
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Save";
+        submitBtn.textContent = "Save Student + Guardian";
       }
     }
   });

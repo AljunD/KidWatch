@@ -25,11 +25,16 @@ class Guardian extends Model
         'deleted_at',
     ];
 
-    protected $dates = [
-        'trashed_at',
-        'deleted_at',
-        'created_at',
-        'updated_at',
+    /**
+     * ✅ Use casts instead of $dates for Laravel 11+
+     * This ensures trashed_at, deleted_at, created_at, updated_at
+     * are Carbon instances automatically.
+     */
+    protected $casts = [
+        'trashed_at' => 'datetime',
+        'deleted_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -81,6 +86,6 @@ class Guardian extends Model
     {
         $this->deleted_at = now();
         $this->save();
-        parent::delete(); // permanently remove from DB
+        parent::delete(); 
     }
 }
