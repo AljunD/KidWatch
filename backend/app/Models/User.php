@@ -6,7 +6,6 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
@@ -14,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'email',
@@ -35,7 +34,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Get the teacher profile associated with the user.
-     * Changed to hasOne because teachers table holds the user_id.
+     * Relationship: One User -> One Teacher
      */
     public function teacher(): HasOne
     {
@@ -44,7 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Get the guardian profile associated with the user.
-     * Changed to hasOne because guardians table holds the user_id.
+     * Relationship: One User -> One Guardian
      */
     public function guardian(): HasOne
     {

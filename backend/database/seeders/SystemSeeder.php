@@ -33,16 +33,14 @@ class SystemSeeder extends Seeder
                     for ($filipino = 0; $filipino <= 4; $filipino++) {
 
                         $ratings = [
-                            'Math' => $math,
-                            'Science' => $science,
-                            'English' => $english,
+                            'Math'     => $math,
+                            'Science'  => $science,
+                            'English'  => $english,
                             'Filipino' => $filipino,
                         ];
 
-                        // 1. Compute average
                         $average = array_sum($ratings) / count($ratings);
 
-                        // 2. Detect weak and strong subjects
                         $weakSubjects = [];
                         $strongSubjects = [];
 
@@ -54,7 +52,6 @@ class SystemSeeder extends Seeder
                             }
                         }
 
-                        // 3. Overall classification
                         if ($average <= 1.5) {
                             $level = "needs immediate intervention";
                             $generalAdvice = "The learner requires close monitoring, structured remediation, and consistent guidance across all learning areas.";
@@ -69,7 +66,6 @@ class SystemSeeder extends Seeder
                             $generalAdvice = "The learner consistently performs at a high level and should be challenged with advanced and creative tasks.";
                         }
 
-                        // 4. Convert arrays to readable text
                         $weakText = empty($weakSubjects)
                             ? "no major areas of concern"
                             : implode(', ', $weakSubjects);
@@ -78,7 +74,6 @@ class SystemSeeder extends Seeder
                             ? "no standout strengths yet"
                             : implode(', ', $strongSubjects);
 
-                        // 5. FINAL ONE PARAGRAPH SUMMARY
                         $intervention = sprintf(
                             "Overall, the learner %s across the four subject areas (Math: %s, Science: %s, English: %s, Filipino: %s). Strengths are observed in %s, while attention is needed in %s. %s",
                             $level,
@@ -92,10 +87,10 @@ class SystemSeeder extends Seeder
                         );
 
                         RecommendationEngineConfig::create([
-                            'math_rating'     => $math,
-                            'science_rating'  => $science,
-                            'english_rating'  => $english,
-                            'filipino_rating' => $filipino,
+                            'math_rating'       => $math,
+                            'science_rating'    => $science,
+                            'english_rating'    => $english,
+                            'filipino_rating'   => $filipino,
                             'intervention_text' => $intervention,
                         ]);
                     }

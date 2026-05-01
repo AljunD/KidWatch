@@ -6,13 +6,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Guardian extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'user_id',
@@ -22,6 +21,15 @@ class Guardian extends Model
         'relationship_to_child',
         'contact_number',
         'address',
+        'trashed_at',
+        'deleted_at',
+    ];
+
+    protected $dates = [
+        'trashed_at',
+        'deleted_at',
+        'created_at',
+        'updated_at',
     ];
 
     /**
@@ -34,7 +42,6 @@ class Guardian extends Model
 
     /**
      * Get the students associated with the guardian.
-     * Changed from BelongsToMany to HasMany to match the migration schema.
      */
     public function students(): HasMany
     {
@@ -47,5 +54,33 @@ class Guardian extends Model
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    /**
+     * Soft delete (move to trash).
+     */
+    public function trash(): void
+    {
+        $this->trashed_at = now();
+        $this->save();
+    }
+
+    /**
+     * Restore from trash.
+     */
+    public function restoreFromTrash(): void
+    {
+        $this->trashed_at = null;
+        $this->save();
+    }
+
+    /**
+     * Hard delete (permanent removal).
+     */
+    public function hardDelete(): void
+    {
+        $this->deleted_at = now();
+        $this->save();
+        parent::delete(); // permanently remove from DB
     }
 }

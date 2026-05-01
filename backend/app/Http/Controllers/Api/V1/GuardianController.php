@@ -5,14 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * Authentication controller for guardians
- */
 class AuthController extends Controller
 {
-    /**
-     * Guardian login
-     */
     public function login(Request $request)
     {
         $request->validate([
@@ -26,7 +20,6 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
-        // Only guardians with active accounts can log in
         if (!$user->is_active || $user->role !== 'guardian') {
             Auth::logout();
             return $this->errorResponse('Unauthorized', 403, ['Only guardians can log in']);
@@ -35,23 +28,15 @@ class AuthController extends Controller
         $token = $user->createToken('guardian-token')->plainTextToken;
 
         return $this->successResponse([
-            'user' => [
-                'id'    => $user->id,
-                'email' => $user->email,
-                'role'  => $user->role,
-            ],
-            'token'      => $token,
+            'user'  => ['id' => $user->id, 'email' => $user->email, 'role' => $user->role],
+            'token' => $token,
             'token_type' => 'Bearer',
         ], 'Login successful');
     }
 
-    /**
-     * Guardian logout
-     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-
         return $this->successResponse(null, 'Logged out successfully');
     }
 }

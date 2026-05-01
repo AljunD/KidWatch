@@ -6,12 +6,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProgressRecord extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'student_id',
@@ -19,6 +18,15 @@ class ProgressRecord extends Model
         'subject',
         'rating_level',
         'remarks',       // optional if you added this column
+        'trashed_at',
+        'deleted_at',
+    ];
+
+    protected $dates = [
+        'trashed_at',
+        'deleted_at',
+        'created_at',
+        'updated_at',
     ];
 
     /**
@@ -37,13 +45,41 @@ class ProgressRecord extends Model
         return $this->belongsTo(Week::class);
     }
 
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
+
     public function getRatingLabelAttribute(): string
     {
         return self::RATINGS[$this->rating_level] ?? 'Unknown';
     }
 
-    public function student(): BelongsTo
+    /**
+     * Soft delete (move to trash).
+     */
+    public function trash(): void
     {
-        return $this->belongsTo(Student::class);
+        $this->trashed_at = now();
+        $this->save();
+    }
+
+    /**
+     * Restore from trash.
+     */
+    public function restoreFromTrash(): void
+    {
+        $this->trashed_at = null;
+        $this->save();
+    }
+
+    /**
+     * Hard delete (permanent removal).
+     */
+    public function hardDelete(): void
+    {
+        $this->deleted_at = now();
+        $this->save();
+        parent::delete(); // permanently remove from DB
     }
 }

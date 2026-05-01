@@ -10,27 +10,29 @@
                 : ($user->guardian ?? (object)['first_name' => 'Parent']);
             $displayName = $profile->first_name . ' ' . ($profile->last_name ?? '');
             $greetingTime = now()->hour < 12 ? 'morning' : (now()->hour < 17 ? 'afternoon' : 'evening');
-
-            // Demo data (in real app this comes from Controller)
-            $totalStudents = $role === 'teacher' ? 28 : 2;
-            $childrenLabel = $role === 'teacher' ? 'Total Students' : 'My Children';
-            $weeksTracked = 12;
-            $avgRating = 3.4;
-            $currentWeek = 12; // from Weeks table
-            $currentWeekLabel = 'Apr 14 – Apr 20, 2026';
         @endphp
 
         <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div>
                 <h1 class="text-5xl font-black tracking-[-2px] text-[#003366]">Dashboard</h1>
-                <p class="mt-2 text-xl text-slate-600">Good {{ $greetingTime }}, <span class="font-semibold">{{ $displayName }}</span> 👋</p>
+                <p class="mt-2 text-xl text-slate-600">
+                    Good {{ $greetingTime }}, <span class="font-semibold">{{ $displayName }}</span> 👋
+                </p>
                 <p class="text-slate-500">Here's what's happening with your kids this week</p>
             </div>
 
             <div class="flex items-center gap-x-4 bg-white rounded-3xl px-6 py-4 shadow-sm border border-slate-100">
                 <div class="text-right">
-                    <p class="text-xs font-bold uppercase tracking-widest text-[#0077cc]">Week {{ $currentWeek }}</p>
-                    <p class="text-lg font-semibold text-[#003366]">{{ $currentWeekLabel }}</p>
+                    <p class="text-xs font-bold uppercase tracking-widest text-[#0077cc]">
+                        Week {{ $currentWeek ?: '—' }}
+                    </p>
+                    <p class="text-lg font-semibold text-[#003366]">
+                        @if($currentWeekStart && $currentWeekEnd)
+                            {{ $currentWeekStart }} – {{ $currentWeekEnd }}
+                        @else
+                            No week data yet
+                        @endif
+                    </p>
                 </div>
                 <div class="w-px h-12 bg-slate-200"></div>
                 <div class="flex items-center justify-center w-12 h-12 bg-[#003366] text-white rounded-3xl text-3xl shadow-inner">
@@ -45,8 +47,12 @@
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-sm font-semibold text-slate-500">{{ $childrenLabel }}</p>
-                        <p class="text-5xl font-black text-[#003366] mt-2">{{ $totalStudents }}</p>
+                        <p class="text-sm font-semibold text-slate-500">
+                            {{ $role === 'teacher' ? 'Total Students' : 'My Children' }}
+                        </p>
+                        <p class="text-5xl font-black text-[#003366] mt-2">
+                            {{ $totalStudents > 0 ? $totalStudents : 'No students yet' }}
+                        </p>
                     </div>
                     <div class="w-12 h-12 bg-blue-50 text-[#0077cc] rounded-3xl flex items-center justify-center text-3xl">
                         @if($role === 'teacher')
@@ -58,7 +64,7 @@
                 </div>
                 <div class="flex items-center gap-2 text-emerald-600 text-sm font-medium mt-6">
                     <i class="fas fa-arrow-trend-up"></i>
-                    <span>+2 this month</span>
+                    <span>{{ $totalStudents }} active</span>
                 </div>
             </div>
 
@@ -74,9 +80,9 @@
                     </div>
                 </div>
                 <div class="text-xs text-slate-400 mt-8 flex items-center gap-1">
-                    <span class="font-mono">12/52</span>
+                    <span class="font-mono">{{ $weeksTracked }}/52</span>
                     <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-full w-[23%] bg-[#003366]"></div>
+                        <div class="h-full w-[{{ round(($weeksTracked/52)*100) }}%] bg-[#003366]"></div>
                     </div>
                 </div>
             </div>
@@ -97,23 +103,21 @@
                         <i class="fas fa-star"></i>
                     </div>
                 </div>
-                <p class="text-xs text-emerald-600 mt-6 font-medium">↑ 0.3 from last week</p>
-            </div>
-
-            {{-- Card 4: Smart Recommendations --}}
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all relative overflow-hidden">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm font-semibold text-slate-500">Recommendations</p>
-                        <p class="text-5xl font-black text-[#003366] mt-2">7</p>
-                    </div>
-                    <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-3xl flex items-center justify-center text-3xl">
-                        <i class="fas fa-lightbulb"></i>
-                    </div>
-                </div>
-                <div class="absolute bottom-6 right-6 text-[10px] font-black uppercase bg-purple-100 text-purple-700 px-4 h-7 rounded-3xl flex items-center">
-                    Ready to apply
-                </div>
+                <p class="text-xs text-emerald-600 mt-6 font-medium">
+                    @if($previousAvgRating !== null)
+                        Compared to last week:
+                        @php $diff = $avgRating - $previousAvgRating; @endphp
+                        @if($diff > 0)
+                            ↑ {{ number_format($diff, 1) }}
+                        @elseif($diff < 0)
+                            ↓ {{ number_format(abs($diff), 1) }}
+                        @else
+                            No change
+                        @endif
+                    @else
+                        No previous data
+                    @endif
+                </p>
             </div>
         </div>
 
@@ -124,7 +128,7 @@
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-2xl font-semibold text-[#003366]">Recent Progress</h2>
                     <a href="{{ route('progress') }}"
-                       class="text-sm font-semibold text-[#0077cc] hover:underline flex items-center gap-1">
+                    class="text-sm font-semibold text-[#0077cc] hover:underline flex items-center gap-1">
                         View full log <i class="fas fa-arrow-right text-xs"></i>
                     </a>
                 </div>
@@ -141,59 +145,48 @@
                             </tr>
                         </thead>
                         <tbody class="text-sm divide-y">
-                            {{-- Demo rows - in real app loop through progress_records with eager loading --}}
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-5 font-medium">Emma Thompson</td>
-                                <td class="py-5">Language</td>
-                                <td class="py-5 text-slate-500">Week 12</td>
-                                <td class="py-5 text-center">
-                                    <div class="inline-flex items-center justify-center px-4 h-8 bg-emerald-100 text-emerald-700 rounded-3xl text-sm font-semibold">Excellent (4)</div>
-                                </td>
-                                <td class="py-5 text-right">
-                                    <button onclick="viewProgressDetail(1)"
-                                            class="text-[#0077cc] hover:text-[#003366] text-xs font-semibold">Details →</button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-5 font-medium">Liam Santos</td>
-                                <td class="py-5">Math</td>
-                                <td class="py-5 text-slate-500">Week 12</td>
-                                <td class="py-5 text-center">
-                                    <div class="inline-flex items-center justify-center px-4 h-8 bg-amber-100 text-amber-700 rounded-3xl text-sm font-semibold">Good (2)</div>
-                                </td>
-                                <td class="py-5 text-right">
-                                    <button onclick="viewProgressDetail(2)"
-                                            class="text-[#0077cc] hover:text-[#003366] text-xs font-semibold">Details →</button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-5 font-medium">Mia Reyes</td>
-                                <td class="py-5">Arts</td>
-                                <td class="py-5 text-slate-500">Week 11</td>
-                                <td class="py-5 text-center">
-                                    <div class="inline-flex items-center justify-center px-4 h-8 bg-red-100 text-red-700 rounded-3xl text-sm font-semibold">Poor (1)</div>
-                                </td>
-                                <td class="py-5 text-right">
-                                    <button onclick="viewProgressDetail(3)"
-                                            class="text-[#0077cc] hover:text-[#003366] text-xs font-semibold">Details →</button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="py-5 font-medium">Noah Cruz</td>
-                                <td class="py-5">Science</td>
-                                <td class="py-5 text-slate-500">Week 12</td>
-                                <td class="py-5 text-center">
-                                    <div class="inline-flex items-center justify-center px-4 h-8 bg-blue-100 text-blue-700 rounded-3xl text-sm font-semibold">Very Good (3)</div>
-                                </td>
-                                <td class="py-5 text-right">
-                                    <button onclick="viewProgressDetail(4)"
-                                            class="text-[#0077cc] hover:text-[#003366] text-xs font-semibold">Details →</button>
-                                </td>
-                            </tr>
+                            @forelse($progressRecords as $record)
+                                @php
+                                    // Map rating_level to label and color
+                                    $labels = [
+                                        0 => ['label' => 'No Classes', 'color' => 'gray'],
+                                        1 => ['label' => 'Poor', 'color' => 'red'],
+                                        2 => ['label' => 'Good', 'color' => 'amber'],
+                                        3 => ['label' => 'Very Good', 'color' => 'blue'],
+                                        4 => ['label' => 'Excellent', 'color' => 'emerald'],
+                                    ];
+                                    $rating = $labels[$record->rating_level] ?? ['label' => 'Unknown', 'color' => 'gray'];
+                                @endphp
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="py-5 font-medium">{{ $record->student->first_name }} {{ $record->student->last_name }}</td>
+                                    <td class="py-5">{{ $record->subject }}</td>
+                                    <td class="py-5 text-slate-500">Week {{ $record->week->number }}</td>
+                                    <td class="py-5 text-center">
+                                        <div class="inline-flex items-center justify-center px-4 h-8 
+                                            bg-{{ $rating['color'] }}-100 text-{{ $rating['color'] }}-700 
+                                            rounded-3xl text-sm font-semibold">
+                                            {{ $rating['label'] }} ({{ $record->rating_level }})
+                                        </div>
+                                    </td>
+                                    <td class="py-5 text-right">
+                                        <button onclick="viewProgressDetail({{ $record->id }})"
+                                                class="text-[#0077cc] hover:text-[#003366] text-xs font-semibold">
+                                            Details →
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="py-10 text-center text-gray-400 italic">
+                                        No progress records found.
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
+        </div>
 
             {{-- RIGHT COLUMN: Weekly Summary + Recommendations --}}
             <div class="xl:col-span-5 space-y-8">
@@ -202,7 +195,7 @@
                 <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 h-full">
                     <h2 class="text-2xl font-semibold text-[#003366] mb-4">This Week’s Summary</h2>
                     <div class="bg-slate-50 rounded-3xl p-5 text-slate-600 text-[15px] leading-relaxed">
-                        Emma is showing excellent language skills and creativity. Liam needs extra support in Math — consider using blocks for visual learning. Mia continues to shine in Arts. Overall group energy is high!
+                        {{ $weeklySummary->content ?? 'No summary available yet.' }}
                     </div>
                     <div class="flex justify-between items-center mt-6 text-xs">
                         <span class="font-medium text-slate-400">Generated from weekly_summaries table</span>
@@ -210,119 +203,83 @@
                     </div>
                 </div>
 
-                {{-- Smart Recommendations (tied to recommendation_engine_configs) --}}
-                <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-                    <div class="flex justify-between mb-6">
-                        <h2 class="text-2xl font-semibold text-[#003366]">Smart Interventions</h2>
-                        <span class="px-4 py-1 text-xs font-black bg-purple-100 text-purple-700 rounded-3xl">Based on rating_level &lt; 2</span>
-                    </div>
+            {{-- Performance by Subject Chart --}}
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-semibold text-[#003366]">Subject Performance (Last 4 Weeks)</h2>
+                    <select id="subject-filter" class="bg-white border border-slate-200 text-sm rounded-3xl px-5 py-2 focus:outline-none">
+                        <option value="all">All Subjects</option>
+                        <option value="Language">Language</option>
+                        <option value="Math">Math</option>
+                        <option value="Science">Science</option>
+                        <option value="Arts">Arts</option>
+                    </select>
+                </div>
 
-                    <div class="space-y-5">
-                        <div class="flex gap-4">
-                            <div class="w-8 h-8 bg-red-100 text-red-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-xl">📐</div>
-                            <div class="flex-1">
-                                <p class="font-semibold">Liam – Math (Rating 1)</p>
-                                <p class="text-sm text-slate-600 mt-px">Use physical blocks and counting games. Intervention: “Pair with a buddy for hands-on practice.”</p>
-                                <a href="#" class="text-[#0077cc] text-xs mt-2 inline-flex items-center gap-1 hover:underline">Apply now <i class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="w-8 h-8 bg-red-100 text-red-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-xl">🎨</div>
-                            <div class="flex-1">
-                                <p class="font-semibold">Mia – Arts (Rating 1)</p>
-                                <p class="text-sm text-slate-600 mt-px">Encourage free drawing time. Intervention: “Provide larger paper and bright colors to spark confidence.”</p>
-                                <a href="#" class="text-[#0077cc] text-xs mt-2 inline-flex items-center gap-1 hover:underline">Apply now <i class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </div>
-                    </div>
+                <div class="h-80">
+                    <canvas id="subjectChart"></canvas>
                 </div>
             </div>
-        </div>
 
-        {{-- Performance by Subject Chart --}}
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-semibold text-[#003366]">Subject Performance (Last 4 Weeks)</h2>
-                <select id="subject-filter" class="bg-white border border-slate-200 text-sm rounded-3xl px-5 py-2 focus:outline-none">
-                    <option>All Subjects</option>
-                    <option>Language</option>
-                    <option>Math</option>
-                    <option>Science</option>
-                    <option>Arts</option>
-                </select>
-            </div>
-
-            <div class="h-80">
-                <canvas id="subjectChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    {{-- Chart.js + Script --}}
+    {{-- Chart.js --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
-        // Progress Chart
-        document.addEventListener('DOMContentLoaded', () => {
-            const ctx = document.getElementById('subjectChart');
+    document.addEventListener('DOMContentLoaded', () => {
+        const rawData = @json($chartData);
 
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Week 9', 'Week 10', 'Week 11', 'Week 12'],
-                    datasets: [
-                        {
-                            label: 'Language',
-                            data: [4, 3, 4, 4],
-                            backgroundColor: '#0077cc',
-                            borderRadius: 8,
-                            borderSkipped: false,
-                        },
-                        {
-                            label: 'Math',
-                            data: [2, 2, 1, 3],
-                            backgroundColor: '#f59e0b',
-                            borderRadius: 8,
-                            borderSkipped: false,
-                        },
-                        {
-                            label: 'Science',
-                            data: [3, 4, 3, 4],
-                            backgroundColor: '#10b981',
-                            borderRadius: 8,
-                            borderSkipped: false,
-                        },
-                        {
-                            label: 'Arts',
-                            data: [4, 3, 2, 1],
-                            backgroundColor: '#8b5cf6',
-                            borderRadius: 8,
-                            borderSkipped: false,
-                        }
-                    ]
+        const weeks = [...new Set(rawData.map(r => 'Week ' + r.week_id))];
+        const subjects = [...new Set(rawData.map(r => r.subject))];
+
+        const colors = {
+            Language: '#0077cc',
+            Math: '#f59e0b',
+            Science: '#10b981',
+            Arts: '#8b5cf6'
+        };
+
+        const datasets = subjects.map(sub => ({
+            label: sub,
+            data: weeks.map(week => {
+                const rec = rawData.find(r => 'Week ' + r.week_id === week && r.subject === sub);
+                return rec ? parseFloat(rec.avg_rating) : null;
+            }),
+            backgroundColor: colors[sub] || '#ccc',
+            borderRadius: 8,
+            borderSkipped: false,
+        }));
+
+        const ctx = document.getElementById('subjectChart');
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: weeks, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', align: 'end', labels: { usePointStyle: true, padding: 25, boxWidth: 8 } },
+                    tooltip: { mode: 'index', intersect: false }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top', align: 'end', labels: { usePointStyle: true, padding: 25, boxWidth: 8 } },
-                        tooltip: { mode: 'index', intersect: false }
+                scales: {
+                    y: {
+                        min: 1,
+                        max: 4,
+                        ticks: {
+                            stepSize: 1,
+                            callback: v => ['Poor','Good','Very Good','Excellent'][v-1]
+                        }
                     },
-                    scales: {
-                        y: {
-                            min: 1,
-                            max: 4,
-                            ticks: { stepSize: 1, callback: (v) => ['Poor','Good','Very Good','Excellent'][v-1] }
-                        },
-                        x: { grid: { color: '#f1f5f9' } }
-                    }
+                    x: { grid: { color: '#f1f5f9' } }
                 }
-            });
-
-            // Demo: Clickable progress rows
-            window.viewProgressDetail = function(id) {
-                alert(`🔍 Opening detailed progress record #${id} (student_id + week_id + subject from progress_records table)`);
-                // In real app: Livewire / Inertia / AJAX modal with full record + recommendation_engine_configs lookup
-            };
+            }
         });
+
+        document.getElementById('subject-filter').addEventListener('change', e => {
+            const selected = e.target.value;
+            chart.data.datasets = selected === 'all'
+                ? datasets
+                : datasets.filter(d => d.label === selected);
+            chart.update();
+        });
+    });
     </script>
 </x-layout>

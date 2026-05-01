@@ -8,27 +8,58 @@
             <div>
                 <h1 class="text-4xl font-black text-[#003366] tracking-[-1px] leading-none uppercase italic">Student Progress</h1>
                 <p class="text-slate-500 mt-2 font-medium">Track weekly academic performance • Real-time updates</p>
+
+                {{-- Alert Messages --}}
+                @if(session('success'))
+                    <div class="mt-4 px-6 py-4 rounded-xl bg-green-100 text-green-800 font-semibold shadow flex justify-between items-center">
+                        <span>{{ session('success') }}</span>
+                        <button onclick="this.parentElement.remove()" class="text-green-700 hover:text-green-900">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="mt-4 px-6 py-4 rounded-xl bg-red-100 text-red-800 font-semibold shadow flex justify-between items-center">
+                        <span>{{ session('error') }}</span>
+                        <button onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-900">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                @endif
             </div>
 
             {{-- Week Creation Form --}}
             <form action="{{ route('weeks.store') }}" method="POST"
-                  class="flex flex-wrap items-center gap-6 bg-white rounded-3xl px-6 py-4 shadow-sm border border-blue-100">
+                class="flex flex-wrap items-center gap-6 bg-white rounded-3xl px-6 py-4 shadow-sm border border-blue-100">
                 @csrf
+
+                {{-- Show next week number (read-only) --}}
+                @php
+                    $nextWeekNumber = $weeks->max('week_number') ? $weeks->max('week_number') + 1 : 1;
+                @endphp
+
                 <div class="flex items-center gap-3">
-                    <label for="week_number" class="text-[10px] font-black uppercase tracking-widest text-[#003366]/70">Week #</label>
-                    <input type="number" name="week_number" id="week_number"
-                           class="bg-slate-50 border border-blue-100 rounded-2xl px-4 py-2 text-sm font-bold text-[#003366] focus:ring-2 focus:ring-blue-500 outline-none w-20" required>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#003366]/70">Week #</label>
+                    <span class="bg-slate-100 border border-blue-100 rounded-2xl px-4 py-2 text-sm font-bold text-[#003366]">
+                        {{ $nextWeekNumber }}
+                    </span>
                 </div>
+
                 <div class="flex items-center gap-3">
                     <label for="start_date" class="text-[10px] font-black uppercase tracking-widest text-[#003366]/70">Start</label>
                     <input type="date" name="start_date" id="start_date"
-                           class="bg-slate-50 border border-blue-100 rounded-2xl px-4 py-2 text-sm font-bold text-[#003366] focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        class="bg-slate-50 border border-blue-100 rounded-2xl px-4 py-2 text-sm font-bold text-[#003366] focus:ring-2 focus:ring-blue-500 outline-none"
+                        required>
                 </div>
+
                 <div class="flex items-center gap-3">
                     <label for="end_date" class="text-[10px] font-black uppercase tracking-widest text-[#003366]/70">End</label>
                     <input type="date" name="end_date" id="end_date"
-                           class="bg-slate-50 border border-blue-100 rounded-2xl px-4 py-2 text-sm font-bold text-[#003366] focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        class="bg-slate-50 border border-blue-100 rounded-2xl px-4 py-2 text-sm font-bold text-[#003366] focus:ring-2 focus:ring-blue-500 outline-none"
+                        required>
                 </div>
+
                 <button type="submit"
                         class="bg-[#003366] text-white px-7 py-3 rounded-3xl font-black text-xs uppercase shadow-xl shadow-blue-900/20 hover:shadow-2xl active:scale-95 transition-all flex items-center gap-2">
                     <i class="fas fa-plus"></i> Create New Week
@@ -228,16 +259,6 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                        </div>
-
-                        {{-- Weekly Summary --}}
-                        <div class="bg-slate-50 px-8 py-6 border-t">
-                            <h3 class="text-xs font-black uppercase tracking-widest text-[#003366] flex items-center gap-2 mb-3">
-                                <i class="fas fa-comment-dots"></i> Teacher Summary
-                            </h3>
-                            <p class="text-slate-600 italic text-sm">
-                                "{{ $week->weeklySummaries->first()->summary_text ?? 'No summary recorded yet for this week.' }}"
-                            </p>
                         </div>
                     </div>
                 </details>

@@ -86,6 +86,14 @@
                     <span>Dashboard</span>
                 </a>
 
+                {{-- Guardians --}}
+                <a href="{{ route('guardians.index') }}"
+                class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
+                        {{ request()->routeIs('guardians*') ? 'active' : '' }}">
+                    <i class="fas fa-users w-5 h-5"></i>
+                    <span>Guardians</span>
+                </a>
+
                 {{-- Students (for student.blade.php) --}}
                 <a href="{{ route('students') ?? route('students.index') }}"
                    class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
@@ -113,13 +121,12 @@
                 <div class="h-px bg-slate-100 my-6 mx-5"></div>
             </nav>
             {{-- Trash (Student Records) --}}
-            <a href="{{ route('students.trash') }}"
+            <a href="{{ route('guardians.trash') }}"
             class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
-            {{ request()->routeIs('students.trash') ? 'active' : '' }}">
-                <i class="fas fa-trash-alt w-5 h-5 text-red-500"></i>
-                <span>Trash</span>
+            {{ request()->routeIs('guardians.trash') ? 'active' : '' }}">
+            <i class="fas fa-trash-alt w-5 h-5 text-red-500"></i>
+            <span>Trash</span>
             </a>
-
             {{-- Sidebar Footer - User Info --}}
             <div class="p-6 border-t border-slate-100 mt-auto">
                 <div class="flex items-center gap-3">

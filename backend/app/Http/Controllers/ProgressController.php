@@ -13,41 +13,30 @@ class ProgressController extends Controller
 {
     public function index()
     {
-        $weeks = Week::with(['progressRecords', 'weeklySummaries'])
-            ->orderBy('week_number')
+        $weeks = Week::with([
+            'progressRecords' => function ($query) {
+                $query->whereNull('trashed_at'); // ✅ only active progress records
+            },
+            'weeklySummaries' => function ($query) {
+                $query->whereNull('trashed_at'); // ✅ only active summaries
+            }
+        ])
+        ->orderBy('week_number')
+        ->get();
+
+        $students = Student::whereNull('trashed_at') // ✅ only active students
+            ->whereHas('guardian', function ($query) {
+                $query->whereNull('trashed_at'); // ✅ only if guardian is active
+            })
+            ->with(['progressRecords' => function ($query) {
+                $query->whereNull('trashed_at'); // ✅ only active progress records
+            }])
             ->get();
 
-        $students = Student::with('progressRecords')->get();
-
-        // Subjects are now fixed (not plucked from recommendation_engine_configs)
         $subjects = ['Math', 'Science', 'English', 'Filipino'];
         $ratings = ProgressRecord::RATINGS;
 
         return view('progress', compact('weeks', 'students', 'subjects', 'ratings'));
-    }
-
-    public function viewAll(Request $request)
-    {
-        $studentId = $request->student_id;
-
-        $weeks = Week::with('weeklySummaries')
-            ->orderBy('week_number')
-            ->get();
-
-        $today = Carbon::today();
-        $currentWeek = $weeks->first(fn($week) => $today->between($week->start_date, $week->end_date));
-
-        if ($currentWeek) {
-            $weeks = collect([$currentWeek])
-                ->merge($weeks->where('id', '!=', $currentWeek->id));
-        }
-
-        $student = Student::with('progressRecords')->findOrFail($studentId);
-
-        $subjects = ['Math', 'Science', 'English', 'Filipino'];
-        $ratings = ProgressRecord::RATINGS;
-
-        return view('progress.view-all', compact('weeks', 'student', 'subjects', 'ratings'));
     }
 
     public function create(Request $request)

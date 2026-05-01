@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Week;
+use App\Models\Student;
+use App\Models\ProgressRecord;
+use Carbon\Carbon;
 
 class WeekController extends Controller
 {
@@ -21,20 +24,72 @@ class WeekController extends Controller
 
     /**
      * Store a newly created week.
+     * Only allowed if all students have ratings for every subject in the latest week.
      */
     public function store(Request $request)
     {
+        // Get the latest week
+        $latestWeek = Week::orderBy('week_number', 'desc')->first();
+
+        if ($latestWeek) {
+            // ✅ Only active students with active guardians
+            $students = Student::whereNull('trashed_at')
+                ->whereHas('guardian', fn($q) => $q->whereNull('trashed_at'))
+                ->get();
+
+            $subjects = ['Math', 'Science', 'English', 'Filipino'];
+
+            foreach ($students as $student) {
+                foreach ($subjects as $subject) {
+                    $hasRecord = ProgressRecord::where('student_id', $student->id)
+                        ->where('week_id', $latestWeek->id)
+                        ->where('subject', $subject)
+                        ->whereNull('trashed_at') // ✅ only active records
+                        ->exists();
+
+                    if (!$hasRecord) {
+                        return redirect()
+                            ->route('progress')
+                            ->with('error', "Cannot create a new week: Student {$student->first_name} {$student->last_name} is missing a rating for {$subject} in Week {$latestWeek->week_number}.");
+                    }
+                }
+            }
+        }
+
+        // ✅ Auto-increment week_number
+        $nextWeekNumber = $latestWeek ? $latestWeek->week_number + 1 : 1;
+
+        // Validate new week input
         $request->validate([
-            'week_number' => 'required|integer|unique:weeks,week_number',
-            'start_date'  => 'required|date',
-            'end_date'    => 'required|date|after_or_equal:start_date',
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
         ]);
 
-        Week::create($request->only('week_number', 'start_date', 'end_date'));
+        // ✅ Prevent overlapping weeks
+        $overlap = Week::where(function ($query) use ($request) {
+            $query->whereBetween('start_date', [$request->start_date, $request->end_date])
+                  ->orWhereBetween('end_date', [$request->start_date, $request->end_date])
+                  ->orWhere(function ($q) use ($request) {
+                      $q->where('start_date', '<=', $request->start_date)
+                        ->where('end_date', '>=', $request->end_date);
+                  });
+        })->exists();
+
+        if ($overlap) {
+            return redirect()
+                ->route('progress')
+                ->with('error', 'The new week overlaps with an existing week. Please adjust the dates.');
+        }
+
+        Week::create([
+            'week_number' => $nextWeekNumber,
+            'start_date'  => $request->start_date,
+            'end_date'    => $request->end_date,
+        ]);
 
         return redirect()
             ->route('progress')
-            ->with('success', 'New week created successfully!');
+            ->with('success', "Week {$nextWeekNumber} created successfully!");
     }
 
     /**
