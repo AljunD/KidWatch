@@ -107,14 +107,15 @@
                    class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
                           {{ request()->routeIs('progress') ? 'active' : '' }}">
                     <i class="fas fa-chart-line w-5 h-5"></i>
-                    <span>Progress Log</span>
+                    <span>Progress</span>
                 </a>
-                 {{-- Recommendations --}}
-                <a href="{{ route('recommendation') }}"
-                   class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
-                          {{ request()->routeIs('recommendation') ? 'active' : '' }}">
-                    <i class="fas fa-lightbulb w-5 h-5"></i>
-                    <span>Recommendation</span>
+
+                {{-- System Logs --}}
+                <a href="{{ route('logs.index') }}"
+                class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
+                        {{ request()->routeIs('logs.index') ? 'active' : '' }}">
+                    <i class="fas fa-clipboard-list w-5 h-5"></i>
+                    <span>System Logs</span>
                 </a>
 
                 {{-- Divider --}}

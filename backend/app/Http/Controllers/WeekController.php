@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Week;
 use App\Models\Student;
 use App\Models\ProgressRecord;
-use Carbon\Carbon;
 
 class WeekController extends Controller
 {
@@ -15,9 +14,20 @@ class WeekController extends Controller
      */
     public function index()
     {
-        $weeks = Week::with(['progressRecords', 'weeklySummaries'])
-            ->orderBy('week_number')
+        // ✅ Only active students with active guardians
+        $students = Student::whereNull('trashed_at')
+            ->whereHas('guardian', fn($q) => $q->whereNull('trashed_at'))
             ->get();
+
+        // ✅ If no students, delete all weeks and return empty
+        if ($students->isEmpty()) {
+            Week::query()->delete();
+            $weeks = collect(); // empty collection
+        } else {
+            $weeks = Week::with(['progressRecords', 'weeklySummaries'])
+                ->orderBy('week_number')
+                ->get();
+        }
 
         return view('students.progress', compact('weeks'));
     }
@@ -28,15 +38,22 @@ class WeekController extends Controller
      */
     public function store(Request $request)
     {
+        // ✅ Only active students with active guardians
+        $students = Student::whereNull('trashed_at')
+            ->whereHas('guardian', fn($q) => $q->whereNull('trashed_at'))
+            ->get();
+
+        // ✅ Block creation if no students exist
+        if ($students->isEmpty()) {
+            return redirect()
+                ->route('progress')
+                ->with('error', 'Cannot create a new week: No active students exist.');
+        }
+
         // Get the latest week
         $latestWeek = Week::orderBy('week_number', 'desc')->first();
 
         if ($latestWeek) {
-            // ✅ Only active students with active guardians
-            $students = Student::whereNull('trashed_at')
-                ->whereHas('guardian', fn($q) => $q->whereNull('trashed_at'))
-                ->get();
-
             $subjects = ['Math', 'Science', 'English', 'Filipino'];
 
             foreach ($students as $student) {
@@ -44,7 +61,7 @@ class WeekController extends Controller
                     $hasRecord = ProgressRecord::where('student_id', $student->id)
                         ->where('week_id', $latestWeek->id)
                         ->where('subject', $subject)
-                        ->whereNull('trashed_at') // ✅ only active records
+                        ->whereNull('trashed_at')
                         ->exists();
 
                     if (!$hasRecord) {

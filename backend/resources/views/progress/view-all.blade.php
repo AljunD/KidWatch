@@ -17,39 +17,70 @@
             </a>
         </div>
 
+        {{-- ✅ Error & Success Handling --}}
+        @if(session('success'))
+            <div class="mb-6 px-6 py-4 rounded-xl bg-emerald-100 text-emerald-800 font-semibold shadow flex justify-between items-center">
+                <span>{{ session('success') }}</span>
+                <button onclick="this.parentElement.remove()" class="text-emerald-700 hover:text-emerald-900">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="mb-6 px-6 py-4 rounded-xl bg-red-100 text-red-800 font-semibold shadow flex justify-between items-center">
+                <span>{{ session('error') }}</span>
+                <button onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-900">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="mb-6 px-6 py-4 rounded-xl bg-yellow-100 text-yellow-800 font-semibold shadow">
+                <ul class="list-disc pl-5 space-y-1">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         @php
-            $today = \Carbon\Carbon::today();
-            $currentWeek = $weeks->first(fn($w) => $today->between($w->start_date, $w->end_date));
-            $sortedWeeks = $currentWeek
-                ? collect([$currentWeek])->merge($weeks->where('id', '!=', $currentWeek->id)->sortByDesc('week_number'))
-                : $weeks->sortByDesc('week_number');
+            $sortedWeeks = $weeks->sortByDesc('week_number');
+            $latestWeekId = $sortedWeeks->first()->id ?? null;
+
+            $classMap = [
+                0 => 'bg-gray-100 text-gray-500',
+                1 => 'bg-red-100 text-red-700',
+                2 => 'bg-amber-100 text-amber-700',
+                3 => 'bg-blue-100 text-blue-700',
+                4 => 'bg-emerald-100 text-emerald-700',
+            ];
         @endphp
 
-        {{-- Loop through reordered weeks --}}
+        {{-- Loop through weeks --}}
         @foreach($sortedWeeks as $week)
             @php
+                // Check if all subjects are rated for this week
                 $allSubjectsRated = true;
                 foreach($subjects as $subject) {
                     $record = $student->progressRecords
                         ->where('week_id', $week->id)
                         ->where('subject', $subject)
                         ->first();
-
-                    // Fail if no record exists at all
                     if(!$record) {
                         $allSubjectsRated = false;
                         break;
                     }
                 }
+
+                $summary = $summaries[$student->id . '-' . $week->id][0] ?? null;
             @endphp
 
             <div class="rounded-2xl shadow-md p-6 space-y-6
-                @if($today->between($week->start_date, $week->end_date))
-                    bg-emerald-50 border-2 border-emerald-400
-                @else
-                    bg-slate-50 border border-slate-200
-                @endif"
-                @if($today->between($week->start_date, $week->end_date)) id="current-week" @endif>
+                {{ $week->id === $latestWeekId ? 'bg-emerald-50 border-2 border-emerald-400' : 'bg-slate-50 border border-slate-200' }}"
+                @if($week->id === $latestWeekId) id="current-week" @endif>
 
                 <h2 class="text-xl font-black text-[#003366]">
                     Week {{ $week->week_number }}
@@ -57,6 +88,11 @@
                         ({{ \Carbon\Carbon::parse($week->start_date)->format('M d') }} –
                         {{ \Carbon\Carbon::parse($week->end_date)->format('M d, Y') }})
                     </span>
+                    @if($week->id === $latestWeekId)
+                        <span class="ml-3 inline-block px-3 py-1 text-xs font-bold bg-emerald-600 text-white rounded-full">
+                            Current Week
+                        </span>
+                    @endif
                 </h2>
 
                 {{-- Progress Table --}}
@@ -76,19 +112,13 @@
                                         ->where('week_id', $week->id)
                                         ->where('subject', $subject)
                                         ->first();
+                                    $ratingClass = $record ? ($classMap[$record->rating_level] ?? 'bg-gray-50 text-gray-400') : '';
                                 @endphp
                                 <tr class="hover:bg-slate-50 transition">
                                     <td class="px-6 py-4 font-semibold text-[#003366]">{{ $subject }}</td>
                                     <td class="px-6 py-4 text-center">
                                         @if($record)
-                                            <span class="inline-block px-4 py-1 rounded-full text-xs font-bold uppercase
-                                                @switch($record->rating_level)
-                                                    @case(0) bg-gray-100 text-gray-500 @break
-                                                    @case(1) bg-red-100 text-red-700 @break
-                                                    @case(2) bg-amber-100 text-amber-700 @break
-                                                    @case(3) bg-blue-100 text-blue-700 @break
-                                                    @case(4) bg-emerald-100 text-emerald-700 @break
-                                                @endswitch">
+                                            <span class="inline-block px-4 py-1 rounded-full text-xs font-bold uppercase {{ $ratingClass }}">
                                                 {{ $ratings[$record->rating_level] ?? 'Lvl '.$record->rating_level }}
                                             </span>
                                         @else
@@ -107,17 +137,53 @@
                 {{-- Generate Recommendation Button --}}
                 <div class="mt-4 flex justify-end">
                     @if($allSubjectsRated)
-                        <a href="{{ route('recommendation', ['student' => $student->id, 'week' => $week->id]) }}"
-                        class="px-6 py-2 bg-purple-600 text-white rounded-lg font-bold shadow hover:bg-purple-700 transition">
-                            📌 Generate Recommendation
-                        </a>
+                        <form action="{{ route('progress.generateRecommendation', ['student' => $student->id, 'week' => $week->id]) }}" method="POST">
+                            @csrf
+                            <button class="px-6 py-2 {{ $summary ? 'bg-amber-600 hover:bg-amber-700' : 'bg-purple-600 hover:bg-purple-700' }} text-white rounded-lg font-bold shadow transition">
+                                {{ $summary ? '🔄 Regenerate Recommendation' : '📌 Generate Recommendation' }}
+                            </button>
+                        </form>
                     @else
                         <button disabled
                                 class="px-6 py-2 bg-gray-200 text-gray-400 rounded-lg font-bold cursor-not-allowed">
                             📌 Generate Recommendation
                         </button>
                     @endif
-                </div
+                </div>
+
+                {{-- Show Recommendation Summary if exists --}}
+                @if($summary)
+                    @php
+                        $activities = json_decode($summary->activities_text, true) ?? [];
+                    @endphp
+
+                    <div class="mt-4 p-4 bg-emerald-50 border border-emerald-300 rounded-lg">
+                        <h4 class="font-bold text-[#003366] mb-2">Recommendation Summary</h4>
+                        <p class="text-gray-700 whitespace-pre-line">{{ $summary->summary_text }}</p>
+
+                        <h4 class="font-bold text-[#003366] mt-4 mb-2">Recommendation Activities</h4>
+                        <ul class="list-disc pl-6 text-gray-700 space-y-4">
+                            @foreach($activities as $activity)
+                                <li>
+                                    <p class="font-medium">{{ $activity['activity'] }}</p>
+                                    <span class="text-xs px-2 py-1 rounded 
+                                        @if($activity['priority'] === 'high') bg-red-100 text-red-700
+                                        @elseif($activity['priority'] === 'medium') bg-yellow-100 text-yellow-700
+                                        @else bg-green-100 text-green-700
+                                        @endif">
+                                        Priority: {{ ucfirst($activity['priority']) }}
+                                    </span>
+                                    @if(!empty($activity['guardian_tip']))
+                                        <p class="mt-2 text-sm text-blue-800"><strong>Guardian Tip:</strong> {{ $activity['guardian_tip'] }}</p>
+                                    @endif
+                                    @if(!empty($activity['student_tip']))
+                                        <p class="mt-1 text-sm text-green-800"><strong>Student Tip:</strong> {{ $activity['student_tip'] }}</p>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
             </div>
         @endforeach
     </div>

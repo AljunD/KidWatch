@@ -209,10 +209,10 @@
                     <h2 class="text-2xl font-semibold text-[#003366]">Subject Performance (Last 4 Weeks)</h2>
                     <select id="subject-filter" class="bg-white border border-slate-200 text-sm rounded-3xl px-5 py-2 focus:outline-none">
                         <option value="all">All Subjects</option>
-                        <option value="Language">Language</option>
-                        <option value="Math">Math</option>
-                        <option value="Science">Science</option>
-                        <option value="Arts">Arts</option>
+                        <option value="Language">Math</option>
+                        <option value="Math">Science</option>
+                        <option value="Science">English</option>
+                        <option value="Arts">Filipino</option>
                     </select>
                 </div>
 

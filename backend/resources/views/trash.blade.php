@@ -1,6 +1,21 @@
 <x-layout>
     <x-slot:title>KidWatch | Trash Bin</x-slot>
 
+    <div class="max-w-6xl mx-auto mb-6">
+        <!-- ✅ Flash Messages -->
+        @if(session('success'))
+            <div class="mb-4 p-4 rounded-lg bg-green-100 text-green-800 border border-green-300">
+                <i class="fas fa-check-circle"></i> {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="mb-4 p-4 rounded-lg bg-red-100 text-red-800 border border-red-300">
+                <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+            </div>
+        @endif
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- LEFT COLUMN: Guardians -->
         <section class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">

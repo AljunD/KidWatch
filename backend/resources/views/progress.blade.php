@@ -246,7 +246,7 @@
                                                     @endphp
 
                                                     @if($firstRecord)
-                                                        <a href="{{ route('progress.edit', $firstRecord->id) }}"
+                                                        <a href="{{ route('progress.edit', ['student' => $student->id, 'week' => $week->id]) }}"
                                                         class="w-9 h-9 bg-white border border-slate-200 hover:bg-amber-600 hover:text-white rounded-2xl flex items-center justify-center transition-all text-slate-600"
                                                         title="Edit Progress">
                                                             <i class="fas fa-edit text-sm"></i>

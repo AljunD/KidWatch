@@ -8,9 +8,9 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\WeekController;
-use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\GuardianController;
-use App\Http\Controllers\TrashController; // ✅ Add TrashController
+use App\Http\Controllers\TrashController; // ✅ Unified TrashController
+use App\Http\Controllers\LogController;    // ✅ Unified LogController
 
 // Swagger docs
 Route::view('/api/swagger', 'swagger');
@@ -73,27 +73,31 @@ Route::middleware([TeacherAuthMiddleware::class, 'verified'])->group(function ()
     Route::get('/progress', [ProgressController::class, 'index'])->name('progress');
     Route::get('/progress/create', [ProgressController::class, 'create'])->name('progress.create');
     Route::post('/progress', [ProgressController::class, 'store'])->name('progress.store');
-    Route::get('/progress/{progressRecord}/edit', [ProgressController::class, 'edit'])->name('progress.edit');
-    Route::put('/progress/{progressRecord}', [ProgressController::class, 'update'])->name('progress.update');
+
+    // Edit all subjects for a student/week
+    Route::get('/progress/{student}/{week}/edit', [ProgressController::class, 'edit'])->name('progress.edit');
+    // Update a single subject record
+    Route::put('/progress/{id}', [ProgressController::class, 'update'])->name('progress.update');
+
     Route::delete('/progress/{progressRecord}', [ProgressController::class, 'destroy'])->name('progress.destroy');
 
     Route::get('/progress/{student_id}/{week_id}/view', [ProgressController::class, 'view'])->name('progress.view');
     Route::get('/progress/view-all', [ProgressController::class, 'viewAll'])->name('progress.viewAll');
     Route::get('/progress/{student}/{week}/summary', [ProgressController::class, 'summary'])->name('progress.summary');
+    Route::post('/progress/{student}/{week}/recommendation', [ProgressController::class, 'generateRecommendation'])->name('progress.generateRecommendation');
 
     // Weeks
     Route::get('/weeks', [WeekController::class, 'index'])->name('weeks.index');
     Route::post('/weeks', [WeekController::class, 'store'])->name('weeks.store');
-
-    // Recommendations
-    Route::get('/recommendation', [RecommendationController::class, 'index'])->name('recommendation');
-    Route::get('/recommendation/{student}/{week}', [RecommendationController::class, 'show'])->name('recommendation.detail');
-    Route::post('/recommendation/{student}/{week}/generate', [RecommendationController::class, 'generateSummary'])->name('recommendation.generate');
 });
 
-// ✅ Unified TrashController routes
+// ✅ Unified TrashController + Logs routes
 Route::middleware([TeacherAuthMiddleware::class,'verified'])->group(function () {
+    // Trash
     Route::get('/trash', [TrashController::class, 'index'])->name('trash.index');
     Route::post('/trash/{type}/{id}/restore', [TrashController::class, 'restore'])->name('trash.restore');
     Route::delete('/trash/{type}/{id}/force-delete', [TrashController::class, 'forceDelete'])->name('trash.forceDelete');
+
+    // Logs
+    Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 });

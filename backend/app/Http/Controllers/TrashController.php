@@ -32,6 +32,7 @@ class TrashController extends Controller
             case 'guardian':
                 $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
                 $guardian->restoreFromTrash();
+
                 foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
                     $student->restoreFromTrash();
                 }
@@ -39,6 +40,15 @@ class TrashController extends Controller
 
             case 'student':
                 $student = Student::whereNotNull('trashed_at')->findOrFail($id);
+
+                // ✅ Block restore if guardian is missing or trashed
+                if (!$student->guardian || $student->guardian->trashed_at !== null) {
+                    return back()->with(
+                        'error',
+                        'Cannot restore student: Guardian is missing or inactive.'
+                    );
+                }
+
                 $student->restoreFromTrash();
                 break;
 
@@ -64,9 +74,11 @@ class TrashController extends Controller
         switch ($type) {
             case 'guardian':
                 $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
+
                 foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
                     $student->hardDelete();
                 }
+
                 $guardian->hardDelete();
                 break;
 

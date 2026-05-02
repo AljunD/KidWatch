@@ -11,7 +11,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Instead of the default User factory, call your SystemSeeder
+        // Call your custom seeders
         $this->call(AdminSeeder::class);
         // $this->call(SystemSeeder::class);
     }

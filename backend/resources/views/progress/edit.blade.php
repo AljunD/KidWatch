@@ -17,14 +17,32 @@
             </a>
         </div>
 
-        <form action="{{ route('progress.update', $progressRecord->id) }}" method="POST" class="space-y-6">
+        {{-- Show validation errors --}}
+        @if ($errors->any())
+            <div class="mb-6 px-6 py-4 rounded-xl bg-red-100 text-red-800 font-semibold shadow">
+                <ul class="list-disc pl-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        {{-- Show success message --}}
+        @if(session('success'))
+            <div class="mb-6 px-6 py-4 rounded-xl bg-green-100 text-green-800 font-semibold shadow">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <form id="progressForm" action="{{ route('progress.update', $progressRecord->id) }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
 
             {{-- Subject Dropdown --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Subject</label>
-                <select id="subject" name="subject" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400" required>
+                <select id="subject" name="subject" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('subject') border-red-500 @enderror" required>
                     @foreach($subjects as $subject)
                         @php
                             $record = $progressRecord->student->progressRecords
@@ -33,6 +51,7 @@
                                 ->first();
                         @endphp
                         <option value="{{ $subject }}"
+                                data-id="{{ $record->id ?? '' }}"
                                 data-rating="{{ $record->rating_level ?? '' }}"
                                 data-remarks="{{ $record->remarks ?? '' }}"
                                 {{ $progressRecord->subject === $subject ? 'selected' : '' }}
@@ -41,15 +60,19 @@
                         </option>
                     @endforeach
                 </select>
+                @error('subject')
+                    <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
+                @enderror
             </div>
 
             {{-- Rating Level --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label for="rating_level" class="block text-sm font-bold text-[#003366] mb-2">Rating Level</label>
-                <select name="rating_level" id="rating_level" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400" required>
-                    <option value="0">No Classes</option>
+                <select name="rating_level" id="rating_level" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('rating_level') border-red-500 @enderror" required>
                     @foreach($ratings as $level => $label)
-                        <option value="{{ $level }}">{{ $label }}</option>
+                        <option value="{{ $level }}" {{ old('rating_level', $progressRecord->rating_level) == $level ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
                     @endforeach
                 </select>
                 <p class="text-xs text-slate-500 mt-2">
@@ -57,19 +80,25 @@
                         {{ $ratings[$progressRecord->rating_level] ?? 'No Classes' }}
                     </span>
                 </p>
+                @error('rating_level')
+                    <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
+                @enderror
             </div>
 
             {{-- Remarks --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label for="remarks" class="block text-sm font-bold text-[#003366] mb-2">Remarks</label>
                 <textarea name="remarks" id="remarks" rows="3"
-                          class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400"
-                          placeholder="Enter remarks for this subject">{{ $progressRecord->remarks }}</textarea>
+                          class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('remarks') border-red-500 @enderror"
+                          placeholder="Enter remarks for this subject">{{ old('remarks', $progressRecord->remarks) }}</textarea>
                 <p class="text-xs text-slate-500 mt-2">
                     Current remarks: <em id="current-remarks" class="text-emerald-700">
                         {{ $progressRecord->remarks ?: 'No remarks yet' }}
                     </em>
                 </p>
+                @error('remarks')
+                    <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
+                @enderror
             </div>
 
             {{-- Action Buttons --}}
@@ -83,7 +112,7 @@
     </div>
 </x-layout>
 
-{{-- Script to update rating and remarks dynamically --}}
+{{-- Script to update form action, rating and remarks dynamically --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const subjectSelect = document.getElementById('subject');
@@ -91,12 +120,20 @@
         const remarksTextarea = document.getElementById('remarks');
         const currentRatingText = document.getElementById('current-rating');
         const currentRemarksText = document.getElementById('current-remarks');
+        const form = document.getElementById('progressForm');
 
         subjectSelect.addEventListener('change', function () {
             const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+            const recordId = selectedOption.getAttribute('data-id');
             const rating = selectedOption.getAttribute('data-rating');
             const remarks = selectedOption.getAttribute('data-remarks');
 
+            // Update form action dynamically to target the correct record
+            if (recordId) {
+                form.action = `/progress/${recordId}`;
+            }
+
+            // Update rating
             if (rating) {
                 ratingSelect.value = rating;
                 currentRatingText.textContent = ratingSelect.options[ratingSelect.selectedIndex].text;
@@ -105,6 +142,7 @@
                 currentRatingText.textContent = 'No Classes';
             }
 
+            // Update remarks
             remarksTextarea.value = remarks || '';
             currentRemarksText.textContent = remarks || 'No remarks yet';
         });

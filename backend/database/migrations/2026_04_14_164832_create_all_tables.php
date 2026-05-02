@@ -66,23 +66,7 @@ return new class extends Migration
             $table->index(['last_name', 'first_name']);
         });
 
-        // 5. Recommendation Engine Configs
-        Schema::create('recommendation_engine_configs', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedTinyInteger('math_rating');
-            $table->unsignedTinyInteger('science_rating');
-            $table->unsignedTinyInteger('english_rating');
-            $table->unsignedTinyInteger('filipino_rating');
-            $table->text('intervention_text');
-            $table->timestamps();
-
-            $table->unique(
-                ['math_rating', 'science_rating', 'english_rating', 'filipino_rating'],
-                'unique_subject_combination'
-            );
-        });
-
-        // 6. Weeks table (hard delete only)
+        // 5. Weeks table (hard delete only)
         Schema::create('weeks', function (Blueprint $table) {
             $table->id();
             $table->unsignedTinyInteger('week_number')->unique();
@@ -90,7 +74,7 @@ return new class extends Migration
             $table->date('end_date');
         });
 
-        // 7. Progress records (soft + hard delete)
+        // 6. Progress records (soft + hard delete)
         Schema::create('progress_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
@@ -106,12 +90,17 @@ return new class extends Migration
             $table->unique(['student_id', 'week_id', 'subject'], 'unique_progress_entry');
         });
 
-        // 8. Weekly summaries (soft + hard delete)
         Schema::create('weekly_summaries', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('week_id')->constrained('weeks')->onDelete('cascade');
+
+            // Narrative summary text
             $table->text('summary_text');
+
+            // Recommendation activities (newline-separated list)
+            $table->text('activities_text')->nullable();
+
             $table->timestamps();
             $table->timestamp('trashed_at')->nullable();
             $table->timestamp('deleted_at')->nullable();
@@ -119,21 +108,34 @@ return new class extends Migration
             $table->unique(['student_id', 'week_id'], 'unique_weekly_summary');
         });
 
-        // 9. Password reset tokens 
+        // 8. Password reset tokens
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
+
+        // 9. System Logs (audit trail)
+        Schema::create('logs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->string('action'); // created, updated, trashed, restored, deleted
+            $table->string('entity_type'); // student, guardian, progress, summary
+            $table->unsignedBigInteger('entity_id')->nullable();
+            $table->text('details')->nullable();
+            $table->timestamps();
+
+            $table->index(['entity_type', 'entity_id'], 'idx_entity_logs');
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('logs');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('weekly_summaries');
         Schema::dropIfExists('progress_records');
         Schema::dropIfExists('weeks');
-        Schema::dropIfExists('recommendation_engine_configs');
         Schema::dropIfExists('students');
         Schema::dropIfExists('guardians');
         Schema::dropIfExists('teachers');

@@ -250,6 +250,12 @@
                                 <label class="block text-xs font-black text-gray-400 uppercase mb-2">Religion</label>
                                 <input type="text" id="edit_student_religion" name="student_religion" required class="w-full px-4 py-3 border rounded-xl">
                             </div>
+                            <div class="md:col-span-6">
+                                <label class="block text-xs font-black text-gray-400 uppercase mb-2">Student Photo</label>
+                                <input type="file" id="edit_student_photo" name="student_photo" accept="image/*"
+                                    class="w-full px-4 py-3 border rounded-xl">
+                                <p class="text-xs text-gray-500 mt-1">Optional — leave blank to keep current photo.</p>
+                            </div>
                         </div>
                     </section>
                 </div>

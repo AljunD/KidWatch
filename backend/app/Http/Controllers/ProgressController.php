@@ -7,31 +7,26 @@ use App\Models\ProgressRecord;
 use App\Models\WeeklySummary;
 use App\Models\Week;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use App\Services\SummaryGeneratorService;
 
 class ProgressController extends Controller
 {
     public function index()
     {
-        $weeks = Week::with([
-            'progressRecords' => function ($query) {
-                $query->whereNull('trashed_at'); // ✅ only active progress records
-            },
-            'weeklySummaries' => function ($query) {
-                $query->whereNull('trashed_at'); // ✅ only active summaries
-            }
-        ])
-        ->orderBy('week_number')
-        ->get();
-
-        $students = Student::whereNull('trashed_at') // ✅ only active students
-            ->whereHas('guardian', function ($query) {
-                $query->whereNull('trashed_at'); // ✅ only if guardian is active
-            })
-            ->with(['progressRecords' => function ($query) {
-                $query->whereNull('trashed_at'); // ✅ only active progress records
-            }])
+        $students = Student::whereNull('trashed_at')
+            ->whereHas('guardian', fn($q) => $q->whereNull('trashed_at'))
+            ->with(['progressRecords' => fn($q) => $q->whereNull('trashed_at')])
             ->get();
+
+        if ($students->isEmpty()) {
+            Week::query()->delete();
+            $weeks = collect();
+        } else {
+            $weeks = Week::with([
+                'progressRecords' => fn($q) => $q->whereNull('trashed_at'),
+                'weeklySummaries' => fn($q) => $q->whereNull('trashed_at')
+            ])->orderBy('week_number')->get();
+        }
 
         $subjects = ['Math', 'Science', 'English', 'Filipino'];
         $ratings = ProgressRecord::RATINGS;
@@ -73,42 +68,54 @@ class ProgressController extends Controller
 
         ProgressRecord::create($validated);
 
-        return redirect()->route('progress')
-            ->with('success', 'Progress record added successfully.');
+        return redirect()->route('progress')->with('success', 'Progress record added successfully.');
     }
 
-    public function edit(ProgressRecord $progressRecord)
+    public function edit($studentId, $weekId)
     {
-        $students = Student::all();
-        $weeks = Week::all();
+        $student = Student::findOrFail($studentId);
+        $week = Week::findOrFail($weekId);
 
         $subjects = ['Math', 'Science', 'English', 'Filipino'];
         $ratings = ProgressRecord::RATINGS;
 
-        return view('progress.edit', compact('progressRecord', 'students', 'weeks', 'subjects', 'ratings'));
+        $records = ProgressRecord::where('student_id', $studentId)
+            ->where('week_id', $weekId)
+            ->whereNull('trashed_at')
+            ->get()
+            ->keyBy('subject');
+
+        $progressRecord = $records->first();
+
+        return view('progress.edit', compact(
+            'student',
+            'week',
+            'subjects',
+            'ratings',
+            'records',
+            'progressRecord'
+        ));
     }
 
-    public function update(Request $request, ProgressRecord $progressRecord)
+    public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'rating_level' => 'required|integer|min:0|max:4',
             'remarks'      => 'nullable|string|max:500',
         ]);
 
+        $progressRecord = ProgressRecord::findOrFail($id);
         $progressRecord->update($validated);
 
-        return redirect()->route('progress')->with('success', 'Progress record updated successfully.');
+        return redirect()->back()->with('success', $progressRecord->subject.' updated successfully.');
     }
 
-    /** Soft delete a progress record */
     public function destroy(ProgressRecord $progressRecord)
     {
         $progressRecord->trash();
-
         return redirect()->route('progress')->with('success', 'Progress record moved to trash successfully.');
     }
 
-    /** Restore a trashed progress record */
     public function restore($id)
     {
         $record = ProgressRecord::whereNotNull('trashed_at')->findOrFail($id);
@@ -117,7 +124,6 @@ class ProgressController extends Controller
         return redirect()->route('progress')->with('success', 'Progress record restored successfully.');
     }
 
-    /** Permanently delete a trashed progress record */
     public function forceDelete($id)
     {
         $record = ProgressRecord::whereNotNull('trashed_at')->findOrFail($id);
@@ -128,51 +134,65 @@ class ProgressController extends Controller
 
     public function view($studentId, $weekId)
     {
-        $student = Student::with(['progressRecords' => function ($query) use ($weekId) {
-            $query->where('week_id', $weekId)->whereNull('trashed_at');
-        }])->findOrFail($studentId);
+        $student = Student::with(['progressRecords' => fn($q) => $q->where('week_id', $weekId)->whereNull('trashed_at')])
+            ->findOrFail($studentId);
 
         $week = Week::findOrFail($weekId);
-
         $subjects = ['Math', 'Science', 'English', 'Filipino'];
         $ratings = ProgressRecord::RATINGS;
 
         return view('progress.view', compact('student', 'week', 'subjects', 'ratings'));
     }
 
-    /** ✅ NEW: View all progress records for a student */
     public function viewAll(Request $request)
     {
         $studentId = $request->query('student_id');
 
-        $student = Student::with(['progressRecords' => function ($query) {
-            $query->whereNull('trashed_at');
-        }])->findOrFail($studentId);
+        $student = Student::with(['progressRecords' => fn($q) => $q->whereNull('trashed_at')])
+            ->findOrFail($studentId);
 
-        $weeks = Week::with(['progressRecords' => function ($query) use ($studentId) {
-            $query->where('student_id', $studentId)->whereNull('trashed_at');
-        }])->orderBy('week_number')->get();
+        $weeks = Week::with([
+            'progressRecords' => fn($q) => $q->where('student_id', $studentId)->whereNull('trashed_at'),
+            'weeklySummaries' => fn($q) => $q->where('student_id', $studentId)->whereNull('trashed_at')
+        ])->orderBy('week_number')->get();
 
         $subjects = ['Math', 'Science', 'English', 'Filipino'];
         $ratings = ProgressRecord::RATINGS;
 
-        return view('progress.view-all', compact('student', 'weeks', 'subjects', 'ratings'));
+        // ✅ Fetch summaries grouped by student-week
+        $summaries = WeeklySummary::where('student_id', $studentId)
+            ->whereNull('trashed_at')
+            ->get()
+            ->groupBy(fn($s) => $s->student_id . '-' . $s->week_id);
+
+        return view('progress.view-all', compact('student', 'weeks', 'subjects', 'ratings', 'summaries'));
     }
 
-    public function showRecommendation($studentId = null, $weekId = null)
+    public function generateRecommendation($studentId, $weekId)
     {
-        if (!$studentId || !$weekId) {
-            return view('recommendation');
-        }
-
         $student = Student::findOrFail($studentId);
-        $week = Week::findOrFail($weekId);
 
-        $summary = WeeklySummary::where('student_id', $studentId)
+        $records = ProgressRecord::where('student_id', $studentId)
             ->where('week_id', $weekId)
             ->whereNull('trashed_at')
-            ->first();
+            ->get();
 
-        return view('recommendation', compact('student', 'week', 'summary'));
+        if ($records->count() < 4) {
+            return back()->with('error', 'Complete all subject ratings first.');
+        }
+
+        // Generate structured summary + activities
+        $result = app(SummaryGeneratorService::class)->generate($student, $weekId);
+
+        WeeklySummary::updateOrCreate(
+            ['student_id' => $studentId, 'week_id' => $weekId],
+            [
+                'summary_text'    => $result['summary'],
+                // Store activities as JSON for structured access
+                'activities_text' => json_encode($result['activities'], JSON_PRETTY_PRINT)
+            ]
+        );
+
+        return back()->with('success', 'Weekly summary generated successfully!');
     }
 }

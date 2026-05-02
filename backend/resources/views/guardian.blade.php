@@ -410,20 +410,19 @@
       <div class="bg-blue-50/50 px-10 py-6 border-b flex justify-between items-center">
         <h2 class="text-2xl font-black text-[#003366]">Add Student</h2>
         <button type="button" onclick="closeAddStudentModal()"
-                class="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-red-50 hover:text-red-500">
+          class="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-red-50 hover:text-red-500">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
       <!-- Form -->
-      <form id="enrollStudentForm" method="POST" action="" enctype="multipart/form-data"
+      <form id="enrollStudentForm" method="POST" enctype="multipart/form-data"
             class="p-10 text-left overflow-y-auto max-h-[70vh]">
         @csrf
 
         <!-- Hidden guardian_id injected dynamically -->
         <input type="hidden" name="guardian_id" id="guardianIdInput">
 
-        <!-- Student fields -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <input type="text" name="first_name" placeholder="First Name" required class="w-full px-4 py-3 border rounded-xl">
           <input type="text" name="middle_name" placeholder="Middle Name" class="w-full px-4 py-3 border rounded-xl">
@@ -439,12 +438,9 @@
           <input type="text" name="nationality" placeholder="Nationality" required value="Filipino" class="w-full px-4 py-3 border rounded-xl">
           <input type="text" name="religion" placeholder="Religion" required class="w-full px-4 py-3 border rounded-xl md:col-span-2">
 
-          <!-- ✅ Student Photo Required -->
-          <input type="file" name="photo" accept="image/*" required
-                 class="w-full px-4 py-3 border rounded-xl md:col-span-2">
+          <input type="file" name="photo" accept="image/*" required class="w-full px-4 py-3 border rounded-xl md:col-span-2">
         </div>
 
-        <!-- Footer -->
         <div class="flex justify-end gap-4 mt-12 pt-6 border-t">
           <button type="button" onclick="closeAddStudentModal()"
                   class="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-50">Discard</button>
@@ -454,6 +450,7 @@
           </button>
         </div>
       </form>
+
     </div>
   </div>
 </div>
@@ -528,10 +525,10 @@ function openViewGuardianModal(button) {
       li.className = "flex items-center gap-3";
       if (student.photo_path) {
         li.innerHTML = `<img src="/storage/${student.photo_path}" class="w-10 h-10 object-cover rounded-full border">
-                        <span>${student.full_name} (${student.gender}, ${student.date_of_birth.split('T')[0]})</span>`;
+                        <span>${student.full_name} (${student.gender})</span>`;
       } else {
         li.innerHTML = `<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">N/A</div>
-                        <span>${student.full_name} (${student.gender}, ${student.date_of_birth.split('T')[0]})</span>`;
+                        <span>${student.full_name} (${student.gender})</span>`;
       }
       studentsList.appendChild(li);
     });
@@ -541,6 +538,7 @@ function openViewGuardianModal(button) {
 
   document.getElementById('viewGuardianModal').classList.remove('hidden');
 }
+
 
 /* ===== EDIT GUARDIAN MODAL ===== */
 function closeEditGuardianModal() {
@@ -574,14 +572,87 @@ function openEditGuardianModal(button) {
 /* ===== ADD STUDENT MODAL ===== */
 function openAddStudentModal(guardianId) {
   const form = document.getElementById('enrollStudentForm');
-  document.getElementById('guardianIdInput').value = guardianId;
-  form.action = `/guardians/${guardianId}/students`;
-  document.getElementById('addStudentModal').classList.remove('hidden');
+  const guardianInput = document.getElementById('guardianIdInput');
+  const modal = document.getElementById('addStudentModal');
+
+  if (!form || !guardianInput || !modal) {
+    console.error('❌ Add Student modal elements not found in DOM.');
+    return;
+  }
+
+  guardianInput.value = guardianId;
+  form.action = `/guardians/${guardianId}/students`; // ✅ correct route
+  modal.classList.remove('hidden');
 }
+
 function closeAddStudentModal() {
-  document.getElementById('addStudentModal').classList.add('hidden');
-  document.getElementById('enrollStudentForm').reset();
+  const form = document.getElementById('enrollStudentForm');
+  const modal = document.getElementById('addStudentModal');
+
+  if (!form || !modal) {
+    console.error('❌ Add Student modal elements not found in DOM.');
+    return;
+  }
+
+  modal.classList.add('hidden');
+  form.reset();
+  document.getElementById('guardianIdInput').value = '';
 }
+
+/* ===== AJAX SUBMISSION FOR ADD STUDENT ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('enrollStudentForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const guardianId = document.getElementById('guardianIdInput').value;
+    const actionUrl = `/guardians/${guardianId}/students`;
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch(actionUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        closeAddStudentModal();
+
+        // ✅ Update guardian row instantly
+        const guardianRow = document.querySelector(`tr[data-id="${guardianId}"]`);
+        if (guardianRow) {
+          const studentsCell = guardianRow.querySelector('td:nth-child(2) ul');
+          if (studentsCell) {
+            const newLi = document.createElement('li');
+            newLi.classList.add('flex','items-center','gap-3');
+            newLi.innerHTML = `
+              ${formData.get('photo')
+                ? `<img src="${URL.createObjectURL(formData.get('photo'))}" class="w-10 h-10 object-cover rounded-full border">`
+                : `<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">N/A</div>`}
+              <span>${formData.get('first_name')} ${formData.get('last_name')} (${formData.get('gender')}, ${formData.get('date_of_birth')})</span>
+            `;
+            studentsCell.appendChild(newLi);
+          }
+        }
+
+        alert('✅ Student linked to guardian successfully!');
+      } else {
+        alert('❌ Failed to add student: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error(error);
+      alert('❌ An error occurred while adding the student.');
+    }
+  });
+});
 
 /* ===== TRASH STUDENT MODAL ===== */
 function openTrashStudentModal(guardianId, guardianName) {
