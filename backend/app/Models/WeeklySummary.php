@@ -27,47 +27,32 @@ class WeeklySummary extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * A weekly summary belongs to a student.
-     */
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class, 'student_id');
     }
 
-    /**
-     * A weekly summary belongs to a week.
-     */
     public function week(): BelongsTo
     {
         return $this->belongsTo(Week::class, 'week_id');
     }
 
-    /**
-     * Soft delete (move to trash).
-     */
     public function trash(): void
     {
         $this->trashed_at = now();
         $this->save();
     }
 
-    /**
-     * Restore from trash.
-     */
     public function restoreFromTrash(): void
     {
         $this->trashed_at = null;
         $this->save();
     }
 
-    /**
-     * Hard delete (permanent removal).
-     */
     public function hardDelete(): void
     {
         $this->deleted_at = now();
         $this->save();
-        parent::delete(); // permanently remove from DB
+        parent::delete();
     }
 }

@@ -8,19 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Base auth table (hard delete only)
+
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['teacher', 'guardian']);
-            $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();
         });
 
-        // 2. Teacher profile (hard delete only)
         Schema::create('teachers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users')->onDelete('cascade');
@@ -32,7 +30,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 3. Guardian profile (soft + hard delete)
         Schema::create('guardians', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users')->onDelete('cascade');
@@ -47,7 +44,6 @@ return new class extends Migration
             $table->timestamp('deleted_at')->nullable();   // permanent delete marker
         });
 
-        // 4. Students profile (soft + hard delete)
         Schema::create('students', function (Blueprint $table) {
             $table->id();
             $table->foreignId('guardian_id')->constrained('guardians')->onDelete('cascade');
@@ -66,7 +62,6 @@ return new class extends Migration
             $table->index(['last_name', 'first_name']);
         });
 
-        // 5. Weeks table (hard delete only)
         Schema::create('weeks', function (Blueprint $table) {
             $table->id();
             $table->unsignedTinyInteger('week_number')->unique();
@@ -74,7 +69,6 @@ return new class extends Migration
             $table->date('end_date');
         });
 
-        // 6. Progress records (soft + hard delete)
         Schema::create('progress_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
@@ -94,13 +88,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('week_id')->constrained('weeks')->onDelete('cascade');
-
-            // Narrative summary text
             $table->text('summary_text');
-
-            // Recommendation activities (newline-separated list)
             $table->text('activities_text')->nullable();
-
             $table->timestamps();
             $table->timestamp('trashed_at')->nullable();
             $table->timestamp('deleted_at')->nullable();
@@ -108,14 +97,12 @@ return new class extends Migration
             $table->unique(['student_id', 'week_id'], 'unique_weekly_summary');
         });
 
-        // 8. Password reset tokens
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
-        // 9. System Logs (audit trail)
         Schema::create('logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');

@@ -19,7 +19,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role',
-        'is_active',
     ];
 
     protected $hidden = [
@@ -32,19 +31,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active' => 'boolean',
     ];
 
-    /**
-     * Get the teacher profile associated with the user.
-     * Relationship: One User -> One Teacher
-     */
     public function teacher(): HasOne
     {
         return $this->hasOne(Teacher::class, 'user_id');
     }
 
-    /**
-     * Get the guardian profile associated with the user.
-     * Relationship: One User -> One Guardian
-     */
     public function guardian(): HasOne
     {
         return $this->hasOne(Guardian::class, 'user_id');

@@ -29,9 +29,6 @@ class ProgressRecord extends Model
         'updated_at',
     ];
 
-    /**
-     * Map numeric ratings to labels.
-     */
     public const RATINGS = [
         0 => 'No Classes',
         1 => 'Poor',
@@ -55,31 +52,22 @@ class ProgressRecord extends Model
         return self::RATINGS[$this->rating_level] ?? 'Unknown';
     }
 
-    /**
-     * Soft delete (move to trash).
-     */
     public function trash(): void
     {
         $this->trashed_at = now();
         $this->save();
     }
 
-    /**
-     * Restore from trash.
-     */
     public function restoreFromTrash(): void
     {
         $this->trashed_at = null;
         $this->save();
     }
 
-    /**
-     * Hard delete (permanent removal).
-     */
     public function hardDelete(): void
     {
         $this->deleted_at = now();
         $this->save();
-        parent::delete(); 
+        parent::delete();
     }
 }

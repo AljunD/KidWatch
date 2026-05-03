@@ -25,11 +25,6 @@ class Guardian extends Model
         'deleted_at',
     ];
 
-    /**
-     * ✅ Use casts instead of $dates for Laravel 11+
-     * This ensures trashed_at, deleted_at, created_at, updated_at
-     * are Carbon instances automatically.
-     */
     protected $casts = [
         'trashed_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -37,55 +32,42 @@ class Guardian extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the user account associated with the guardian.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the students associated with the guardian.
-     */
     public function students(): HasMany
     {
         return $this->hasMany(Student::class, 'guardian_id');
     }
 
-    /**
-     * Helper to get the full name of the guardian.
-     */
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
     }
 
-    /**
-     * Soft delete (move to trash).
-     */
     public function trash(): void
     {
         $this->trashed_at = now();
         $this->save();
+
+        if ($this->user) {
+            $this->user->email = "deleted_guardian_{$this->id}@example.com";
+            $this->user->save();
+        }
     }
 
-    /**
-     * Restore from trash.
-     */
     public function restoreFromTrash(): void
     {
         $this->trashed_at = null;
         $this->save();
     }
 
-    /**
-     * Hard delete (permanent removal).
-     */
     public function hardDelete(): void
     {
         $this->deleted_at = now();
         $this->save();
-        parent::delete(); 
+        $this->delete();
     }
 }
