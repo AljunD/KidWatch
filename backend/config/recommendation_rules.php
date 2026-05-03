@@ -2,6 +2,7 @@
 // config/recommendation_rules.php
 
 return [
+
     'math' => [
         0 => [
             'activity'     => "Math: No classes attended. Encourage attendance and catch-up worksheets.",
@@ -11,7 +12,7 @@ return [
             'student_tip'  => "Try to attend every math class — consistency builds confidence.",
         ],
         1 => [
-            'activity'     => "Math: Poor rating. Assign daily drills, tutoring, and multiplication practice.",
+            'activity'     => "Math: Needs Attention. Assign daily drills, tutoring, and multiplication practice.",
             'category'     => 'remedial',
             'priority'     => 'high',
             'guardian_tip' => "Arrange short daily review sessions and consider a tutor.",
@@ -49,7 +50,7 @@ return [
             'student_tip'  => "Attend every science class to avoid missing experiments.",
         ],
         1 => [
-            'activity'     => "Science: Poor rating. Assign review of lab notes and guided experiments.",
+            'activity'     => "Science: Needs Attention. Assign review of lab notes and guided experiments.",
             'category'     => 'remedial',
             'priority'     => 'high',
             'guardian_tip' => "Review lab notes together and supervise simple experiments.",
@@ -87,7 +88,7 @@ return [
             'student_tip'  => "Attend classes and read short stories daily.",
         ],
         1 => [
-            'activity'     => "English: Poor rating. Assign daily reading aloud and comprehension drills.",
+            'activity'     => "English: Needs Attention. Assign daily reading aloud and comprehension drills.",
             'category'     => 'remedial',
             'priority'     => 'high',
             'guardian_tip' => "Listen to the student read aloud and correct pronunciation.",
@@ -125,7 +126,7 @@ return [
             'student_tip'  => "Attend Filipino classes and engage with cultural texts.",
         ],
         1 => [
-            'activity'     => "Filipino: Poor rating. Assign vocabulary flashcards and conversational practice.",
+            'activity'     => "Filipino: Needs Attention. Assign vocabulary flashcards and conversational practice.",
             'category'     => 'remedial',
             'priority'     => 'high',
             'guardian_tip' => "Practice conversational Filipino at home.",

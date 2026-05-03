@@ -2,7 +2,6 @@
     <x-slot:title>KidWatch | System Logs</x-slot>
 
     <div class="max-w-6xl mx-auto mb-6">
-        <!-- ✅ Flash Messages -->
         @if(session('success'))
             <div class="mb-4 p-4 rounded-lg bg-green-100 text-green-800 border border-green-300">
                 <i class="fas fa-check-circle"></i> {{ session('success') }}
@@ -35,7 +34,6 @@
                     </div>
                 </div>
 
-                <!-- Optional details -->
                 @if($log->details)
                     <details class="mt-3">
                         <summary class="cursor-pointer text-blue-600 font-medium flex items-center gap-1">
@@ -51,7 +49,6 @@
             <p class="text-gray-400 italic">No logs available</p>
         @endforelse
 
-        <!-- Pagination -->
         <div class="mt-6">
             {{ $logs->links() }}
         </div>

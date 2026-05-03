@@ -16,20 +16,17 @@
 <body class="flex items-center justify-center min-h-screen p-6">
 
     <div class="w-full max-w-md">
-        <!-- Header -->
         <div class="text-center mb-10">
             <h2 class="text-4xl font-extrabold text-[#003366] uppercase tracking-tight">KidWatch</h2>
             <p class="mt-2 text-sm text-gray-500">Email Verification Required</p>
         </div>
 
-        <!-- Card -->
         <div class="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-gray-100 text-center">
             <h3 class="text-xl font-semibold text-[#003366] mb-4">Verify Your Email Address</h3>
             <p class="text-gray-600 mb-6">
                 We’ve sent a verification link to your email. Please check your inbox and click the link to activate your account.
             </p>
 
-            <!-- Resend Button -->
             <form method="POST" action="{{ route('verification.resend') }}">
                 @csrf
                 <button type="submit"
@@ -38,7 +35,6 @@
                 </button>
             </form>
 
-            <!-- Success/Error Messages -->
             @if (session('resent'))
                 <div class="mt-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm">
                     A new verification link has been sent to your email address.
@@ -46,7 +42,6 @@
             @endif
         </div>
 
-        <!-- Footer -->
         <p class="text-center mt-10 text-xs text-gray-400 font-medium">
             © {{ date('Y') }} KidWatch System — Secure Access Only
         </p>

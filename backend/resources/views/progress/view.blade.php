@@ -10,7 +10,6 @@
             - Week {{ $week->week_number }}
         </h1>
 
-        {{-- Back Button --}}
         <div class="mb-6">
             <a href="{{ route('progress') }}"
                class="inline-flex items-center gap-2 bg-gray-200 text-[#003366] px-5 py-2 rounded-lg font-bold hover:bg-gray-300 transition">
@@ -23,7 +22,6 @@
             {{ \Carbon\Carbon::parse($week->end_date)->format('M d, Y') }}
         </p>
 
-        {{-- Progress Table --}}
         <div class="overflow-hidden border border-slate-200 rounded-xl shadow-sm">
             <table class="w-full">
                 <thead>
@@ -65,7 +63,6 @@
             </table>
         </div>
 
-        {{-- Generated Recommendations --}}
         @php
             $summary = $week->weeklySummaries->firstWhere('student_id', $student->id);
             $recommendations = $summary ? explode("\n", $summary->summary_text) : [];

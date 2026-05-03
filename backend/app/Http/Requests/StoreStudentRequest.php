@@ -10,7 +10,7 @@ class StoreStudentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // RBAC handled by middleware/policy
+        return true; 
     }
 
     public function rules(): array

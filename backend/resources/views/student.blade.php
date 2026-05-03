@@ -1,4 +1,3 @@
-{{-- resources/views/student.blade.php --}}
 <x-layout>
     <x-slot:title>KidWatch | Students</x-slot>
 
@@ -115,7 +114,6 @@
                 </table>
             </div>
 
-            <!-- Pagination Footer -->
             @if ($students->hasPages())
                 <div class="px-6 py-4 border-t bg-gray-50 flex items-center justify-between text-sm text-gray-600">
                     <div>Showing {{ $students->firstItem() }} to {{ $students->lastItem() }} of {{ $students->total() }} students</div>
@@ -126,11 +124,9 @@
             @endif
         </div>
     </div>
-    <!-- ====================== VIEW PROFILE MODAL ====================== -->
     <div id="viewStudentModal" class="hidden fixed inset-0 z-[100] overflow-hidden">
         <div class="flex items-center justify-center min-h-screen p-4 text-center">
             <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl overflow-hidden">
-                <!-- Header -->
                 <div class="bg-blue-50/50 px-10 py-6 border-b border-gray-100 flex justify-between items-center">
                     <div>
                         <h2 class="text-2xl font-black text-[#003366]" id="viewModalTitle">Student Profile</h2>
@@ -142,9 +138,7 @@
                     </button>
                 </div>
 
-                <!-- Body -->
                 <div class="p-10 text-left max-h-[70vh] overflow-y-auto space-y-10">
-                    <!-- Student Photo -->
                     <div class="flex justify-center mb-6">
                         <img id="viewStudentPhoto"
                             src="{{ asset('images/default-avatar.png') }}"
@@ -152,7 +146,6 @@
                             class="w-32 h-32 rounded-full object-cover border-4 border-blue-200 shadow-md">
                     </div>
 
-                    <!-- Student Profile -->
                     <section>
                         <div class="flex items-center gap-3 mb-6">
                             <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</div>
@@ -168,19 +161,17 @@
                         </div>
                     </section>
 
-                    <!-- Guardian Section -->
                     <section>
                         <div class="flex items-center gap-3 mb-6">
                             <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">2</div>
                             <h3 class="text-lg font-bold text-gray-800">Guardian</h3>
                         </div>
                         <div id="viewGuardiansList" class="space-y-4">
-                            <!-- Populated by JS -->
+
                         </div>
                     </section>
                 </div>
 
-                <!-- Footer -->
                 <div class="px-10 py-6 border-t flex justify-end">
                     <button onclick="closeViewModal()"
                             class="px-8 py-3 rounded-xl font-bold text-[#003366] hover:bg-gray-100">
@@ -190,11 +181,10 @@
             </div>
         </div>
     </div>
-    <!-- ====================== EDIT STUDENT MODAL ====================== -->
+
 <div id="editStudentModal" class="hidden fixed inset-0 z-[100] overflow-hidden">
     <div class="flex items-center justify-center min-h-screen p-4 text-center">
         <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all">
-            <!-- Header -->
             <div class="bg-orange-50/50 px-10 py-6 border-b border-gray-100 flex justify-between items-center">
                 <div>
                     <h2 class="text-2xl font-black text-[#003366]" id="editModalTitle">Edit Student Profile</h2>
@@ -206,13 +196,11 @@
                 </button>
             </div>
 
-            <!-- Form -->
             <form id="editStudentForm" method="POST" class="p-10 text-left overflow-y-auto max-h-[70vh]">
                 @csrf
                 <input type="hidden" name="_method" value="PUT" id="editMethodInput">
 
                 <div class="space-y-10">
-                    <!-- Student Profile -->
                     <section>
                         <div class="flex items-center gap-3 mb-6">
                             <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</div>
@@ -260,7 +248,6 @@
                     </section>
                 </div>
 
-                <!-- Footer -->
                 <div class="flex items-center justify-end gap-4 mt-12 pt-6 border-t border-gray-100">
                     <button type="button" onclick="closeEditModal()" class="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-50 transition-colors">Cancel</button>
                     <button type="submit" id="editSubmitBtn" class="bg-orange-600 text-white px-10 py-3 rounded-xl font-bold shadow-xl hover:bg-orange-700 transition-all flex items-center">
@@ -273,7 +260,6 @@
 </div>
 
 <script>
-// ====================== SHARED HELPERS ======================
 
 function closeModal() {
     const modal = document.getElementById('addStudentModal');
@@ -308,8 +294,6 @@ function showToast(message, type = 'success') {
     }, 2800);
 }
 
-// ====================== HANDLE ALL BUTTON CLICKS ======================
-
 function handleStudentAction(action, buttonElement) {
     const row = buttonElement.closest('tr');
     const studentId = row.dataset.id;
@@ -324,8 +308,6 @@ function handleStudentAction(action, buttonElement) {
         document.getElementById('editStudentModal').classList.remove('hidden');
     }
 }
-
-// ====================== POPULATE VIEW MODAL ======================
 
 function calculateAge(dob) {
     const birthDate = new Date(dob);
@@ -352,13 +334,11 @@ function populateViewModal(student, guardian, id) {
     document.getElementById('viewReligion').textContent = student.religion;
     document.getElementById('viewAge').textContent = `${calculateAge(student.date_of_birth)} years old`;
 
-    // ✅ Student photo
     const photoElement = document.getElementById('viewStudentPhoto');
     if (photoElement) {
         photoElement.src = student.photo_path ? `/storage/${student.photo_path}` : '/images/default-avatar.png';
     }
 
-    // Guardian info
     const guardiansHTML = guardian.first_name
         ? `
         <div class="flex items-center gap-4 p-4 bg-emerald-50 rounded-2xl">
@@ -373,8 +353,6 @@ function populateViewModal(student, guardian, id) {
     document.getElementById('viewGuardiansList').innerHTML = guardiansHTML;
 }
 
-// ====================== POPULATE EDIT MODAL ======================
-
 function formatDateForInput(dob) {
     if (!dob) return '';
     const date = new Date(dob);
@@ -385,7 +363,6 @@ function populateEditModal(student, guardian, id) {
     const form = document.getElementById('editStudentForm');
     form.action = `/students/${id}`;
 
-    // Student fields
     document.getElementById('edit_student_first_name').value = student.first_name || '';
     document.getElementById('edit_student_middle_name').value = student.middle_name || '';
     document.getElementById('edit_student_last_name').value = student.last_name || '';
@@ -394,8 +371,6 @@ function populateEditModal(student, guardian, id) {
     document.getElementById('edit_student_nationality').value = student.nationality || 'Filipino';
     document.getElementById('edit_student_religion').value = student.religion || 'Catholic';
 }
-
-// ====================== SEARCH (real-time client-side filter) ======================
 
 function initSearch() {
     const searchInput = document.getElementById('studentSearch');
@@ -416,7 +391,6 @@ function initSearch() {
             }
         });
 
-        // Show empty state if nothing matches
         const tbody = document.getElementById('studentTableBody');
         const existingEmpty = document.getElementById('emptyStateRow');
         if (visibleCount === 0 && term !== '') {
@@ -439,8 +413,6 @@ function initSearch() {
     });
 }
 
-// ====================== EDIT FORM (AJAX PUT via _method) ======================
-
 function initEditForm() {
     const form = document.getElementById('editStudentForm');
     if (!form) return;
@@ -455,12 +427,9 @@ function initEditForm() {
 
         const formData = new FormData(form);
 
-        // ✅ Guardian section removed, so no guardian_contact_number handling
-        // (delete this block entirely)
-
         try {
             const response = await fetch(form.action, {
-                method: 'POST', // send as POST with _method=PUT
+                method: 'POST',
                 body: formData,
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -470,10 +439,8 @@ function initEditForm() {
 
             let data;
             try {
-                // Try to parse JSON
                 data = await response.json();
             } catch (err) {
-                // Fallback: if not JSON, assume success if response.ok
                 data = { success: response.ok };
             }
 
@@ -493,12 +460,11 @@ function initEditForm() {
     });
 }
 
-// ====================== INIT EVERYTHING ======================
 document.addEventListener('DOMContentLoaded', function () {
     initSearch();
     initEditForm();
 
-    console.log('%c✅ Student page scripts initialized (Search • Edit)',
+    console.log('%c Student page scripts initialized (Search • Edit)',
         'color:#007bff;font-weight:bold;font-size:13px');
 });
 </script>

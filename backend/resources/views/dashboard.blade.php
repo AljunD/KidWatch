@@ -1,7 +1,5 @@
-{{-- resources/views/dashboard.blade.php --}}
 <x-layout>
     <div class="space-y-10">
-        {{-- Page Header + Greeting --}}
         @php
             $user = Auth::user();
             $role = $user->role;
@@ -41,9 +39,7 @@
             </div>
         </div>
 
-        {{-- Stats Cards --}}
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {{-- Card 1: Students / Children --}}
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all">
                 <div class="flex justify-between items-start">
                     <div>
@@ -68,7 +64,6 @@
                 </div>
             </div>
 
-            {{-- Card 2: Weeks Tracked --}}
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all">
                 <div class="flex justify-between items-start">
                     <div>
@@ -87,7 +82,6 @@
                 </div>
             </div>
 
-            {{-- Card 3: Average Rating --}}
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all">
                 <div class="flex justify-between items-start">
                     <div>
@@ -123,7 +117,6 @@
 
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
 
-            {{-- LEFT COLUMN: Recent Progress Log --}}
             <div class="xl:col-span-7 bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-2xl font-semibold text-[#003366]">Recent Progress</h2>
@@ -147,7 +140,6 @@
                         <tbody class="text-sm divide-y">
                             @forelse($progressRecords as $record)
                                 @php
-                                    // Map rating_level to label and color
                                     $labels = [
                                         0 => ['label' => 'No Classes', 'color' => 'gray'],
                                         1 => ['label' => 'Poor', 'color' => 'red'],
@@ -188,7 +180,6 @@
             </div>
         </div>
 
-            {{-- RIGHT COLUMN: Weekly Summary + Recommendations --}}
             <div class="xl:col-span-5 space-y-8">
 
                 {{-- Weekly Summary Card --}}
@@ -203,7 +194,6 @@
                     </div>
                 </div>
 
-            {{-- Performance by Subject Chart --}}
             <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-2xl font-semibold text-[#003366]">Subject Performance (Last 4 Weeks)</h2>
@@ -221,7 +211,6 @@
                 </div>
             </div>
 
-    {{-- Chart.js --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {

@@ -26,13 +26,13 @@ class Student extends Model
         'religion',
         'photo_path',
         'trashed_at',
-        'deleted_at',
     ];
 
     protected $casts = [
         'date_of_birth' => 'date',
         'trashed_at'    => 'datetime',
-        'deleted_at'    => 'datetime',
+        'created_at'    => 'datetime',
+        'updated_at'    => 'datetime',
     ];
 
     public function getFullNameAttribute(): string
@@ -86,8 +86,6 @@ class Student extends Model
 
     public function hardDelete(): void
     {
-        $this->deleted_at = now();
-        $this->save();
-        parent::delete();
+        $this->delete();
     }
 }

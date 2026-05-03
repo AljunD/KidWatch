@@ -8,48 +8,50 @@ use Illuminate\Support\Facades\Config;
 
 class RecommendationEngine
 {
-    /**
-     * Generate structured recommendation activities based on subject ratings.
-     *
-     * Each activity includes:
-     * - activity (string)
-     * - category (string)
-     * - priority (string: high/medium/low)
-     * - guardian_tip (string)
-     * - student_tip (string)
-     */
     public function getActivities(array $ratings): array
     {
-        $rules = Config::get('recommendation_rules');
+        $rules      = Config::get('recommendation_rules');
         $activities = [];
 
         foreach ($ratings as $subject => $rating) {
             $subjectKey = strtolower($subject);
 
             if (isset($rules[$subjectKey][$rating])) {
-                // Return the full structured rule object
+                $rule = $rules[$subjectKey][$rating];
+
                 $activities[] = [
                     'subject'      => ucfirst($subjectKey),
                     'rating'       => $rating,
-                    'activity'     => $rules[$subjectKey][$rating]['activity'] ?? '',
-                    'category'     => $rules[$subjectKey][$rating]['category'] ?? 'general',
-                    'priority'     => $rules[$subjectKey][$rating]['priority'] ?? 'medium',
-                    'guardian_tip' => $rules[$subjectKey][$rating]['guardian_tip'] ?? null,
-                    'student_tip'  => $rules[$subjectKey][$rating]['student_tip'] ?? null,
+                    'activity'     => $rule['activity']     ?? '',
+                    'category'     => $rule['category']     ?? 'general',
+                    'priority'     => $rule['priority']     ?? 'medium',
+                    'guardian_tip' => $rule['guardian_tip'] ?? null,
+                    'student_tip'  => $rule['student_tip']  ?? null,
                 ];
             }
         }
 
-        // Extra global rule: parent-teacher conference if any Poor ratings persist
         if (in_array(1, $ratings, true)) {
             $activities[] = [
                 'subject'      => 'General',
                 'rating'       => 1,
-                'activity'     => "Organize a parent-teacher conference if any Poor ratings persist.",
+                'activity'     => "Organize a parent-teacher conference to address persistent Needs Attention ratings.",
                 'category'     => 'intervention',
                 'priority'     => 'high',
-                'guardian_tip' => "Coordinate with teachers to create a support plan.",
+                'guardian_tip' => "Coordinate with teachers to create a targeted support plan.",
                 'student_tip'  => "Be open to feedback and commit to improvement strategies.",
+            ];
+        }
+
+        if (!empty($ratings) && min($ratings) >= 3) {
+            $activities[] = [
+                'subject'      => 'General',
+                'rating'       => max($ratings),
+                'activity'     => "Encourage enrichment activities such as clubs, competitions, or peer tutoring.",
+                'category'     => 'enrichment',
+                'priority'     => 'low',
+                'guardian_tip' => "Support participation in academic clubs or competitions.",
+                'student_tip'  => "Challenge yourself with enrichment tasks and help peers.",
             ];
         }
 

@@ -22,12 +22,10 @@ class Guardian extends Model
         'contact_number',
         'address',
         'trashed_at',
-        'deleted_at',
     ];
 
     protected $casts = [
         'trashed_at' => 'datetime',
-        'deleted_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -53,7 +51,7 @@ class Guardian extends Model
         $this->save();
 
         if ($this->user) {
-            $this->user->email = "deleted_guardian_{$this->id}@example.com";
+            $this->user->email = "trashed_guardian_{$this->id}@example.com";
             $this->user->save();
         }
     }
@@ -66,8 +64,10 @@ class Guardian extends Model
 
     public function hardDelete(): void
     {
-        $this->deleted_at = now();
-        $this->save();
+        if ($this->user) {
+            $this->user->delete();
+        }
+
         $this->delete();
     }
 }

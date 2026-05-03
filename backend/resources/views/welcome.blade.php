@@ -6,20 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>KidWatch | Secure Login</title>
 
-    <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self';
-                   script-src 'self' https://cdn.tailwindcss.com https://unpkg.com;
-                   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
-                   font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com;
-                   img-src 'self' data:;
-                   object-src 'none';
-                   base-uri 'self';
-                   form-action 'self';
-                   frame-ancestors 'none';
-                   upgrade-insecure-requests;">
-
-    <!-- Tailwind & Alpine -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -37,13 +23,11 @@
 <body class="flex items-center justify-center min-h-screen p-6">
 
     <div class="w-full max-w-md" x-data="{ showPassword: false }">
-        <!-- Logo / Title -->
         <div class="text-center mb-10">
             <h2 class="text-4xl font-extrabold text-[#003366] uppercase tracking-tight">KidWatch</h2>
             <p class="mt-2 text-sm text-gray-500">Secure Access Portal</p>
         </div>
 
-        <!-- Login Card -->
         <div class="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-gray-100">
 
             <!-- Header -->
@@ -52,14 +36,12 @@
                 <p class="text-gray-500 text-sm">Sign in with your credentials</p>
             </div>
 
-            <!-- Success Messages -->
             @if (session('status'))
                 <div class="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm">
                     <i class="fas fa-check-circle"></i> {{ session('status') }}
                 </div>
             @endif
 
-            <!-- Error Messages -->
             @if ($errors->any())
                 <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
                     <ul class="space-y-1">
@@ -72,11 +54,9 @@
                 </div>
             @endif
 
-            <!-- Login Form -->
             <form method="POST" action="{{ route('login') }}" class="space-y-6" novalidate>
                 @csrf
 
-                <!-- Email -->
                 <div>
                     <label for="email" class="block text-xs font-semibold uppercase tracking-wide text-[#003366] mb-2">Email Address</label>
                     <div class="relative">
@@ -90,7 +70,6 @@
                     </div>
                 </div>
 
-                <!-- Password -->
                 <div>
                     <label for="password" class="block text-xs font-semibold uppercase tracking-wide text-[#003366] mb-2">Password</label>
                     <div class="relative">
@@ -104,7 +83,16 @@
                     </div>
                 </div>
 
-                <!-- Submit -->
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center gap-2 text-gray-600">
+                        <input type="checkbox" name="remember" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span>Remember Me</span>
+                    </label>
+                    <a href="{{ route('password.request') }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                        Forgot your password?
+                    </a>
+                </div>
+
                 <div class="pt-4">
                     <button type="submit"
                         class="w-full bg-[#003e6d] hover:bg-[#002d50] text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg active:scale-[0.98] flex items-center justify-center space-x-2">
@@ -112,17 +100,9 @@
                         <i class="fas fa-arrow-right text-sm opacity-70"></i>
                     </button>
                 </div>
-                <!-- Forgot Password -->
-                <div class="mt-4 text-center">
-                    <a href="{{ route('password.request') }}"
-                    class="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                    Forgot your password?
-                    </a>
-                </div>
             </form>
         </div>
 
-        <!-- Footer -->
         <p class="text-center mt-10 text-xs text-gray-400 font-medium">
             Authorized Personnel Only &mdash; © {{ date('Y') }} KidWatch System
         </p>

@@ -8,7 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('email')->unique();
@@ -40,8 +39,7 @@ return new class extends Migration
             $table->string('contact_number', 20);
             $table->text('address');
             $table->timestamps();
-            $table->timestamp('trashed_at')->nullable();   // soft delete marker
-            $table->timestamp('deleted_at')->nullable();   // permanent delete marker
+            $table->timestamp('trashed_at')->nullable();  
         });
 
         Schema::create('students', function (Blueprint $table) {
@@ -57,7 +55,6 @@ return new class extends Migration
             $table->string('photo_path')->nullable();
             $table->timestamps();
             $table->timestamp('trashed_at')->nullable();
-            $table->timestamp('deleted_at')->nullable();
 
             $table->index(['last_name', 'first_name']);
         });
@@ -78,7 +75,6 @@ return new class extends Migration
             $table->text('remarks')->nullable();
             $table->timestamps();
             $table->timestamp('trashed_at')->nullable();
-            $table->timestamp('deleted_at')->nullable();
 
             $table->index(['student_id', 'week_id'], 'idx_student_week_perf');
             $table->unique(['student_id', 'week_id', 'subject'], 'unique_progress_entry');
@@ -92,7 +88,6 @@ return new class extends Migration
             $table->text('activities_text')->nullable();
             $table->timestamps();
             $table->timestamp('trashed_at')->nullable();
-            $table->timestamp('deleted_at')->nullable();
 
             $table->unique(['student_id', 'week_id'], 'unique_weekly_summary');
         });
@@ -106,8 +101,8 @@ return new class extends Migration
         Schema::create('logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->string('action'); // created, updated, trashed, restored, deleted
-            $table->string('entity_type'); // student, guardian, progress, summary
+            $table->string('action');
+            $table->string('entity_type');
             $table->unsignedBigInteger('entity_id')->nullable();
             $table->text('details')->nullable();
             $table->timestamps();

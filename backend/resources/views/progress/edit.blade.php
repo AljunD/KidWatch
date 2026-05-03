@@ -9,7 +9,6 @@
             </span>
         </h1>
 
-        {{-- Back Button --}}
         <div class="mb-6">
             <a href="{{ route('progress') }}"
                class="inline-flex items-center gap-2 bg-gray-200 text-[#003366] px-5 py-2 rounded-lg font-bold hover:bg-gray-300 transition">
@@ -17,7 +16,6 @@
             </a>
         </div>
 
-        {{-- Show validation errors --}}
         @if ($errors->any())
             <div class="mb-6 px-6 py-4 rounded-xl bg-red-100 text-red-800 font-semibold shadow">
                 <ul class="list-disc pl-5">
@@ -28,7 +26,6 @@
             </div>
         @endif
 
-        {{-- Show success message --}}
         @if(session('success'))
             <div class="mb-6 px-6 py-4 rounded-xl bg-green-100 text-green-800 font-semibold shadow">
                 {{ session('success') }}
@@ -39,7 +36,6 @@
             @csrf
             @method('PUT')
 
-            {{-- Subject Dropdown --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Subject</label>
                 <select id="subject" name="subject" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('subject') border-red-500 @enderror" required>
@@ -65,7 +61,6 @@
                 @enderror
             </div>
 
-            {{-- Rating Level --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label for="rating_level" class="block text-sm font-bold text-[#003366] mb-2">Rating Level</label>
                 <select name="rating_level" id="rating_level" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('rating_level') border-red-500 @enderror" required>
@@ -85,7 +80,6 @@
                 @enderror
             </div>
 
-            {{-- Remarks --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label for="remarks" class="block text-sm font-bold text-[#003366] mb-2">Remarks</label>
                 <textarea name="remarks" id="remarks" rows="3"
@@ -101,7 +95,6 @@
                 @enderror
             </div>
 
-            {{-- Action Buttons --}}
             <div class="flex justify-center items-center mt-8">
                 <button type="submit"
                         class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition">
@@ -112,7 +105,6 @@
     </div>
 </x-layout>
 
-{{-- Script to update form action, rating and remarks dynamically --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const subjectSelect = document.getElementById('subject');
@@ -128,12 +120,10 @@
             const rating = selectedOption.getAttribute('data-rating');
             const remarks = selectedOption.getAttribute('data-remarks');
 
-            // Update form action dynamically to target the correct record
             if (recordId) {
                 form.action = `/progress/${recordId}`;
             }
 
-            // Update rating
             if (rating) {
                 ratingSelect.value = rating;
                 currentRatingText.textContent = ratingSelect.options[ratingSelect.selectedIndex].text;
@@ -142,7 +132,6 @@
                 currentRatingText.textContent = 'No Classes';
             }
 
-            // Update remarks
             remarksTextarea.value = remarks || '';
             currentRemarksText.textContent = remarks || 'No remarks yet';
         });

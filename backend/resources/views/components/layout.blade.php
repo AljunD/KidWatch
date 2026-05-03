@@ -5,17 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
     <title>{{ $title ?? 'KidWatch' }}</title>
-
-    {{-- Tailwind CSS (Vite / compiled in production - you already have this in your app) --}}
     <script src="https://cdn.tailwindcss.com"></script>
-
-    {{-- Font Awesome 6 (matches your existing pages) --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
           integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
           crossorigin="anonymous" referrerpolicy="no-referrer" />
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap');
 
@@ -57,14 +51,11 @@
     @endphp
 
     <div class="flex min-h-screen bg-slate-100">
-
-        {{-- SIDEBAR NAVIGATION --}}
         <aside id="sidebar"
                class="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl flex flex-col 
                       -translate-x-full lg:translate-x-0 lg:static lg:w-64 lg:shadow-none
                       transition-transform duration-300 ease-in-out border-r border-slate-200">
 
-            {{-- Logo Header --}}
             <div class="px-6 py-8 border-b border-slate-100 flex items-center gap-3">
                 <div class="w-10 h-10 bg-[#003366] text-white rounded-3xl flex items-center justify-center text-3xl shadow-inner flex-shrink-0">
                     📖
@@ -75,10 +66,8 @@
                 </div>
             </div>
 
-            {{-- Navigation Links --}}
             <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
 
-                {{-- Dashboard --}}
                 <a href="{{ route('dashboard') }}"
                    class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
                           {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -86,7 +75,6 @@
                     <span>Dashboard</span>
                 </a>
 
-                {{-- Guardians --}}
                 <a href="{{ route('guardians.index') }}"
                 class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
                         {{ request()->routeIs('guardians*') ? 'active' : '' }}">
@@ -94,7 +82,6 @@
                     <span>Guardians</span>
                 </a>
 
-                {{-- Students (for student.blade.php) --}}
                 <a href="{{ route('students') ?? route('students.index') }}"
                    class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
                           {{ request()->routeIs('students*') ? 'active' : '' }}">
@@ -102,7 +89,6 @@
                     <span>Students</span>
                 </a>
 
-                {{-- Progress --}}
                 <a href="{{ route('progress') }}"
                    class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
                           {{ request()->routeIs('progress') ? 'active' : '' }}">
@@ -110,7 +96,6 @@
                     <span>Progress</span>
                 </a>
 
-                {{-- System Logs --}}
                 <a href="{{ route('logs.index') }}"
                 class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
                         {{ request()->routeIs('logs.index') ? 'active' : '' }}">
@@ -118,17 +103,14 @@
                     <span>System Logs</span>
                 </a>
 
-                {{-- Divider --}}
                 <div class="h-px bg-slate-100 my-6 mx-5"></div>
             </nav>
-            {{-- Trash (Student Records) --}}
             <a href="{{ route('guardians.trash') }}"
             class="sidebar-link flex items-center gap-3 px-5 py-4 text-slate-700 hover:bg-slate-100 rounded-3xl font-semibold
             {{ request()->routeIs('guardians.trash') ? 'active' : '' }}">
             <i class="fas fa-trash-alt w-5 h-5 text-red-500"></i>
             <span>Trash</span>
             </a>
-            {{-- Sidebar Footer - User Info --}}
             <div class="p-6 border-t border-slate-100 mt-auto">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 bg-[#003366] text-white rounded-3xl flex items-center justify-center font-black text-lg shadow-inner">
@@ -141,7 +123,6 @@
                         </p>
                     </div>
 
-                    {{-- Logout --}}
                     <form method="POST" action="{{ route('logout') }}" class="inline">
                         @csrf
                         <button type="submit"
@@ -154,13 +135,10 @@
             </div>
         </aside>
 
-        {{-- MAIN CONTENT AREA --}}
         <div class="flex-1 flex flex-col min-w-0 lg:ml-0">
 
-            {{-- MOBILE TOP BAR (Hamburger + Logo + User) --}}
             <div class="lg:hidden bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
 
-                {{-- Hamburger + Logo --}}
                 <div class="flex items-center gap-4">
                     <button onclick="toggleSidebar()"
                             class="text-[#003366] p-2 -ml-2 hover:bg-slate-100 rounded-3xl">
@@ -175,7 +153,6 @@
                     </div>
                 </div>
 
-                {{-- Mobile User Info --}}
                 <div class="flex items-center gap-3">
                     <div class="text-right">
                         <p class="text-sm font-semibold text-[#003366]">{{ $displayName ?: 'Hi there' }}</p>
@@ -186,20 +163,15 @@
                     </div>
                 </div>
             </div>
-
-            {{-- PAGE CONTENT SLOT --}}
             <main class="flex-1 p-6 md:p-8 lg:p-10 main-content overflow-auto">
                 {{ $slot }}
             </main>
         </div>
     </div>
-
-    {{-- MOBILE OVERLAY --}}
     <div onclick="if(event.target.id === 'sidebar-overlay') toggleSidebar()"
          id="sidebar-overlay"
          class="hidden lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"></div>
 
-    {{-- Tailwind script (only needed if you are not using Vite / compiled Tailwind) --}}
     <script>
         function initializeTailwind() {
             tailwind.config = {
@@ -210,7 +182,6 @@
             }
         }
 
-        {{-- Sidebar Toggle (Hamburger) --}}
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar')
             const overlay = document.getElementById('sidebar-overlay')
@@ -228,7 +199,6 @@
             }
         }
 
-        {{-- Close sidebar when clicking any nav link on mobile --}}
         document.addEventListener('DOMContentLoaded', () => {
             initializeTailwind()
 

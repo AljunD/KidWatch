@@ -8,9 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class ProgressService
 {
-    /**
-     * Handles the atomic persistence of progress records and weekly summaries.
-     */
     public function recordWeeklyProgress(int $studentId, int $weekId, array $ratings, string $summaryText, array $activities)
     {
         return DB::transaction(function () use ($studentId, $weekId, $ratings, $summaryText, $activities) {
@@ -23,7 +20,6 @@ class ProgressService
                 );
             }
 
-            // Sync Summary + Activities
             return WeeklySummary::updateOrCreate(
                 ['student_id' => $studentId, 'week_id' => $weekId],
                 [

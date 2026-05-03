@@ -5,84 +5,87 @@ namespace App\Http\Controllers;
 use App\Models\Guardian;
 use App\Models\Student;
 use App\Models\User;
+use App\Models\ProgressRecord;
+use App\Models\WeeklySummary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class GuardianController extends Controller
 {
-    // Show all active guardians
     public function index()
     {
         $guardians = Guardian::whereNull('trashed_at')
-            ->with(['students' => function ($q) {
-                $q->whereNull('trashed_at');
-            }])
+            ->with(['students' => fn($q) => $q->whereNull('trashed_at')])
             ->paginate(20);
 
         return view('guardian', compact('guardians'));
     }
 
-    // Trash list
     public function trash()
     {
-        $guardians = Guardian::whereNotNull('trashed_at')->paginate(20);
-        $students  = Student::whereNotNull('trashed_at')->paginate(20);
+        $guardians       = Guardian::whereNotNull('trashed_at')->paginate(20);
+        $students        = Student::whereNotNull('trashed_at')->paginate(20);
+        $progressRecords = ProgressRecord::whereNotNull('trashed_at')->paginate(20);
+        $weeklySummaries = WeeklySummary::whereNotNull('trashed_at')->paginate(20);
 
-        return view('trash', compact('guardians', 'students'));
+        return view('trash', compact('guardians', 'students', 'progressRecords', 'weeklySummaries'));
     }
 
-    // Restore guardian + cascade restore students
     public function restore($id)
     {
         try {
             $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
-            $guardian->restoreFromTrash(); // ✅ custom helper
+            $guardian->restoreFromTrash();
 
-            // Cascade restore linked students
             foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
                 $student->restoreFromTrash();
             }
 
-            return redirect()->route('guardians.trash')->with('success', 'Guardian and linked students restored successfully.');
+            return redirect()->route('guardians.trash')
+                ->with('success', 'Guardian and linked students restored successfully.');
         } catch (\Throwable $e) {
             Log::error('Guardian restore failed', ['error' => $e->getMessage()]);
-            return redirect()->route('guardians.trash')->with('error', 'Guardian restore failed. Please try again.');
+            return redirect()->route('guardians.trash')
+                ->with('error', 'Guardian restore failed. Please try again.');
         }
     }
 
-    // Force delete guardian + cascade delete students
     public function forceDelete($id)
     {
         try {
             $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
-
-            // Cascade delete linked students
+            
             foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
                 $student->hardDelete();
             }
 
-            $guardian->hardDelete(); // ✅ custom helper
+            if ($guardian->user) {
+                $guardian->user->delete();
+            }
 
-            return redirect()->route('guardians.trash')->with('success', 'Guardian and linked students permanently deleted.');
+            $guardian->hardDelete();
+
+            return redirect()->route('guardians.trash')
+                ->with('success', 'Guardian, linked students, and email permanently deleted.');
         } catch (\Throwable $e) {
             Log::error('Guardian force delete failed', ['error' => $e->getMessage()]);
-            return redirect()->route('guardians.trash')->with('error', 'Guardian force delete failed. Please try again.');
+            return redirect()->route('guardians.trash')
+                ->with('error', 'Guardian force delete failed. Please try again.');
         }
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'first_name'            => 'required|string|max:255',
-            'middle_name'           => 'nullable|string|max:255',
-            'last_name'             => 'required|string|max:255',
-            'email'                 => 'required|email|unique:users,email',
-            'contact_number'        => 'required|regex:/^09\d{9}$/|digits:11',
-            'address'               => 'required|string|max:255',
-            'relationship_to_child' => 'required|string|max:50',
-            'password'              => 'nullable|string|min:8|confirmed',
+            'first_name'           => 'required|string|max:255',
+            'middle_name'          => 'nullable|string|max:255',
+            'last_name'            => 'required|string|max:255',
+            'email'                => 'required|email|unique:users,email',
+            'contact_number'       => 'required|regex:/^09\d{9}$/|digits:11',
+            'address'              => 'required|string|max:255',
+            'relationship_to_child'=> 'required|string|max:50',
+            'password'             => 'nullable|string|min:8|confirmed',
         ]);
 
         $defaultPassword = $request->filled('password')
@@ -95,14 +98,14 @@ class GuardianController extends Controller
             'role'     => 'guardian',
         ]);
 
-        $guardian = Guardian::create([
-            'user_id'              => $user->id,
-            'first_name'           => $request->first_name,
-            'middle_name'          => $request->middle_name,
-            'last_name'            => $request->last_name,
+        Guardian::create([
+            'user_id'             => $user->id,
+            'first_name'          => $request->first_name,
+            'middle_name'         => $request->middle_name,
+            'last_name'           => $request->last_name,
             'relationship_to_child'=> $request->relationship_to_child,
-            'contact_number'       => $request->contact_number,
-            'address'              => $request->address,
+            'contact_number'      => $request->contact_number,
+            'address'             => $request->address,
         ]);
 
         if ($request->ajax()) {
@@ -122,14 +125,14 @@ class GuardianController extends Controller
     public function update(Request $request, Guardian $guardian)
     {
         $request->validate([
-            'first_name'            => 'required|string|max:255',
-            'middle_name'           => 'nullable|string|max:255',
-            'last_name'             => 'required|string|max:255',
-            'contact_number'        => 'required|regex:/^09\d{9}$/|digits:11',
-            'address'               => 'required|string|max:255',
-            'relationship_to_child' => 'required|string|max:50',
-            'email'                 => 'nullable|email|unique:users,email,' . $guardian->user_id,
-            'password'              => 'nullable|string|min:8|confirmed',
+            'first_name'           => 'required|string|max:255',
+            'middle_name'          => 'nullable|string|max:255',
+            'last_name'            => 'required|string|max:255',
+            'contact_number'       => 'required|regex:/^09\d{9}$/|digits:11',
+            'address'              => 'required|string|max:255',
+            'relationship_to_child'=> 'required|string|max:50',
+            'email'                => 'nullable|email|unique:users,email,' . $guardian->user_id,
+            'password'             => 'nullable|string|min:8|confirmed',
         ]);
 
         $guardian->update($request->only([
@@ -137,17 +140,13 @@ class GuardianController extends Controller
             'contact_number','address','relationship_to_child'
         ]));
 
-        // ✅ If email is changed, reset verification status and send new verification link
         if ($request->filled('email') && $request->email !== $guardian->user->email) {
             $guardian->user->email = $request->email;
-            $guardian->user->email_verified_at = null; // mark as not verified
+            $guardian->user->email_verified_at = null;
             $guardian->user->save();
-
-            // Trigger Laravel's built-in verification notification
             $guardian->user->sendEmailVerificationNotification();
         }
 
-        // ✅ Update password if provided
         if ($request->filled('password')) {
             $guardian->user->password = bcrypt($request->password);
             $guardian->user->save();
@@ -158,18 +157,17 @@ class GuardianController extends Controller
                 'success'          => true,
                 'message'          => 'Guardian updated successfully. Verification email sent if email was changed.',
                 'created_at'       => $guardian->user->created_at->toDateString(),
-                'email_verified_at'=> $guardian->user->email_verified_at, // will be null until verified
+                'email_verified_at'=> $guardian->user->email_verified_at,
             ])
-            : redirect()->route('guardians.index')->with('success', 'Guardian updated successfully. Verification email sent if email was changed.');
+            : redirect()->route('guardians.index')
+                ->with('success', 'Guardian updated successfully. Verification email sent if email was changed.');
     }
 
     public function destroy(Request $request, Guardian $guardian)
     {
-        // ✅ Soft delete guardian
         $guardian->trashed_at = now();
         $guardian->save();
 
-        // ✅ Soft delete all linked students
         foreach ($guardian->students as $student) {
             $student->trashed_at = now();
             $student->save();
@@ -199,10 +197,7 @@ class GuardianController extends Controller
             'photo'         => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        // ✅ Ensure guardian exists
         $guardian = Guardian::findOrFail($guardianId);
-
-        // ✅ Create student linked to guardian
         $student = new Student([
             'guardian_id'   => $guardian->id,
             'first_name'    => $request->first_name,
@@ -214,7 +209,6 @@ class GuardianController extends Controller
             'religion'      => $request->religion,
         ]);
 
-        // ✅ Handle photo upload
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('students/photos', 'public');
             $student->photo_path = $path;
@@ -222,7 +216,6 @@ class GuardianController extends Controller
 
         $student->save();
 
-        // ✅ Return proper response
         if ($request->ajax()) {
             return response()->json([
                 'success'        => true,
@@ -298,9 +291,9 @@ class GuardianController extends Controller
                 'success'             => true,
                 'message'             => 'Guardian and student created successfully.',
                 'default_password'    => $request->filled('guardian_password') ? null : $defaultPassword,
-                'guardian_created_at' => $user->created_at->toDateString(),     // ✅ from user table
-                'student_created_at'  => $student->created_at->toDateString(), // ✅ from student table
-                'email_verified_at'   => $user->email_verified_at,             // ✅ verification status
+                'guardian_created_at' => $user->created_at->toDateString(),
+                'student_created_at'  => $student->created_at->toDateString(),
+                'email_verified_at'   => $user->email_verified_at,
             ]);
         }
 

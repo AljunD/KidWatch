@@ -12,11 +12,6 @@ class Teacher extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'user_id',
         'first_name',
@@ -24,6 +19,11 @@ class Teacher extends Model
         'last_name',
         'contact_number',
         'address',
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -34,5 +34,14 @@ class Teacher extends Model
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function hardDelete(): void
+    {
+        if ($this->user) {
+            $this->user->delete();
+        }
+
+        $this->delete();
     }
 }

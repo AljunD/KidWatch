@@ -18,29 +18,25 @@ class ProgressController extends Controller
             ->with(['progressRecords' => fn($q) => $q->whereNull('trashed_at')])
             ->get();
 
-        if ($students->isEmpty()) {
-            Week::query()->delete();
-            $weeks = collect();
-        } else {
-            $weeks = Week::with([
+        $weeks = $students->isEmpty()
+            ? collect()
+            : Week::with([
                 'progressRecords' => fn($q) => $q->whereNull('trashed_at'),
                 'weeklySummaries' => fn($q) => $q->whereNull('trashed_at')
             ])->orderBy('week_number')->get();
-        }
 
         $subjects = ['Math', 'Science', 'English', 'Filipino'];
-        $ratings = ProgressRecord::RATINGS;
+        $ratings  = ProgressRecord::RATINGS;
 
         return view('progress', compact('weeks', 'students', 'subjects', 'ratings'));
     }
 
     public function create(Request $request)
     {
-        $student = Student::findOrFail($request->student_id);
-        $week = Week::findOrFail($request->week_id);
-
+        $student  = Student::findOrFail($request->student_id);
+        $week     = Week::findOrFail($request->week_id);
         $subjects = ['Math', 'Science', 'English', 'Filipino'];
-        $ratings = ProgressRecord::RATINGS;
+        $ratings  = ProgressRecord::RATINGS;
 
         return view('progress.create', compact('student', 'week', 'subjects', 'ratings'));
     }
@@ -73,11 +69,10 @@ class ProgressController extends Controller
 
     public function edit($studentId, $weekId)
     {
-        $student = Student::findOrFail($studentId);
-        $week = Week::findOrFail($weekId);
-
+        $student  = Student::findOrFail($studentId);
+        $week     = Week::findOrFail($weekId);
         $subjects = ['Math', 'Science', 'English', 'Filipino'];
-        $ratings = ProgressRecord::RATINGS;
+        $ratings  = ProgressRecord::RATINGS;
 
         $records = ProgressRecord::where('student_id', $studentId)
             ->where('week_id', $weekId)
@@ -85,15 +80,8 @@ class ProgressController extends Controller
             ->get()
             ->keyBy('subject');
 
-        $progressRecord = $records->first();
-
         return view('progress.edit', compact(
-            'student',
-            'week',
-            'subjects',
-            'ratings',
-            'records',
-            'progressRecord'
+            'student', 'week', 'subjects', 'ratings', 'records'
         ));
     }
 
@@ -134,12 +122,12 @@ class ProgressController extends Controller
 
     public function view($studentId, $weekId)
     {
-        $student = Student::with(['progressRecords' => fn($q) => $q->where('week_id', $weekId)->whereNull('trashed_at')])
+        $student  = Student::with(['progressRecords' => fn($q) => $q->where('week_id', $weekId)->whereNull('trashed_at')])
             ->findOrFail($studentId);
 
-        $week = Week::findOrFail($weekId);
+        $week     = Week::findOrFail($weekId);
         $subjects = ['Math', 'Science', 'English', 'Filipino'];
-        $ratings = ProgressRecord::RATINGS;
+        $ratings  = ProgressRecord::RATINGS;
 
         return view('progress.view', compact('student', 'week', 'subjects', 'ratings'));
     }
@@ -156,14 +144,12 @@ class ProgressController extends Controller
             'weeklySummaries' => fn($q) => $q->where('student_id', $studentId)->whereNull('trashed_at')
         ])->orderBy('week_number')->get();
 
-        $subjects = ['Math', 'Science', 'English', 'Filipino'];
-        $ratings = ProgressRecord::RATINGS;
-
-        // ✅ Fetch summaries grouped by student-week
+        $subjects  = ['Math', 'Science', 'English', 'Filipino'];
+        $ratings   = ProgressRecord::RATINGS;
         $summaries = WeeklySummary::where('student_id', $studentId)
             ->whereNull('trashed_at')
             ->get()
-            ->groupBy(fn($s) => $s->student_id . '-' . $s->week_id);
+            ->groupBy(fn($s) => $s->student_id.'-'.$s->week_id);
 
         return view('progress.view-all', compact('student', 'weeks', 'subjects', 'ratings', 'summaries'));
     }
@@ -181,15 +167,13 @@ class ProgressController extends Controller
             return back()->with('error', 'Complete all subject ratings first.');
         }
 
-        // Generate structured summary + activities
         $result = app(SummaryGeneratorService::class)->generate($student, $weekId);
 
         WeeklySummary::updateOrCreate(
             ['student_id' => $studentId, 'week_id' => $weekId],
             [
                 'summary_text'    => $result['summary'],
-                // Store activities as JSON for structured access
-                'activities_text' => json_encode($result['activities'], JSON_PRETTY_PRINT)
+                'activities_text' => json_encode($result['activities'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
             ]
         );
 

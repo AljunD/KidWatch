@@ -1,13 +1,5 @@
 <?php
 
-// =============================================
-// E. Security Middleware – CheckStudentAccess
-// app/Http/Middleware/CheckStudentAccess.php
-// Prevents IDOR attacks for guardians. Uses student_guardian table + Guardian profile linkage.
-// Register in Kernel.php under $routeMiddleware['check.student.access'] = CheckStudentAccess::class;
-// Use on routes: ->middleware('check.student.access')
-// =============================================
-
 declare(strict_types=1);
 
 namespace App\Http\Middleware;
@@ -19,24 +11,18 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckStudentAccess
 {
-    /**
-     * Handle an incoming request – guardian can only access students they are linked to via student_guardian.
-     */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        // Teachers & Admins bypass (they have full access per business rules)
         if (!$user || in_array($user->role, ['admin', 'teacher'])) {
             return $next($request);
         }
 
-        // Only guardians are restricted
         if ($user->role !== 'guardian') {
             abort(403, 'Unauthorized role.');
         }
 
-        // Extract student_id from route parameter (route model binding or query)
         $studentId = $request->route('student')?->id
             ?? $request->route('student_id')
             ?? $request->query('student_id')

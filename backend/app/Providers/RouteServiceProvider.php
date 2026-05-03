@@ -15,7 +15,6 @@ class RouteServiceProvider extends ServiceProvider
     {
         parent::boot();
 
-        // Define the "api" rate limiter
         RateLimiter::for('api', function (Request $request) {
             return \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });

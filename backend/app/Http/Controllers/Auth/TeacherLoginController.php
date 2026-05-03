@@ -23,10 +23,12 @@ class TeacherLoginController extends Controller
             'password' => ['required', 'string', 'min:8', 'max:255'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        $remember = $request->filled('remember');
+
+        if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
-            if (Auth::user()->role !== 'teacher' || !Auth::user()->is_active) {
+            if (Auth::user()->role !== 'teacher') {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
@@ -54,17 +56,11 @@ class TeacherLoginController extends Controller
             ->with('status', 'You have logged out successfully.');
     }
 
-    /**
-     * Show the forgot password form.
-     */
     public function showForgotPasswordForm()
     {
         return view('auth.forgot-password');
     }
 
-    /**
-     * Handle sending password reset link.
-     */
     public function sendResetLink(Request $request)
     {
         $request->validate(['email' => 'required|email']);
@@ -78,9 +74,6 @@ class TeacherLoginController extends Controller
             : back()->withErrors(['email' => __($status)]);
     }
 
-    /**
-     * Handle resetting the password.
-     */
     public function resetPassword(Request $request)
     {
         $request->validate([

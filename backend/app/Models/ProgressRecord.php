@@ -19,19 +19,17 @@ class ProgressRecord extends Model
         'rating_level',
         'remarks',
         'trashed_at',
-        'deleted_at',
     ];
 
-    protected $dates = [
-        'trashed_at',
-        'deleted_at',
-        'created_at',
-        'updated_at',
+    protected $casts = [
+        'trashed_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public const RATINGS = [
         0 => 'No Classes',
-        1 => 'Poor',
+        1 => 'Needs Attention',
         2 => 'Good',
         3 => 'Very Good',
         4 => 'Excellent',
@@ -66,8 +64,6 @@ class ProgressRecord extends Model
 
     public function hardDelete(): void
     {
-        $this->deleted_at = now();
-        $this->save();
-        parent::delete();
+        $this->delete();
     }
 }

@@ -9,20 +9,15 @@ use App\Models\ProgressRecord;
 
 class WeekController extends Controller
 {
-    /**
-     * Display all weeks.
-     */
     public function index()
     {
-        // ✅ Only active students with active guardians
         $students = Student::whereNull('trashed_at')
             ->whereHas('guardian', fn($q) => $q->whereNull('trashed_at'))
             ->get();
 
-        // ✅ If no students, delete all weeks and return empty
         if ($students->isEmpty()) {
             Week::query()->delete();
-            $weeks = collect(); // empty collection
+            $weeks = collect();
         } else {
             $weeks = Week::with(['progressRecords', 'weeklySummaries'])
                 ->orderBy('week_number')
@@ -32,25 +27,18 @@ class WeekController extends Controller
         return view('students.progress', compact('weeks'));
     }
 
-    /**
-     * Store a newly created week.
-     * Only allowed if all students have ratings for every subject in the latest week.
-     */
     public function store(Request $request)
     {
-        // ✅ Only active students with active guardians
         $students = Student::whereNull('trashed_at')
             ->whereHas('guardian', fn($q) => $q->whereNull('trashed_at'))
             ->get();
 
-        // ✅ Block creation if no students exist
         if ($students->isEmpty()) {
             return redirect()
                 ->route('progress')
                 ->with('error', 'Cannot create a new week: No active students exist.');
         }
 
-        // Get the latest week
         $latestWeek = Week::orderBy('week_number', 'desc')->first();
 
         if ($latestWeek) {
@@ -73,16 +61,13 @@ class WeekController extends Controller
             }
         }
 
-        // ✅ Auto-increment week_number
         $nextWeekNumber = $latestWeek ? $latestWeek->week_number + 1 : 1;
 
-        // Validate new week input
         $request->validate([
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after_or_equal:start_date',
         ]);
 
-        // ✅ Prevent overlapping weeks
         $overlap = Week::where(function ($query) use ($request) {
             $query->whereBetween('start_date', [$request->start_date, $request->end_date])
                   ->orWhereBetween('end_date', [$request->start_date, $request->end_date])
@@ -109,9 +94,6 @@ class WeekController extends Controller
             ->with('success', "Week {$nextWeekNumber} created successfully!");
     }
 
-    /**
-     * Delete a week.
-     */
     public function destroy(Week $week)
     {
         $week->delete();

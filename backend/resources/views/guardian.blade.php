@@ -24,7 +24,6 @@
              transition-all duration-200 shadow-sm text-sm">
   </div>
 
-    <!-- Add Student + Guardian Button -->
   <button
     type="button"
     onclick="openAddStudentGuardianModal()"
@@ -64,7 +63,7 @@
                   'created_at' => $guardian->user->created_at->toDateString(),
                   'email_verified_at' => $guardian->user->email_verified_at,
                 'students' => $guardian->students->map(fn($s) => [
-                    'id' => $s->id,   // ✅ include the student ID
+                    'id' => $s->id,   
                     'full_name' => $s->full_name,
                     'gender' => $s->gender,
                     'date_of_birth' => $s->date_of_birth,
@@ -120,7 +119,6 @@
                     <i class="fas fa-user-graduate"></i>
                     </button>
 
-                    <!-- ✅ Trash Student Modal Trigger -->
                     <button type="button"
                             onclick="openTrashStudentModal({{ $guardian->id }}, '{{ $guardian->first_name }} {{ $guardian->last_name }}')"
                             class="p-2.5 rounded-xl border border-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-90"
@@ -128,7 +126,6 @@
                     <i class="fas fa-user-graduate"></i>
                     </button>
 
-                    <!-- Guardian Trash -->
                     <a href="{{ route('guardians.destroy', $guardian->id) }}"
                     class="p-2.5 rounded-xl border border-red-100 text-red-400 hover:bg-red-500 hover:text-white transition-all active:scale-90"
                     title="Move to Trash"
@@ -154,7 +151,6 @@
       </table>
     </div>
 
-    {{-- Pagination --}}
     @if($guardians->hasPages())
       <div class="px-6 py-4 border-t bg-gray-50 flex items-center justify-between text-sm text-gray-600">
         <div>Showing {{ $guardians->firstItem() }} to {{ $guardians->lastItem() }} of {{ $guardians->total() }} guardians</div>
@@ -164,12 +160,10 @@
   </div>
 </div>
 
-<!-- ====================== ADD STUDENT + GUARDIAN MODAL ====================== -->
 <div id="addStudentGuardianModal" class="hidden fixed inset-0 z-[100] overflow-hidden">
   <div class="flex items-center justify-center min-h-screen p-4 text-center">
     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden">
 
-      <!-- Header -->
       <div class="bg-green-50/50 px-10 py-6 border-b flex justify-between items-center">
         <h2 class="text-2xl font-black text-[#003366]">Add Student + Guardian</h2>
         <button type="button" onclick="closeAddStudentGuardianModal()"
@@ -178,14 +172,12 @@
         </button>
       </div>
 
-      <!-- Form -->
       <form id="addStudentGuardianForm" method="POST"
             action="{{ route('guardians.storeWithStudent') }}"
             enctype="multipart/form-data"
             class="p-10 text-left overflow-y-auto max-h-[75vh]">
         @csrf
 
-        <!-- Guardian Section -->
         <section class="mb-8">
           <h3 class="text-lg font-bold text-gray-800 mb-4">Guardian Information</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -193,12 +185,8 @@
             <input type="text" name="guardian_middle_name" placeholder="Middle Name" class="w-full px-4 py-3 border rounded-xl">
             <input type="text" name="guardian_last_name" placeholder="Last Name" required class="w-full px-4 py-3 border rounded-xl">
             <input type="email" name="guardian_email" placeholder="Email" required class="w-full px-4 py-3 border rounded-xl">
-
-            <!-- Password fields (optional, can be auto-generated server-side) -->
             <input type="password" name="guardian_password" placeholder="Password" class="w-full px-4 py-3 border rounded-xl">
             <input type="password" name="guardian_password_confirmation" placeholder="Confirm Password" class="w-full px-4 py-3 border rounded-xl">
-
-            <!-- ✅ Contact Number: must start with 09 and be 11 digits -->
             <input type="tel" name="guardian_contact_number" placeholder="09xxxxxxxxx"
                    maxlength="11" pattern="^09\d{9}$" required
                    class="w-full px-4 py-3 border rounded-xl">
@@ -208,7 +196,6 @@
           </div>
         </section>
 
-        <!-- Student Section -->
         <section>
           <h3 class="text-lg font-bold text-gray-800 mb-4">Student Information</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -223,14 +210,11 @@
             <input type="date" name="student_date_of_birth" required class="w-full px-4 py-3 border rounded-xl">
             <input type="text" name="student_nationality" placeholder="Nationality" required value="Filipino" class="w-full px-4 py-3 border rounded-xl">
             <input type="text" name="student_religion" placeholder="Religion" required class="w-full px-4 py-3 border rounded-xl md:col-span-2">
-
-            <!-- ✅ Student Photo Required -->
             <input type="file" name="student_photo" accept="image/*" required
                    class="w-full px-4 py-3 border rounded-xl md:col-span-2">
           </div>
         </section>
 
-        <!-- Footer -->
         <div class="flex justify-end gap-4 mt-12 pt-6 border-t">
           <button type="button" onclick="closeAddStudentGuardianModal()"
                   class="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-50">Discard</button>
@@ -244,12 +228,10 @@
   </div>
 </div>
 
-<!-- ====================== VIEW GUARDIAN MODAL ====================== -->
 <div id="viewGuardianModal" class="hidden fixed inset-0 z-[100] overflow-hidden">
   <div class="flex items-center justify-center min-h-screen p-4 text-center">
     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl overflow-hidden">
 
-      <!-- Header -->
       <div class="bg-blue-50/50 px-10 py-6 border-b flex justify-between items-center">
         <h2 class="text-2xl font-black text-[#003366]">Guardian Profile</h2>
         <button type="button" onclick="closeViewGuardianModal()"
@@ -258,7 +240,6 @@
         </button>
       </div>
 
-      <!-- Body -->
       <div class="p-10 text-left max-h-[70vh] overflow-y-auto space-y-6">
 
         <div>
@@ -269,7 +250,6 @@
         <div>
           <span class="font-medium text-gray-400">Email:</span><br>
           <span id="viewGuardianEmail" class="font-semibold"></span><br>
-          <!-- ✅ Status now tied to User.email_verified_at -->
           <span id="viewGuardianEmailStatus" class="flex items-center gap-1 mt-1"></span>
         </div>
 
@@ -291,12 +271,11 @@
         <div>
             <span class="font-medium text-gray-400">Linked Students:</span><br>
             <ul id="viewGuardianStudents" class="space-y-3 text-sm">
-                <!-- Students will be injected here by openViewGuardianModal() -->
+
             </ul>
         </div>
       </div>
 
-      <!-- Footer -->
       <div class="px-10 py-6 border-t flex justify-end">
         <button type="button" onclick="closeViewGuardianModal()"
                 class="px-8 py-3 rounded-xl font-bold text-[#003366] hover:bg-gray-100">Close</button>
@@ -305,12 +284,10 @@
   </div>
 </div>
 
-<!-- ====================== EDIT GUARDIAN MODAL ====================== -->
 <div id="editGuardianModal" class="hidden fixed inset-0 z-[100] overflow-hidden">
   <div class="flex items-center justify-center min-h-screen p-4 text-center">
     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl overflow-hidden">
 
-      <!-- Header -->
       <div class="bg-orange-50/50 px-10 py-6 border-b flex justify-between items-center">
         <h2 class="text-2xl font-black text-[#003366]">Edit Guardian Profile</h2>
         <button onclick="closeEditGuardianModal()"
@@ -319,7 +296,6 @@
         </button>
       </div>
 
-      <!-- Form -->
       <form id="editGuardianForm" method="POST" class="p-10 text-left overflow-y-auto max-h-[70vh]">
         @csrf
         @method('PUT')
@@ -380,7 +356,6 @@
                    class="w-full px-4 py-3 bg-gray-50 border rounded-xl">
           </div>
 
-          <!-- NEW Relationship to Child field -->
           <div class="md:col-span-2">
             <label class="block text-xs font-black text-gray-400 uppercase mb-2">Relationship to Child</label>
             <input type="text" id="edit_guardian_relationship" name="relationship_to_child" required
@@ -401,12 +376,10 @@
   </div>
 </div>
 
-<!-- ====================== ADD STUDENT MODAL ====================== -->
 <div id="addStudentModal" class="hidden fixed inset-0 z-[100] overflow-hidden">
   <div class="flex items-center justify-center min-h-screen p-4 text-center">
     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl overflow-hidden">
 
-      <!-- Header -->
       <div class="bg-blue-50/50 px-10 py-6 border-b flex justify-between items-center">
         <h2 class="text-2xl font-black text-[#003366]">Add Student</h2>
         <button type="button" onclick="closeAddStudentModal()"
@@ -415,12 +388,10 @@
         </button>
       </div>
 
-      <!-- Form -->
       <form id="enrollStudentForm" method="POST" enctype="multipart/form-data"
             class="p-10 text-left overflow-y-auto max-h-[70vh]">
         @csrf
 
-        <!-- Hidden guardian_id injected dynamically -->
         <input type="hidden" name="guardian_id" id="guardianIdInput">
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -454,12 +425,11 @@
     </div>
   </div>
 </div>
-<!-- ====================== TRASH STUDENT MODAL ====================== -->
+
 <div id="trashStudentModal" class="hidden fixed inset-0 z-[100] overflow-hidden">
   <div class="flex items-center justify-center min-h-screen p-4 text-center">
     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl overflow-hidden">
 
-      <!-- Header -->
       <div class="bg-red-50/50 px-10 py-6 border-b flex justify-between items-center">
         <h2 class="text-2xl font-black text-red-600">Trash Linked Students</h2>
         <button type="button" onclick="closeTrashStudentModal()"
@@ -468,7 +438,6 @@
         </button>
       </div>
 
-      <!-- Body -->
       <div class="p-10 text-left max-h-[70vh] overflow-y-auto space-y-6">
         <div>
           <span class="font-medium text-gray-400">Guardian:</span><br>
@@ -478,12 +447,11 @@
         <div>
           <span class="font-medium text-gray-400">Linked Students:</span><br>
             <ul id="trashGuardianStudents" class="space-y-3 text-sm">
-                <!-- Students will be injected here by openTrashStudentModal() -->
+
             </ul>
         </div>
       </div>
 
-      <!-- Footer -->
       <div class="px-10 py-6 border-t flex justify-end">
         <button type="button" onclick="closeTrashStudentModal()"
                 class="px-8 py-3 rounded-xl font-bold text-[#003366] hover:bg-gray-100">Close</button>
@@ -493,7 +461,6 @@
 </div>
 
 <script>
-/* ===== VIEW GUARDIAN MODAL ===== */
 function closeViewGuardianModal() {
   const modal = document.getElementById('viewGuardianModal');
   if (modal) modal.classList.add('hidden');
@@ -539,8 +506,6 @@ function openViewGuardianModal(button) {
   document.getElementById('viewGuardianModal').classList.remove('hidden');
 }
 
-
-/* ===== EDIT GUARDIAN MODAL ===== */
 function closeEditGuardianModal() {
   document.getElementById('editGuardianModal').classList.add('hidden');
   document.getElementById('editGuardianForm').reset();
@@ -569,19 +534,18 @@ function openEditGuardianModal(button) {
   document.getElementById('editGuardianModal').classList.remove('hidden');
 }
 
-/* ===== ADD STUDENT MODAL ===== */
 function openAddStudentModal(guardianId) {
   const form = document.getElementById('enrollStudentForm');
   const guardianInput = document.getElementById('guardianIdInput');
   const modal = document.getElementById('addStudentModal');
 
   if (!form || !guardianInput || !modal) {
-    console.error('❌ Add Student modal elements not found in DOM.');
+    console.error('Add Student modal elements not found in DOM.');
     return;
   }
 
   guardianInput.value = guardianId;
-  form.action = `/guardians/${guardianId}/students`; // ✅ correct route
+  form.action = `/guardians/${guardianId}/students`;
   modal.classList.remove('hidden');
 }
 
@@ -590,7 +554,7 @@ function closeAddStudentModal() {
   const modal = document.getElementById('addStudentModal');
 
   if (!form || !modal) {
-    console.error('❌ Add Student modal elements not found in DOM.');
+    console.error('Add Student modal elements not found in DOM.');
     return;
   }
 
@@ -599,7 +563,6 @@ function closeAddStudentModal() {
   document.getElementById('guardianIdInput').value = '';
 }
 
-/* ===== AJAX SUBMISSION FOR ADD STUDENT ===== */
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('enrollStudentForm');
   if (!form) return;
@@ -626,7 +589,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success) {
         closeAddStudentModal();
 
-        // ✅ Update guardian row instantly
         const guardianRow = document.querySelector(`tr[data-id="${guardianId}"]`);
         if (guardianRow) {
           const studentsCell = guardianRow.querySelector('td:nth-child(2) ul');
@@ -643,18 +605,17 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        alert('✅ Student linked to guardian successfully!');
+        alert('Student linked to guardian successfully!');
       } else {
-        alert('❌ Failed to add student: ' + (data.message || 'Unknown error'));
+        alert('Failed to add student: ' + (data.message || 'Unknown error'));
       }
     } catch (error) {
       console.error(error);
-      alert('❌ An error occurred while adding the student.');
+      alert('An error occurred while adding the student.');
     }
   });
 });
 
-/* ===== TRASH STUDENT MODAL ===== */
 function openTrashStudentModal(guardianId, guardianName) {
   document.getElementById('trashGuardianName').textContent = guardianName;
   const row = document.querySelector(`tr[data-id="${guardianId}"]`);
@@ -686,7 +647,6 @@ function closeTrashStudentModal() {
   document.getElementById('trashStudentModal').classList.add('hidden');
 }
 
-/* ===== REFRESH GUARDIAN TABLE ===== */
 async function refreshGuardianTable() {
   try {
     const response = await fetch('/guardians', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
@@ -702,7 +662,6 @@ async function refreshGuardianTable() {
   }
 }
 
-/* ===== AJAX TRASH STUDENT HANDLER ===== */
 document.addEventListener('click', async function(e) {
   const btn = e.target.closest('.trash-student-btn');
   if (!btn) return;
@@ -723,7 +682,7 @@ document.addEventListener('click', async function(e) {
 
       if (response.ok && data.success) {
         btn.closest('li').remove();
-        refreshGuardianTable(); // ✅ auto-update guardian table
+        refreshGuardianTable();
         alert(`${studentName} moved to trash.`);
       } else {
         alert(data.message || `Failed to trash ${studentName}.`);
@@ -735,7 +694,6 @@ document.addEventListener('click', async function(e) {
   }
 });
 
-/* ===== ADD STUDENT + GUARDIAN MODAL ===== */
 function openAddStudentGuardianModal() {
   document.getElementById('addStudentGuardianModal').classList.remove('hidden');
 }
@@ -745,7 +703,6 @@ function closeAddStudentGuardianModal() {
   document.getElementById('addStudentGuardianForm').reset();
 }
 
-/* ===== AJAX SUBMISSION FOR ADD STUDENT + GUARDIAN ===== */
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('addStudentGuardianForm');
   if (!form) return;
@@ -753,10 +710,8 @@ document.addEventListener('DOMContentLoaded', () => {
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    // Remove old error messages
     form.querySelector('.error-messages')?.remove();
 
-    // Show loading state
     const submitBtn = form.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = true;
@@ -773,10 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
 
       if (data.success) {
-        // Close modal
         closeAddStudentGuardianModal();
-
-        // Success popup
         const popup = document.createElement('div');
         popup.className = "fixed inset-0 flex items-center justify-center bg-black/50 z-[200]";
         popup.innerHTML = `
@@ -794,10 +746,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         document.body.appendChild(popup);
 
-        // ✅ Refresh guardian table automatically
         refreshGuardianTable();
       } else {
-        // Validation errors
         let errorHtml = `<div class="error-messages bg-red-100 text-red-700 p-4 rounded-xl mt-4">
                            <ul class="list-disc list-inside">`;
         if (data.errors) {
@@ -816,7 +766,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(error);
       alert('An error occurred while saving guardian and student.');
     } finally {
-      // Reset button state
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = "Save Student + Guardian";

@@ -9,7 +9,6 @@
             </span>
         </h1>
 
-        {{-- Back Button --}}
         <div class="mb-6">
             <a href="{{ route('progress') }}"
                class="inline-flex items-center gap-2 bg-gray-200 text-[#003366] px-5 py-2 rounded-lg font-bold hover:bg-gray-300 transition">
@@ -17,7 +16,6 @@
             </a>
         </div>
 
-        {{-- ✅ Error & Success Handling --}}
         @if(session('success'))
             <div class="mb-6 px-6 py-4 rounded-xl bg-emerald-100 text-emerald-800 font-semibold shadow flex justify-between items-center">
                 <span>{{ session('success') }}</span>
@@ -59,10 +57,8 @@
             ];
         @endphp
 
-        {{-- Loop through weeks --}}
         @foreach($sortedWeeks as $week)
             @php
-                // Check if all subjects are rated for this week
                 $allSubjectsRated = true;
                 foreach($subjects as $subject) {
                     $record = $student->progressRecords
@@ -95,7 +91,6 @@
                     @endif
                 </h2>
 
-                {{-- Progress Table --}}
                 <div class="overflow-x-auto">
                     <table class="w-full border border-slate-200 rounded-lg">
                         <thead>
@@ -134,7 +129,6 @@
                     </table>
                 </div>
 
-                {{-- Generate Recommendation Button --}}
                 <div class="mt-4 flex justify-end">
                     @if($allSubjectsRated)
                         <form action="{{ route('progress.generateRecommendation', ['student' => $student->id, 'week' => $week->id]) }}" method="POST">
@@ -151,10 +145,12 @@
                     @endif
                 </div>
 
-                {{-- Show Recommendation Summary if exists --}}
                 @if($summary)
                     @php
-                        $activities = json_decode($summary->activities_text, true) ?? [];
+                        $activities = json_decode($summary->activities_text, true);
+                        if (!is_array($activities)) {
+                            $activities = [];
+                        }
                     @endphp
 
                     <div class="mt-4 p-4 bg-emerald-50 border border-emerald-300 rounded-lg">
@@ -164,22 +160,31 @@
                         <h4 class="font-bold text-[#003366] mt-4 mb-2">Recommendation Activities</h4>
                         <ul class="list-disc pl-6 text-gray-700 space-y-4">
                             @foreach($activities as $activity)
-                                <li>
-                                    <p class="font-medium">{{ $activity['activity'] }}</p>
-                                    <span class="text-xs px-2 py-1 rounded 
-                                        @if($activity['priority'] === 'high') bg-red-100 text-red-700
-                                        @elseif($activity['priority'] === 'medium') bg-yellow-100 text-yellow-700
-                                        @else bg-green-100 text-green-700
-                                        @endif">
-                                        Priority: {{ ucfirst($activity['priority']) }}
-                                    </span>
-                                    @if(!empty($activity['guardian_tip']))
-                                        <p class="mt-2 text-sm text-blue-800"><strong>Guardian Tip:</strong> {{ $activity['guardian_tip'] }}</p>
-                                    @endif
-                                    @if(!empty($activity['student_tip']))
-                                        <p class="mt-1 text-sm text-green-800"><strong>Student Tip:</strong> {{ $activity['student_tip'] }}</p>
-                                    @endif
-                                </li>
+                                @if(is_array($activity))
+                                    <li>
+                                        <p class="font-medium">{{ $activity['activity'] ?? '' }}</p>
+
+                                        <span class="text-xs px-2 py-1 rounded
+                                            @if(($activity['priority'] ?? '') === 'high') bg-red-100 text-red-700
+                                            @elseif(($activity['priority'] ?? '') === 'medium') bg-yellow-100 text-yellow-700
+                                            @else bg-green-100 text-green-700
+                                            @endif">
+                                            Priority: {{ ucfirst($activity['priority'] ?? 'low') }}
+                                        </span>
+
+                                        @if(!empty($activity['guardian_tip']))
+                                            <p class="mt-2 text-sm text-blue-800">
+                                                <strong>Guardian Tip:</strong> {{ $activity['guardian_tip'] }}
+                                            </p>
+                                        @endif
+
+                                        @if(!empty($activity['student_tip']))
+                                            <p class="mt-1 text-sm text-green-800">
+                                                <strong>Student Tip:</strong> {{ $activity['student_tip'] }}
+                                            </p>
+                                        @endif
+                                    </li>
+                                @endif
                             @endforeach
                         </ul>
                     </div>

@@ -16,12 +16,9 @@ class SystemSeeder extends Seeder
 {
     public function run(): void
     {
-        // ======================
-        // 1. Expert System Knowledge Base (625 combinations)
-        // ======================
         $labels = [
             0 => 'No Classes',
-            1 => 'Poor',
+            1 => 'Needs Attention',
             2 => 'Good',
             3 => 'Very Good',
             4 => 'Excellent',
@@ -41,7 +38,7 @@ class SystemSeeder extends Seeder
 
                         $average = array_sum($ratings) / count($ratings);
 
-                        $weakSubjects = [];
+                        $weakSubjects   = [];
                         $strongSubjects = [];
 
                         foreach ($ratings as $subject => $score) {
@@ -53,26 +50,21 @@ class SystemSeeder extends Seeder
                         }
 
                         if ($average <= 1.5) {
-                            $level = "needs immediate intervention";
+                            $level        = "needs immediate intervention";
                             $generalAdvice = "The learner requires close monitoring, structured remediation, and consistent guidance across all learning areas.";
                         } elseif ($average <= 2.5) {
-                            $level = "is developing foundational skills";
+                            $level        = "is developing foundational skills";
                             $generalAdvice = "The learner shows emerging understanding and would benefit from guided practice and reinforcement activities.";
                         } elseif ($average <= 3.5) {
-                            $level = "is progressing well";
+                            $level        = "is progressing well";
                             $generalAdvice = "The learner demonstrates good understanding and should be supported with enrichment and continuous practice.";
                         } else {
-                            $level = "is highly proficient";
+                            $level        = "is highly proficient";
                             $generalAdvice = "The learner consistently performs at a high level and should be challenged with advanced and creative tasks.";
                         }
 
-                        $weakText = empty($weakSubjects)
-                            ? "no major areas of concern"
-                            : implode(', ', $weakSubjects);
-
-                        $strongText = empty($strongSubjects)
-                            ? "no standout strengths yet"
-                            : implode(', ', $strongSubjects);
+                        $weakText   = empty($weakSubjects) ? "no major areas of concern" : implode(', ', $weakSubjects);
+                        $strongText = empty($strongSubjects) ? "no standout strengths yet" : implode(', ', $strongSubjects);
 
                         $intervention = sprintf(
                             "Overall, the learner %s across the four subject areas (Math: %s, Science: %s, English: %s, Filipino: %s). Strengths are observed in %s, while attention is needed in %s. %s",
@@ -98,9 +90,6 @@ class SystemSeeder extends Seeder
             }
         }
 
-        // ======================
-        // 2. Initial Teacher Account
-        // ======================
         $teacherUser = User::create([
             'email'     => 'aljundalman12@gmail.com',
             'password'  => Hash::make('password'),
@@ -117,23 +106,20 @@ class SystemSeeder extends Seeder
             'address'        => 'Brgy. Balite, Quezon City, Philippines',
         ]);
 
-        // ======================
-        // 3. Guardians + Students
-        // ======================
         $guardianData = [
-            ['first_name' => 'Maria', 'middle_name' => 'Luz', 'last_name' => 'Cruz', 'relationship_to_child' => 'Mother', 'contact_number' => '09182345678', 'address' => 'Brgy. Balite, Quezon City'],
-            ['first_name' => 'Jose', 'middle_name' => null, 'last_name' => 'Santos', 'relationship_to_child' => 'Father', 'contact_number' => '09193456789', 'address' => 'Brgy. Balite, Quezon City'],
-            ['first_name' => 'Ana', 'middle_name' => 'Grace', 'last_name' => 'Reyes', 'relationship_to_child' => 'Mother', 'contact_number' => '09184567890', 'address' => 'Brgy. Balite, Quezon City'],
-            ['first_name' => 'Roberto', 'middle_name' => null, 'last_name' => 'Dela Cruz', 'relationship_to_child' => 'Father', 'contact_number' => '09195678901', 'address' => 'Brgy. Balite, Quezon City'],
-            ['first_name' => 'Lourdes', 'middle_name' => 'Paz', 'last_name' => 'Bautista', 'relationship_to_child' => 'Guardian', 'contact_number' => '09186789012', 'address' => 'Brgy. Balite, Quezon City'],
+            ['first_name' => 'Maria',    'middle_name' => 'Luz',   'last_name' => 'Cruz',      'relationship_to_child' => 'Mother',   'contact_number' => '09182345678', 'address' => 'Brgy. Balite, Quezon City'],
+            ['first_name' => 'Jose',     'middle_name' => null,    'last_name' => 'Santos',    'relationship_to_child' => 'Father',   'contact_number' => '09193456789', 'address' => 'Brgy. Balite, Quezon City'],
+            ['first_name' => 'Ana',      'middle_name' => 'Grace', 'last_name' => 'Reyes',     'relationship_to_child' => 'Mother',   'contact_number' => '09184567890', 'address' => 'Brgy. Balite, Quezon City'],
+            ['first_name' => 'Roberto',  'middle_name' => null,    'last_name' => 'Dela Cruz', 'relationship_to_child' => 'Father',   'contact_number' => '09195678901', 'address' => 'Brgy. Balite, Quezon City'],
+            ['first_name' => 'Lourdes',  'middle_name' => 'Paz',   'last_name' => 'Bautista',  'relationship_to_child' => 'Guardian', 'contact_number' => '09186789012', 'address' => 'Brgy. Balite, Quezon City'],
         ];
 
         $studentsData = [
-            ['first_name' => 'Liam', 'middle_name' => null, 'last_name' => 'Cruz', 'gender' => 'male', 'date_of_birth' => '2021-03-15', 'nationality' => 'Filipino', 'religion' => 'Catholic'],
-            ['first_name' => 'Sofia', 'middle_name' => 'Mae', 'last_name' => 'Santos', 'gender' => 'female', 'date_of_birth' => '2020-11-22', 'nationality' => 'Filipino', 'religion' => 'Catholic'],
-            ['first_name' => 'Noah', 'middle_name' => null, 'last_name' => 'Reyes', 'gender' => 'male', 'date_of_birth' => '2021-07-08', 'nationality' => 'Filipino', 'religion' => 'Catholic'],
-            ['first_name' => 'Isabella', 'middle_name' => 'Rose', 'last_name' => 'Dela Cruz', 'gender' => 'female', 'date_of_birth' => '2020-05-30', 'nationality' => 'Filipino', 'religion' => 'Catholic'],
-            ['first_name' => 'Lucas', 'middle_name' => null, 'last_name' => 'Bautista', 'gender' => 'male', 'date_of_birth' => '2021-09-12', 'nationality' => 'Filipino', 'religion' => 'Catholic'],
+            ['first_name' => 'Liam',     'middle_name' => null,    'last_name' => 'Cruz',      'gender' => 'male',   'date_of_birth' => '2021-03-15', 'nationality' => 'Filipino', 'religion' => 'Catholic'],
+            ['first_name' => 'Sofia',    'middle_name' => 'Mae',   'last_name' => 'Santos',    'gender' => 'female', 'date_of_birth' => '2020-11-22', 'nationality' => 'Filipino', 'religion' => 'Catholic'],
+            ['first_name' => 'Noah',     'middle_name' => null,    'last_name' => 'Reyes',     'gender' => 'male',   'date_of_birth' => '2021-07-08', 'nationality' => 'Filipino', 'religion' => 'Catholic'],
+            ['first_name' => 'Isabella', 'middle_name' => 'Rose',  'last_name' => 'Dela Cruz', 'gender' => 'female', 'date_of_birth' => '2020-05-30', 'nationality' => 'Filipino', 'religion' => 'Catholic'],
+            ['first_name' => 'Lucas',    'middle_name' => null,    'last_name' => 'Bautista',  'gender' => 'male',   'date_of_birth' => '2021-09-12', 'nationality' => 'Filipino', 'religion' => 'Catholic'],
         ];
 
         foreach ($guardianData as $i => $gData) {
@@ -151,15 +137,10 @@ class SystemSeeder extends Seeder
             ]));
         }
 
-        // ======================
-        // 4. Seed Weeks
-        // ======================
-        $weeks = [
-            ['week_number' => 1, 'start_date' => '2026-03-30', 'end_date' => '2026-04-03'],
-        ];
-
-        foreach ($weeks as $week) {
-            Week::create($week);
-        }
+        Week::create([
+            'week_number' => 1,
+            'start_date'  => '2026-03-30',
+            'end_date'    => '2026-04-03',
+        ]);
     }
 }

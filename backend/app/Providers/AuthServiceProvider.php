@@ -17,14 +17,8 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\Student::class => \App\Policies\StudentPolicy::class,
     ];
 
-    /**
-     * Register any authentication / authorization services.
-     */
     public function boot(): void
     {
         $this->registerPolicies();
-
-        // You can also define Gates here if needed
-        // Gate::define('something', fn(User $user) => ...);
     }
 }

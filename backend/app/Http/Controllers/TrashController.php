@@ -10,94 +10,102 @@ use Illuminate\Http\Request;
 
 class TrashController extends Controller
 {
-    /**
-     * Show all trashed records in one unified view.
-     */
     public function index()
     {
-        $guardians = Guardian::whereNotNull('trashed_at')->with('students')->paginate(10);
-        $students = Student::whereNotNull('trashed_at')->with('progressRecords')->paginate(10);
+        $guardians       = Guardian::whereNotNull('trashed_at')->with('students')->paginate(10);
+        $students        = Student::whereNotNull('trashed_at')->with(['progressRecords','weeklySummaries'])->paginate(10);
         $progressRecords = ProgressRecord::whereNotNull('trashed_at')->with(['student','week'])->paginate(10);
         $weeklySummaries = WeeklySummary::whereNotNull('trashed_at')->with(['student','week'])->paginate(10);
 
         return view('trash', compact('guardians','students','progressRecords','weeklySummaries'));
     }
 
-    /**
-     * Restore a trashed record dynamically.
-     */
-    public function restore($type, $id)
+    public function restore(string $type, int $id)
     {
-        switch ($type) {
-            case 'guardian':
-                $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
-                $guardian->restoreFromTrash();
+        try {
+            switch ($type) {
+                case 'guardian':
+                    $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
+                    $guardian->restoreFromTrash();
 
-                foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
+                    foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
+                        $student->restoreFromTrash();
+                    }
+                    break;
+
+                case 'student':
+                    $student = Student::whereNotNull('trashed_at')->findOrFail($id);
+
+                    if (!$student->guardian || $student->guardian->trashed_at !== null) {
+                        return back()->with(
+                            'error',
+                            'Cannot restore student: Guardian is missing or inactive.'
+                        );
+                    }
+
                     $student->restoreFromTrash();
-                }
-                break;
+                    break;
 
-            case 'student':
-                $student = Student::whereNotNull('trashed_at')->findOrFail($id);
+                case 'progress':
+                    $record = ProgressRecord::whereNotNull('trashed_at')->findOrFail($id);
+                    $record->restoreFromTrash();
+                    break;
 
-                // ✅ Block restore if guardian is missing or trashed
-                if (!$student->guardian || $student->guardian->trashed_at !== null) {
-                    return back()->with(
-                        'error',
-                        'Cannot restore student: Guardian is missing or inactive.'
-                    );
-                }
+                case 'summary':
+                    $summary = WeeklySummary::whereNotNull('trashed_at')->findOrFail($id);
+                    $summary->restoreFromTrash();
+                    break;
 
-                $student->restoreFromTrash();
-                break;
+                default:
+                    return back()->with('error', 'Invalid restore type.');
+            }
 
-            case 'progress':
-                $record = ProgressRecord::whereNotNull('trashed_at')->findOrFail($id);
-                $record->restoreFromTrash();
-                break;
-
-            case 'summary':
-                $summary = WeeklySummary::whereNotNull('trashed_at')->findOrFail($id);
-                $summary->restoreFromTrash();
-                break;
+            return back()->with('success', ucfirst($type).' restored successfully.');
+        } catch (\Throwable $e) {
+            return back()->with('error', ucfirst($type).' restore failed: '.$e->getMessage());
         }
-
-        return back()->with('success', ucfirst($type).' restored successfully.');
     }
 
-    /**
-     * Permanently delete a trashed record dynamically.
-     */
-    public function forceDelete($type, $id)
+    public function forceDelete(string $type, int $id)
     {
-        switch ($type) {
-            case 'guardian':
-                $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
+        try {
+            switch ($type) {
+                case 'guardian':
+                    $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
 
-                foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
+                    foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
+                        $student->hardDelete();
+                    }
+
+                    if ($guardian->user) {
+                        $guardian->user->delete();
+                    }
+
+                    $guardian->hardDelete();
+                    break;
+
+                case 'student':
+                    $student = Student::whereNotNull('trashed_at')->findOrFail($id);
                     $student->hardDelete();
-                }
+                    break;
 
-                $guardian->hardDelete();
-                break;
+                case 'progress':
+                    $record = ProgressRecord::whereNotNull('trashed_at')->findOrFail($id);
+                    $record->hardDelete();
+                    break;
 
-            case 'student':
-                $student = Student::whereNotNull('trashed_at')->findOrFail($id);
-                $student->hardDelete();
-                break;
+                case 'summary':
+                    $summary = WeeklySummary::whereNotNull('trashed_at')->findOrFail($id);
+                    $summary->hardDelete();
+                    break;
 
-            case 'progress':
-                $record = ProgressRecord::whereNotNull('trashed_at')->findOrFail($id);
-                $record->hardDelete();
-                break;
+                default:
+                    return back()->with('error', 'Invalid delete type.');
+            }
 
-            case 'summary':
-                $summary = WeeklySummary::whereNotNull('trashed_at')->findOrFail($id);
-                $summary->hardDelete();
-                break;
+            return back()->with('success', ucfirst($type).' permanently deleted.');
+        } catch (\Throwable $e) {
+            return back()->with('error', ucfirst($type).' delete failed: '.$e->getMessage());
         }
-
-        return back()->with('success', ucfirst($type).' permanently deleted.');
     }
 }

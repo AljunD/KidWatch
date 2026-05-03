@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Storage;
 
 class StudentController extends Controller
 {
-    // Show all active students
     public function index()
     {
         $students = Student::whereNull('trashed_at')
@@ -20,7 +19,6 @@ class StudentController extends Controller
         return view('student', compact('students'));
     }
 
-    // Update student info with optional photo
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
@@ -37,7 +35,6 @@ class StudentController extends Controller
         try {
             $student = Student::findOrFail($id);
 
-            // Handle optional photo upload
             if ($request->hasFile('student_photo')) {
                 if ($student->photo_path && Storage::disk('public')->exists($student->photo_path)) {
                     Storage::disk('public')->delete($student->photo_path);
@@ -68,7 +65,6 @@ class StudentController extends Controller
         }
     }
 
-    // Move student to trash
     public function trash($id)
     {
         try {
@@ -91,14 +87,12 @@ class StudentController extends Controller
         }
     }
 
-    // List trashed students
     public function trashList()
     {
         $students = Student::whereNotNull('trashed_at')->paginate(20);
         return view('trash', compact('students'));
     }
 
-    // Restore student
     public function restore($id)
     {
         $student = Student::whereNotNull('trashed_at')->findOrFail($id);
@@ -107,7 +101,6 @@ class StudentController extends Controller
         return redirect()->route('students.trash')->with('success', 'Student restored successfully.');
     }
 
-    // Permanently delete student
     public function forceDelete($id)
     {
         $student = Student::whereNotNull('trashed_at')->findOrFail($id);

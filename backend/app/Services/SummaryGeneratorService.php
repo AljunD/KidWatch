@@ -10,10 +10,6 @@ use Illuminate\Support\Collection;
 
 class SummaryGeneratorService
 {
-    /**
-     * Generate professional weekly narrative summary and recommendation activities.
-     * Returns an array with 'summary' and 'activities' keys.
-     */
     public function generate(Student $student, int $weekId, ?array $previousRatings = null): array
     {
         /** @var Collection<ProgressRecord> $records */
@@ -24,27 +20,25 @@ class SummaryGeneratorService
 
         if ($records->isEmpty()) {
             return [
-                'summary'    => "No progress records available for {$student->first_name} {$student->last_name} in Week {$weekId}.",
+                'summary'    => "No progress records available for {$student->full_name} in Week {$weekId}.",
                 'activities' => []
             ];
         }
 
-        // Header
         $narrative  = "Weekly Progress Summary – Week {$weekId}\n";
-        $narrative .= "Student: {$student->first_name} {$student->last_name}\n";
+        $narrative .= "Student: {$student->full_name}\n";
         $narrative .= "Generated on " . now()->format('F j, Y') . "\n\n";
 
-        // Rating labels
         $labels = [
             0 => 'No Classes',
-            1 => 'Poor',
+            1 => 'Needs Attention',
             2 => 'Good',
             3 => 'Very Good',
             4 => 'Excellent',
         ];
 
         // Collect ratings + remarks
-        $ratings = [];
+        $ratings        = [];
         $remarksSummary = [];
         foreach ($records as $record) {
             $ratings[strtolower($record->subject)] = $record->rating_level;
@@ -55,7 +49,7 @@ class SummaryGeneratorService
 
         // Subject ratings section
         foreach ($records as $record) {
-            $label = $labels[$record->rating_level] ?? $record->rating_level;
+            $label = $labels[$record->rating_level] ?? (string) $record->rating_level;
             $narrative .= strtoupper($record->subject) . ": {$label}";
             if ($record->remarks) {
                 $narrative .= " – {$record->remarks}";
@@ -63,7 +57,6 @@ class SummaryGeneratorService
             $narrative .= ".\n";
         }
 
-        // Performance analysis
         $summaryText = "Performance Analysis:\n";
 
         $strengths  = array_keys(array_filter($ratings, fn($r) => $r >= 3));
@@ -76,7 +69,6 @@ class SummaryGeneratorService
             $summaryText .= "Weaknesses in " . implode(', ', $weaknesses) . " require closer attention and support.\n";
         }
 
-        // Week-to-week comparison
         if ($previousRatings) {
             $summaryText .= "\nWeek-to-Week Comparison:\n";
             foreach ($ratings as $subject => $rating) {
@@ -93,7 +85,6 @@ class SummaryGeneratorService
             }
         }
 
-        // Remarks summary
         if (!empty($remarksSummary)) {
             $summaryText .= "\nRemarks Summary:\n";
             foreach ($remarksSummary as $remark) {
@@ -101,16 +92,19 @@ class SummaryGeneratorService
             }
         }
 
-        // Build recommendation activities via engine
-        $engine = new RecommendationEngine();
+        $engine     = new RecommendationEngine();
         $activities = $engine->getActivities($ratings);
 
-        // Always include parent-teacher conference rule
         if (in_array(1, $ratings, true)) {
-            $activities[] = "Organize a parent-teacher conference if any Poor ratings persist.";
+            $activities[] = [
+                'activity'     => "Organize a parent-teacher conference to address persistent Needs Attention ratings.",
+                'category'     => 'intervention',
+                'priority'     => 'high',
+                'guardian_tip' => "Schedule a meeting with teachers to discuss targeted support.",
+                'student_tip'  => "Be open to feedback and commit to improvement plans.",
+            ];
         }
 
-        // Final assembly
         $narrative .= "\nSummary:\n{$summaryText}\n";
         $narrative .= "End of summary.";
 

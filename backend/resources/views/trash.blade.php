@@ -2,7 +2,6 @@
     <x-slot:title>KidWatch | Trash Bin</x-slot>
 
     <div class="max-w-6xl mx-auto mb-6">
-        <!-- ✅ Flash Messages -->
         @if(session('success'))
             <div class="mb-4 p-4 rounded-lg bg-green-100 text-green-800 border border-green-300">
                 <i class="fas fa-check-circle"></i> {{ session('success') }}
@@ -17,7 +16,6 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- LEFT COLUMN: Guardians -->
         <section class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <h2 class="text-xl font-bold text-[#003366] mb-4 flex items-center gap-2">
                 <i class="fas fa-user-shield text-blue-600"></i> Trashed Guardians
@@ -28,10 +26,10 @@
                     <div class="flex justify-between items-center">
                         <div>
                             <p class="font-semibold text-gray-900">
-                                {{ $guardian->first_name }} {{ $guardian->last_name }}
+                                {{ $guardian->full_name }}
                             </p>
                             <p class="text-xs text-gray-500">
-                                Trashed at: {{ $guardian->trashed_at->toDateString() }}
+                                Trashed at: {{ optional($guardian->trashed_at)->toDateString() }}
                             </p>
                         </div>
                         <div class="flex gap-2">
@@ -50,7 +48,6 @@
                         </div>
                     </div>
 
-                    <!-- Linked Students -->
                     <details class="mt-3">
                         <summary class="cursor-pointer text-blue-600 font-medium flex items-center gap-1">
                             <i class="fas fa-users"></i> Linked Students
@@ -58,8 +55,8 @@
                         <ul class="mt-2 space-y-1 text-sm text-gray-700 pl-6">
                             @foreach($guardian->students as $student)
                                 <li>
-                                    {{ $student->first_name }} {{ $student->last_name }} — {{ ucfirst($student->gender) }},
-                                    DOB: {{ $student->date_of_birth->toDateString() }}
+                                    {{ $student->full_name }} — {{ ucfirst($student->gender) }},
+                                    DOB: {{ optional($student->date_of_birth)->toDateString() }}
                                 </li>
                             @endforeach
                         </ul>
@@ -70,7 +67,6 @@
             @endforelse
         </section>
 
-        <!-- RIGHT COLUMN: Students -->
         <section class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <h2 class="text-xl font-bold text-[#003366] mb-4 flex items-center gap-2">
                 <i class="fas fa-user-graduate text-green-600"></i> Trashed Students
@@ -81,10 +77,10 @@
                     <div class="flex justify-between items-center">
                         <div>
                             <p class="font-semibold text-gray-900">
-                                {{ $student->first_name }} {{ $student->last_name }}
+                                {{ $student->full_name }}
                             </p>
                             <p class="text-xs text-gray-500">
-                                Trashed at: {{ $student->trashed_at->toDateString() }}
+                                Trashed at: {{ optional($student->trashed_at)->toDateString() }}
                             </p>
                         </div>
                         <div class="flex gap-2">
@@ -103,7 +99,6 @@
                         </div>
                     </div>
 
-                    <!-- Progress Records -->
                     <details class="mt-3">
                         <summary class="cursor-pointer text-blue-600 font-medium flex items-center gap-1">
                             <i class="fas fa-book"></i> Progress Records
@@ -112,7 +107,20 @@
                             @foreach($student->progressRecords as $record)
                                 <li>
                                     Week {{ $record->week->week_number }} — {{ $record->subject }}:
-                                    {{ $record->rating_level }}
+                                    {{ $record->rating_label }}
+                                </li>
+                            @endforeach
+                        </ul>
+                    </details>
+
+                    <details class="mt-3">
+                        <summary class="cursor-pointer text-purple-600 font-medium flex items-center gap-1">
+                            <i class="fas fa-file-alt"></i> Weekly Summaries
+                        </summary>
+                        <ul class="mt-2 space-y-1 text-sm text-gray-700 pl-6">
+                            @foreach($student->weeklySummaries as $summary)
+                                <li>
+                                    Week {{ $summary->week->week_number }} — {{ Str::limit($summary->summary_text, 50) }}
                                 </li>
                             @endforeach
                         </ul>

@@ -19,6 +19,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -28,7 +29,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'is_active' => 'boolean',
+        'is_active'         => 'boolean',
+        'created_at'        => 'datetime',
+        'updated_at'        => 'datetime',
     ];
 
     public function teacher(): HasOne

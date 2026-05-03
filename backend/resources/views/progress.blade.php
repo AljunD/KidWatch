@@ -3,13 +3,11 @@
     <x-slot:title>Progress Management | KidWatch</x-slot>
 
     <div class="space-y-8">
-        {{-- Header & Controls --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
                 <h1 class="text-4xl font-black text-[#003366] tracking-[-1px] leading-none uppercase italic">Student Progress</h1>
                 <p class="text-slate-500 mt-2 font-medium">Track weekly academic performance • Real-time updates</p>
 
-                {{-- Alert Messages --}}
                 @if(session('success'))
                     <div class="mt-4 px-6 py-4 rounded-xl bg-green-100 text-green-800 font-semibold shadow flex justify-between items-center">
                         <span>{{ session('success') }}</span>
@@ -29,12 +27,10 @@
                 @endif
             </div>
 
-            {{-- Week Creation Form --}}
             <form action="{{ route('weeks.store') }}" method="POST"
                 class="flex flex-wrap items-center gap-6 bg-white rounded-3xl px-6 py-4 shadow-sm border border-blue-100">
                 @csrf
 
-                {{-- Show next week number (read-only) --}}
                 @php
                     $nextWeekNumber = $weeks->max('week_number') ? $weeks->max('week_number') + 1 : 1;
                 @endphp
@@ -67,9 +63,7 @@
             </form>
         </div>
 
-        {{-- Student List Section --}}
         <div class="bg-white rounded-3xl shadow-lg p-8 space-y-6">
-            {{-- Header --}}
             <div class="flex justify-between items-center mb-6 border-b pb-3">
                 <h2 class="text-2xl font-black text-[#003366] flex items-center gap-2">
                     👩‍🎓 Student List
@@ -79,17 +73,14 @@
                 </span>
             </div>
 
-            {{-- Student Grid --}}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($students as $student)
                     <div class="flex items-center gap-4 bg-gradient-to-r from-slate-50 to-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-blue-200 transition-all group">
 
-                        {{-- Avatar Circle --}}
                         <div class="w-12 h-12 rounded-full bg-[#003366] text-white flex items-center justify-center font-black text-lg shadow-inner group-hover:scale-105 transition-transform">
                             {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
                         </div>
 
-                        {{-- Student Info --}}
                         <div>
                             <p class="font-bold text-[#003366] text-lg group-hover:text-blue-700 transition-colors">
                                 {{ $student->first_name }} {{ $student->last_name }}
@@ -99,7 +90,6 @@
                             </p>
                         </div>
 
-                        {{-- Action Button --}}
                         <div class="ml-auto">
                             <a href="{{ route('progress.viewAll', ['student_id' => $student->id]) }}"
                             class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-blue-700 hover:shadow-md transition">
@@ -111,7 +101,6 @@
             </div>
         </div>
 
-        {{-- Weeks - Current week always on top --}}
         <div class="space-y-6">
             @php
                 $sortedWeeks = $weeks->sortByDesc('week_number');
@@ -204,18 +193,15 @@
                                                 </td>
                                             @endforeach
 
-                                            {{-- NEW ACTIONS COLUMN - View / Add / Edit --}}
                                             <td class="px-8 py-6 text-right">
                                                 <div class="flex justify-end gap-2">
 
-                                                    {{-- View Progress --}}
                                                     <a href="{{ route('progress.view', ['student_id' => $student->id, 'week_id' => $week->id]) }}"
                                                     class="w-9 h-9 bg-white border border-slate-200 hover:bg-blue-600 hover:text-white rounded-2xl flex items-center justify-center transition-all text-slate-600"
                                                     title="View Progress">
                                                         <i class="fas fa-eye text-sm"></i>
                                                     </a>
 
-                                                    {{-- Add Progress --}}
                                                     @php
                                                         $gradedSubjectsCount = $student->progressRecords
                                                             ->where('week_id', $week->id)
@@ -238,7 +224,6 @@
                                                         </a>
                                                     @endif
 
-                                                    {{-- Edit Progress --}}
                                                     @php
                                                         $firstRecord = $student->progressRecords
                                                             ->where('week_id', $week->id)
@@ -268,7 +253,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('%c✅ Progress page ready - View / Add / Edit / Delete actions active', 'color:#003366; font-weight:bold');
+        console.log('%c Progress page ready - View / Add / Edit / Delete actions active', 'color:#003366; font-weight:bold');
 
         document.addEventListener('click', function (e) {
             const btn = e.target.closest('.progress-action-btn');
@@ -286,19 +271,14 @@
 
             switch (action) {
                 case 'view':
-                    // Redirect to summary route
                     window.location.href = `/progress/summary/${studentId}/${weekId}`;
                     break;
 
                 case 'add':
-                    // Redirect to create form with query params
                     window.location.href = `/progress/create?student_id=${studentId}&week_id=${weekId}`;
                     break;
 
                 case 'edit':
-                    // Redirect to edit form for this record
-                    // You need the actual record ID here, not just student/week.
-                    // If you only have student/week, you may need to fetch the record ID server-side.
                     const recordId = row.querySelector('[data-subject]')?.dataset.recordId;
                     if (recordId) {
                         window.location.href = `/progress/${recordId}/edit?week_id=${weekId}`;
@@ -309,7 +289,6 @@
 
                 case 'delete':
                     if (confirm(`🗑️ Delete ALL progress records for ${studentName} in Week ${weekId}?`)) {
-                        // Redirect to destroy route (or send AJAX)
                         const recordId = row.querySelector('[data-subject]')?.dataset.recordId;
                         if (recordId) {
                             const form = document.createElement('form');
@@ -328,5 +307,4 @@
         });
     });
     </script>
-
 </x-layout>

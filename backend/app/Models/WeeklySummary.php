@@ -16,13 +16,12 @@ class WeeklySummary extends Model
         'student_id',
         'week_id',
         'summary_text',
+        'activities_text',
         'trashed_at',
-        'deleted_at',
     ];
 
     protected $casts = [
         'trashed_at' => 'datetime',
-        'deleted_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -51,8 +50,6 @@ class WeeklySummary extends Model
 
     public function hardDelete(): void
     {
-        $this->deleted_at = now();
-        $this->save();
-        parent::delete();
+        $this->delete();
     }
 }

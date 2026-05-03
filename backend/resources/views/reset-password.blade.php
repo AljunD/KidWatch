@@ -77,7 +77,6 @@
                 </div>
             </form>
 
-            <!-- Back to Login -->
             <div class="mt-6 text-center">
                 <a href="{{ route('login.form') }}"
                    class="text-sm text-blue-600 hover:text-blue-800 font-medium">
@@ -86,7 +85,6 @@
             </div>
         </div>
 
-        <!-- Footer -->
         <p class="text-center mt-10 text-xs text-gray-400 font-medium">
             Authorized Personnel Only &mdash; © {{ date('Y') }} KidWatch System
         </p>

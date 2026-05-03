@@ -8,7 +8,6 @@
                 {{ $student->first_name }} {{ $student->last_name }}
             </span>
         </h1>
-                {{-- Back Button --}}
         <div class="mb-6">
             <a href="{{ route('progress') }}"
                class="inline-flex items-center gap-2 bg-gray-200 text-[#003366] px-5 py-2 rounded-lg font-bold hover:bg-gray-300 transition">
@@ -19,7 +18,6 @@
         <form action="{{ route('progress.store') }}" method="POST" class="space-y-6">
             @csrf
 
-            {{-- Student (pre-selected, read-only) --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Student</label>
                 <input type="hidden" name="student_id" value="{{ $student->id }}">
@@ -27,7 +25,6 @@
                        class="border rounded-lg px-4 py-2 w-full bg-gray-100 font-semibold text-[#003366]" readonly>
             </div>
 
-            {{-- Week (pre-selected, read-only) --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Week</label>
                 <input type="hidden" name="week_id" value="{{ $week->id }}">
@@ -35,7 +32,6 @@
                        class="border rounded-lg px-4 py-2 w-full bg-gray-100 font-semibold text-[#003366]" readonly>
             </div>
 
-            {{-- Subject Selection --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Subject</label>
                 <select name="subject" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400" required>
@@ -55,7 +51,6 @@
                 </select>
             </div>
 
-            {{-- Rating --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Rating</label>
                 <select name="rating_level" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400" required>
@@ -66,7 +61,6 @@
                 </select>
             </div>
 
-            {{-- Remarks --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Remarks</label>
                 <textarea name="remarks" rows="3"
@@ -74,7 +68,6 @@
                           placeholder="Enter remarks for this subject"></textarea>
             </div>
 
-            {{-- Action Buttons --}}
             <div class="flex justify-center items-center mt-8">
                 <button type="submit"
                         class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition">
