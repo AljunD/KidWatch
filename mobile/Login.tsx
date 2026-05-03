@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react"; // Added useState
 import {
   ImageBackground,
   Text,
@@ -10,22 +10,10 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-/**
- * Reusable Input Component to reduce clutter
- */
-const AuthInput = ({ placeholder, icon, secureTextEntry = false }: any) => (
-  <View style={styles.inputContainer}>
-    <TextInput
-      placeholder={placeholder}
-      placeholderTextColor="#888"
-      secureTextEntry={secureTextEntry}
-      style={styles.input}
-    />
-    <Ionicons name={icon} size={20} color="#555" />
-  </View>
-);
-
 export default function LoginScreen({ navigation }: any) {
+  // State to toggle password visibility
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
   return (
     <ImageBackground 
       source={require("./assets/back.jpg")} 
@@ -52,16 +40,34 @@ export default function LoginScreen({ navigation }: any) {
               Track your child's weekly learning progress
             </Text>
 
-            {/* Input Fields */}
-            <AuthInput 
-              placeholder="Username" 
-              icon="person-outline" 
-            />
-            <AuthInput 
-              placeholder="Password" 
-              icon="eye-outline" 
-              secureTextEntry 
-            />
+            {/* Username Input */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Username"
+                placeholderTextColor="#888"
+                style={styles.input}
+              />
+              <Ionicons name="person-outline" size={20} color="#555" />
+            </View>
+
+            {/* Password Input with Clickable Eye */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Password"
+                placeholderTextColor="#888"
+                secureTextEntry={!passwordVisible} // Changes based on state
+                style={styles.input}
+              />
+              <TouchableOpacity 
+                onPress={() => setPasswordVisible(!passwordVisible)}
+              >
+                <Ionicons 
+                  name={passwordVisible ? "eye-off-outline" : "eye-outline"} 
+                  size={20} 
+                  color="#555" 
+                />
+              </TouchableOpacity>
+            </View>
 
             {/* Action Buttons */}
             <TouchableOpacity 
@@ -84,7 +90,6 @@ export default function LoginScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  // Layout & Background
   background: { 
     flex: 1 
   },
@@ -98,8 +103,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, 
     marginTop: -60 
   },
-  
-  // Header Elements
   backButton: { 
     padding: 20, 
     width: 60 
@@ -111,19 +114,17 @@ const styles = StyleSheet.create({
     alignItems: "center" 
   },
   title: { 
-    fontSize: 22, 
+    fontSize: 25, 
     fontWeight: "bold", 
     color: "#fff", 
     marginBottom: 8 
   },
   subtitle: { 
-    fontSize: 13, 
+    fontSize: 15, 
     color: "#f0f0f0", 
     textAlign: "center", 
     marginBottom: 25 
   },
-
-  // Input Fields
   inputContainer: { 
     flexDirection: "row", 
     alignItems: "center", 
@@ -139,8 +140,6 @@ const styles = StyleSheet.create({
     flex: 1, 
     color: "#000" 
   },
-
-  // Buttons & Links
   button: { 
     backgroundColor: "#2d8ac7", 
     paddingVertical: 14, 

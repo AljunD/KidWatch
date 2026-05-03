@@ -7,185 +7,241 @@ import {
   SafeAreaView,
   Image,
   StatusBar,
+  ScrollView,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 /**
- * Reusable Menu Item Component
+ * Kid-Themed Bubble Menu Button Component
  */
-const MenuButton = ({ title, icon, onPress }: any) => (
+const MenuButton = ({ title, description, icon, color, onPress }: any) => (
   <TouchableOpacity 
-    style={styles.inputContainer} 
-    activeOpacity={0.7} 
+    style={[styles.menuItem, { borderColor: color + "30" }]} 
+    activeOpacity={0.6} 
     onPress={onPress}
   >
-    <View style={styles.iconCircle}>
-      <Ionicons name={icon} size={22} color="#2d8ac7" />
+    <View style={[styles.iconCircle, { backgroundColor: color }]}>
+      <Ionicons name={icon} size={26} color="#fff" />
     </View>
-    <Text style={styles.buttonText}>{title}</Text>
-    <Ionicons name="chevron-forward" size={20} color="#fff" />
+    
+    <View style={styles.textContainer}>
+      <Text style={styles.buttonTitle}>{title}</Text>
+      <Text style={styles.buttonDescription}>{description}</Text>
+    </View>
+    
+    <View style={[styles.arrowCircle, { backgroundColor: color + "10" }]}>
+      <Ionicons name="chevron-forward" size={18} color={color} />
+    </View>
   </TouchableOpacity>
 );
 
 export default function DashboardScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
 
-      {/* --- HEADER --- */}
-      <View style={styles.header}>
-        <Text style={styles.title}>KidWatch</Text>
-      </View>
-
-      <View style={styles.overlay}>
-        {/* --- WELCOME SECTION --- */}
-        <View style={styles.welcomeContainer}>
-          <Text style={styles.welcomeText}>Welcome, Parent!</Text>
-          <Text style={styles.subtitle}>Here is your child's overview</Text>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* --- 1. GREETING SECTION --- */}
+        <View style={styles.welcomeSection}>
+          <Text style={styles.welcomeText}>Hi, Parent! 👋</Text>
+          <Text style={styles.subtitle}>Let's see how the day is going!</Text>
         </View>
 
-        {/* --- STUDENT PROFILE CARD --- */}
+        {/* --- 2. STUDENT PROFILE CARD --- */}
         <View style={styles.card}>
-          <Image 
-            source={require("./assets/cjpic.jpg")} 
-            style={styles.profileImage} 
-          />
-          <View style={styles.infoContainer}>
-            <Text style={styles.childName}>Francisco, Christoper</Text>
+          <View style={styles.cardContent}>
+            <Image 
+              source={require("./assets/cjpic.jpg")} 
+              style={styles.profileImage} 
+            />
+            <View style={styles.nameContainer}>
+              <Text style={styles.childLabel}>Student</Text>
+              <Text style={styles.childName}>Francisco, Christoper Jul</Text>
+            </View>
           </View>
         </View>
 
-        {/* --- NAVIGATION MENU --- */}
+        {/* --- 3. MAIN NAVIGATION MENU --- */}
+        <Text style={styles.sectionLabel}>FUN STUFF TO CHECK</Text>
+        
         <MenuButton 
           title="Weekly Progress" 
+          description="See all the great learning!"
           icon="stats-chart" 
-          onPress={() => {/* Add Progress Navigation */}} 
+          color="#FF6B6B" 
+          onPress={() => navigation.navigate("WeeklyProgress")} 
         />
         
         <MenuButton 
           title="Progress History" 
-          icon="time" 
-          onPress={() => {/* Add History Navigation */}} 
+          description="Look back at the fun times"
+          icon="book" 
+          color="#4ECDC4" 
+          onPress={() => navigation.navigate("ProgressHistory")} 
         />
         
         <MenuButton 
           title="Account Profile" 
-          icon="person" 
+          description="View your settings"
+          icon="happy" 
+          color="#FFBE0B" 
           onPress={() => navigation.navigate("StudentProfile")} 
         />
 
-        {/* --- FOOTER --- */}
+        {/* --- 4. FOOTER ACTIONS --- */}
         <TouchableOpacity 
           style={styles.logoutButton} 
           onPress={() => navigation.replace("Login")}
         >
-          <Text style={styles.logoutText}>Log Out</Text>
+          <Text style={styles.logoutText}>Sign Out</Text>
+          <MaterialCommunityIcons name="exit-run" size={20} color="#FF6B6B" />
         </TouchableOpacity>
-      </View>
+
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  // Layout Containers
+  // --- A. GLOBAL LAYOUT ---
   safeArea: { 
     flex: 1, 
-    backgroundColor: "#F8FAFC" 
+    backgroundColor: "#F0F9FF" 
   },
-  header: { 
-    backgroundColor: "#2d8ac7", 
-    paddingVertical: 20, 
-    alignItems: "center", 
-    borderBottomLeftRadius: 20, 
-    borderBottomRightRadius: 20 
+  container: { 
+    flex: 1 
   },
-  overlay: { 
-    flex: 1, 
+  scrollContent: { 
     paddingHorizontal: 20, 
-    paddingTop: 20 
+    paddingTop: 40, 
+    paddingBottom: 40 
   },
 
-  // Typography
-  title: { 
-    fontSize: 28, 
-    fontWeight: "bold", 
-    color: "#fff" 
-  },
-  welcomeContainer: { 
-    marginBottom: 20 
+  // --- B. HEADER & TEXT ---
+  welcomeSection: { 
+    marginBottom: 25,
+    alignItems: 'flex-start' 
   },
   welcomeText: { 
-    fontSize: 24, 
-    fontWeight: "bold", 
-    color: "#1e293b" 
+    fontSize: 32, 
+    fontWeight: "900", 
+    color: "#1A365D" 
   },
   subtitle: { 
-    fontSize: 14, 
-    color: "#64748b" 
+    fontSize: 16, 
+    color: "#64748b", 
+    marginTop: 4,
+    fontWeight: "500"
+  },
+  sectionLabel: { 
+    fontSize: 13, 
+    fontWeight: "900", 
+    color: "#94a3b8", 
+    marginBottom: 15, 
+    letterSpacing: 2
   },
 
-  // Profile Card
+  // --- C. STUDENT CARD ---
   card: { 
+    backgroundColor: "#4A90E2", 
+    borderRadius: 35, 
+    padding: 24,
+    elevation: 10,
+    marginBottom: 35,
+    borderWidth: 4,
+    borderColor: "#fff",
+    shadowColor: "#4A90E2",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+  },
+  cardContent: { 
     flexDirection: "row", 
-    width: "100%", 
-    padding: 20, 
-    borderRadius: 20, 
-    alignItems: "center", 
-    backgroundColor: "#2d8ac7", 
-    marginBottom: 30 
+    alignItems: "center" 
   },
   profileImage: { 
-    width: 70, 
-    height: 70, 
-    borderRadius: 35, 
+    width: 85, 
+    height: 85, 
+    borderRadius: 30, 
     borderWidth: 3, 
-    borderColor: "rgba(255,255,255,0.5)" 
+    borderColor: "#fff" 
   },
-  infoContainer: { 
-    marginLeft: 15 
+  nameContainer: { 
+    marginLeft: 18,
+    flex: 1
+  },
+  childLabel: { 
+    color: "rgba(255,255,255,0.85)", 
+    fontSize: 10, 
+    fontWeight: "800", 
+    textTransform: "uppercase",
+    letterSpacing: 1.5
   },
   childName: { 
-    fontSize: 20, 
-    fontWeight: "bold", 
-    color: "#fff" 
+    fontSize: 18,           
+    fontWeight: "900",      
+    color: "#fff",
+    lineHeight: 28,
+    marginTop: 2
   },
 
-  // Menu Buttons
-  inputContainer: { 
+  // --- D. BUBBLE MENU BUTTONS ---
+  menuItem: { 
     flexDirection: "row", 
     alignItems: "center", 
-    backgroundColor: "#2d8ac7", 
-    borderRadius: 20, 
-    paddingHorizontal: 15, 
-    paddingVertical: 12, 
-    marginBottom: 15, 
-    width: "100%" 
+    backgroundColor: "#fff", 
+    borderRadius: 25, 
+    padding: 16, 
+    marginBottom: 16,
+    borderWidth: 2,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
   },
   iconCircle: { 
-    width: 40, 
-    height: 40, 
-    borderRadius: 20, 
-    backgroundColor: "#fff", 
+    width: 50, 
+    height: 50, 
+    borderRadius: 18, 
     justifyContent: "center", 
     alignItems: "center" 
   },
-  buttonText: { 
+  textContainer: { 
     flex: 1, 
-    color: "#fff", 
-    fontWeight: "600", 
-    fontSize: 16, 
     marginLeft: 15 
   },
+  buttonTitle: { 
+    fontSize: 17, 
+    fontWeight: "800", 
+    color: "#1e293b" 
+  },
+  buttonDescription: { 
+    fontSize: 13, 
+    color: "#64748b", 
+    fontWeight: "500"
+  },
+  arrowCircle: {
+    padding: 6,
+    borderRadius: 12,
+  },
 
-  // Footer
+  // --- E. FOOTER ACTIONS ---
   logoutButton: { 
-    marginTop: "auto", 
-    marginBottom: 20, 
-    alignSelf: "center" 
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+    padding: 15,
   },
   logoutText: { 
-    color: "#ef4444", 
-    fontWeight: "bold", 
-    fontSize: 16 
+    color: "#FF6B6B", 
+    fontWeight: "900", 
+    fontSize: 16,
+    marginRight: 8
   },
 });
