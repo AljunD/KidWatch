@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import WelcomeScreen from './WelcomeScreen'; 
 import LoginScreen from './Login'; 
+import SelectStudentScreen from './SelectStudent'; 
 import DashboardScreen from './Dashboard';
 import StudentProfileScreen from './StudentProfile';
 import WeeklyProgressScreen from './WeeklyProgress';
@@ -19,6 +20,7 @@ export default function App() {
       <Stack.Navigator initialRouteName="Welcome" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="SelectStudent" component={SelectStudentScreen} />
         <Stack.Screen name="Dashboard" component={DashboardScreen} />
         <Stack.Screen name="StudentProfile" component={StudentProfileScreen} />
         <Stack.Screen name="WeeklyProgress" component={WeeklyProgressScreen} />
