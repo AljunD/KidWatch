@@ -30,6 +30,14 @@ class TrashController extends Controller
 
                     foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
                         $student->restoreFromTrash();
+
+                        foreach ($student->progressRecords()->whereNotNull('trashed_at')->get() as $record) {
+                            $record->restoreFromTrash();
+                        }
+
+                        foreach ($student->weeklySummaries()->whereNotNull('trashed_at')->get() as $summary) {
+                            $summary->restoreFromTrash();
+                        }
                     }
                     break;
 
@@ -44,6 +52,14 @@ class TrashController extends Controller
                     }
 
                     $student->restoreFromTrash();
+
+                    foreach ($student->progressRecords()->whereNotNull('trashed_at')->get() as $record) {
+                        $record->restoreFromTrash();
+                    }
+
+                    foreach ($student->weeklySummaries()->whereNotNull('trashed_at')->get() as $summary) {
+                        $summary->restoreFromTrash();
+                    }
                     break;
 
                 case 'progress':
@@ -74,6 +90,14 @@ class TrashController extends Controller
                     $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
 
                     foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
+                        foreach ($student->progressRecords()->whereNotNull('trashed_at')->get() as $record) {
+                            $record->hardDelete();
+                        }
+
+                        foreach ($student->weeklySummaries()->whereNotNull('trashed_at')->get() as $summary) {
+                            $summary->hardDelete();
+                        }
+
                         $student->hardDelete();
                     }
 
@@ -86,6 +110,15 @@ class TrashController extends Controller
 
                 case 'student':
                     $student = Student::whereNotNull('trashed_at')->findOrFail($id);
+
+                    foreach ($student->progressRecords()->whereNotNull('trashed_at')->get() as $record) {
+                        $record->hardDelete();
+                    }
+
+                    foreach ($student->weeklySummaries()->whereNotNull('trashed_at')->get() as $summary) {
+                        $summary->hardDelete();
+                    }
+
                     $student->hardDelete();
                     break;
 

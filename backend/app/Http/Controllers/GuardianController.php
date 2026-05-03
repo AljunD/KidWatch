@@ -40,10 +40,18 @@ class GuardianController extends Controller
 
             foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
                 $student->restoreFromTrash();
+
+                foreach ($student->progressRecords()->whereNotNull('trashed_at')->get() as $record) {
+                    $record->restoreFromTrash();
+                }
+
+                foreach ($student->weeklySummaries()->whereNotNull('trashed_at')->get() as $summary) {
+                    $summary->restoreFromTrash();
+                }
             }
 
             return redirect()->route('guardians.trash')
-                ->with('success', 'Guardian and linked students restored successfully.');
+                ->with('success', 'Guardian, linked students, progress records, and summaries restored successfully.');
         } catch (\Throwable $e) {
             Log::error('Guardian restore failed', ['error' => $e->getMessage()]);
             return redirect()->route('guardians.trash')
@@ -55,7 +63,7 @@ class GuardianController extends Controller
     {
         try {
             $guardian = Guardian::whereNotNull('trashed_at')->findOrFail($id);
-            
+
             foreach ($guardian->students()->whereNotNull('trashed_at')->get() as $student) {
                 $student->hardDelete();
             }
