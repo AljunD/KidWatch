@@ -1,25 +1,26 @@
 {
   "info": {
     "name": "KidWatch Guardian API",
-    "_postman_id": "kidwatch-guardian-api-collection",
-    "description": "Guardian-only API endpoints for KidWatch mobile app",
+    "description": "Postman collection for Guardian-facing mobile API endpoints (view-only + summary generation).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Auth",
+      "name": "Authentication",
       "item": [
         {
           "name": "Login",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": { "raw": "{{baseUrl}}/api/v1/login", "host": ["{{baseUrl}}"], "path": ["api","v1","login"] },
+            "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"guardian@gmail.com\",\n  \"password\": \"password123\"\n}"
+              "raw": "{\n  \"email\": \"guardian@example.com\",\n  \"password\": \"secret\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/guardian/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guardian", "login"]
             }
           }
         },
@@ -28,9 +29,50 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
             ],
-            "url": { "raw": "{{baseUrl}}/api/v1/logout", "host": ["{{baseUrl}}"], "path": ["api","v1","logout"] }
+            "url": {
+              "raw": "{{base_url}}/api/v1/guardian/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guardian", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Guardian Profile",
+      "item": [
+        {
+          "name": "View Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/guardian/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guardian", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Juan\",\n  \"last_name\": \"Dela Cruz\",\n  \"contact_number\": \"09123456789\",\n  \"address\": \"Quezon City\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/guardian/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guardian", "profile"]
+            }
           }
         }
       ]
@@ -43,9 +85,13 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
             ],
-            "url": { "raw": "{{baseUrl}}/api/v1/students", "host": ["{{baseUrl}}"], "path": ["api","v1","students"] }
+            "url": {
+              "raw": "{{base_url}}/api/v1/guardian/students",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guardian", "students"]
+            }
           }
         },
         {
@@ -53,56 +99,87 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
             ],
-            "url": { "raw": "{{baseUrl}}/api/v1/students/12", "host": ["{{baseUrl}}"], "path": ["api","v1","students","12"] }
+            "url": {
+              "raw": "{{base_url}}/api/v1/guardian/students/:student_id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guardian", "students", ":student_id"]
+            }
           }
         }
       ]
     },
     {
-      "name": "Progress",
+      "name": "Progress Records",
       "item": [
         {
           "name": "List Progress Records",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
             ],
-            "url": { "raw": "{{baseUrl}}/api/v1/students/12/progress", "host": ["{{baseUrl}}"], "path": ["api","v1","students","12","progress"] }
-          }
-        },
-        {
-          "name": "Progress by Week",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": { "raw": "{{baseUrl}}/api/v1/students/12/progress?week=5", "host": ["{{baseUrl}}"], "path": ["api","v1","students","12","progress"], "query": [{ "key": "week", "value": "5" }] }
+            "url": {
+              "raw": "{{base_url}}/api/v1/guardian/students/:student_id/progress?week=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guardian", "students", ":student_id", "progress"],
+              "query": [{ "key": "week", "value": "1" }]
+            }
           }
         }
       ]
     },
     {
-      "name": "Summaries",
+      "name": "Weekly Summaries",
       "item": [
         {
-          "name": "Weekly Summary",
+          "name": "List Summaries",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
             ],
-            "url": { "raw": "{{baseUrl}}/api/v1/students/12/weeks/5/summary", "host": ["{{baseUrl}}"], "path": ["api","v1","students","12","weeks","5","summary"] }
+            "url": {
+              "raw": "{{base_url}}/api/v1/guardian/students/:student_id/summaries",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guardian", "students", ":student_id", "summaries"]
+            }
+          }
+        },
+        {
+          "name": "Show Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/guardian/students/:student_id/summaries/:week",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guardian", "students", ":student_id", "summaries", ":week"]
+            }
+          }
+        },
+        {
+          "name": "Generate Summary",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/guardian/students/:student_id/summaries/:week/generate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "guardian", "students", ":student_id", "summaries", ":week", "generate"]
+            }
           }
         }
       ]
     }
   ],
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "base_url", "value": "http://localhost:8000" },
     { "key": "token", "value": "" }
   ]
 }
