@@ -11,12 +11,11 @@ import {
   Alert 
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { apiRequest, ENDPOINTS } from "./api"; // centralized API client
+import { apiRequest, ENDPOINTS } from "./api";
 import dayjs from "dayjs";
 
 const SubjectCard = ({ subject, date, score, remarks, isPending }: any) => (
   <View style={[styles.card, isPending && styles.pendingCard]}>
-    {/* Card Header */}
     <View style={[styles.cardHeader, isPending && { backgroundColor: '#94a3b8' }]}>
       <View style={styles.headerTitleRow}>
         <Ionicons 
@@ -30,7 +29,6 @@ const SubjectCard = ({ subject, date, score, remarks, isPending }: any) => (
       <Text style={styles.dateText}>{date}</Text>
     </View>
 
-    {/* Card Body */}
     <View style={styles.cardBody}>
       {isPending ? (
         <View style={styles.pendingInner}>
@@ -46,7 +44,7 @@ const SubjectCard = ({ subject, date, score, remarks, isPending }: any) => (
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Remarks:</Text>
-            <Text style={styles.remarkText}>{remarks}</Text>
+            <Text style={styles.remarkText}>{remarks || "No remarks yet"}</Text>
           </View>
         </>
       )}
@@ -62,14 +60,12 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        // ✅ Fetch all progress records for this student
         const res = await apiRequest<any>(
           ENDPOINTS.studentProgress(student.id),
           "GET"
         );
 
-        if (res.success) {
-          // Map DB records to UI format
+        if (res.success && res.data && res.data.length > 0) {
           const records = res.data.map((rec: any) => ({
             id: rec.id,
             name: rec.subject,
@@ -78,12 +74,25 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
             remarks: rec.remarks,
             week: rec.week,
           }));
-          setProgressRecords(records);
+
+          // ✅ Find the latest week by max week_number
+          const latestWeekNumber = Math.max(
+            ...records.map((r: any) => r.week?.week_number || 0)
+          );
+
+          // ✅ Keep only records from the latest week
+          const latestRecords = records.filter(
+            (r: any) => r.week?.week_number === latestWeekNumber
+          );
+
+          setProgressRecords(latestRecords);
         } else {
-          Alert.alert("Error", res.message || "Failed to load progress records.");
+          // ✅ No records case
+          setProgressRecords([]);
         }
       } catch (err: any) {
         Alert.alert("Error", err.message || "Unable to connect to server.");
+        setProgressRecords([]);
       } finally {
         setLoading(false);
       }
@@ -92,15 +101,15 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
     fetchProgress();
   }, [student]);
 
-  // ✅ Logic: At least 4 subjects graded (rating_level > 0)
+  // ✅ Logic: At least 4 subjects graded
   const isComplete = useMemo(() => {
     return progressRecords.filter(s => s.score !== null).length >= 4;
   }, [progressRecords]);
 
   const handleGenerate = async () => {
-    if (isComplete) {
+    if (isComplete && progressRecords.length > 0) {
       try {
-        const weekId = progressRecords[0]?.week?.id;
+        const weekId = progressRecords[0].week?.id;
         const res = await apiRequest<any>(
           ENDPOINTS.generateSummary(student.id, weekId),
           "POST"
@@ -128,7 +137,6 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Cloud Header */}
       <View style={styles.headerContainer}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1A365D" />
@@ -138,50 +146,55 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {progressRecords.length > 0 && (
-          <View style={styles.weekInfo}>
-            <Text style={styles.weekLabel}>
-              Week {progressRecords[0].week?.week_number} Progress
-            </Text>
-            <Text style={styles.weekDates}>
-              {dayjs(progressRecords[0].week?.start_date).format("MMM D")} -{" "}
-              {dayjs(progressRecords[0].week?.end_date).format("MMM D, YYYY")}
-            </Text>
-          </View>
-        )}
+        {progressRecords.length > 0 ? (
+          <>
+            <View style={styles.weekInfo}>
+              <Text style={styles.weekLabel}>
+                Week {progressRecords[0].week?.week_number} Progress
+              </Text>
+              <Text style={styles.weekDates}>
+                {dayjs(progressRecords[0].week?.start_date).format("MMM D")} -{" "}
+                {dayjs(progressRecords[0].week?.end_date).format("MMM D, YYYY")}
+              </Text>
+            </View>
 
-        {progressRecords.map((item) => (
-          <SubjectCard 
-            key={item.id}
-            subject={item.name} 
-            date={item.date} 
-            score={item.score} 
-            remarks={item.remarks} 
-            isPending={item.score === null}
-          />
-        ))}
+            {progressRecords.map((item) => (
+              <SubjectCard 
+                key={item.id}
+                subject={item.name} 
+                date={item.date} 
+                score={item.score} 
+                remarks={item.remarks} 
+                isPending={item.score === null}
+              />
+            ))}
 
-        {/* Generate Summary Button */}
-        <TouchableOpacity 
-          style={[styles.summaryButton, !isComplete && styles.buttonDisabled]}
-          onPress={handleGenerate}
-          disabled={!isComplete}
-          activeOpacity={0.8}
-        >
-          <Ionicons 
-            name={isComplete ? "document-text" : "lock-closed"} 
-            size={22} 
-            color="#fff" 
-            style={{ marginRight: 10 }} 
-          />
-          <Text style={styles.summaryButtonText}>
-            {isComplete ? "Generate Summary" : "Complete 4 Subjects to Unlock"}
-          </Text>
-        </TouchableOpacity>
-        
-        {!isComplete && (
-          <Text style={styles.lockHint}>
-            Please wait for all subjects to be graded.
+            <TouchableOpacity 
+              style={[styles.summaryButton, !isComplete && styles.buttonDisabled]}
+              onPress={handleGenerate}
+              disabled={!isComplete}
+              activeOpacity={0.8}
+            >
+              <Ionicons 
+                name={isComplete ? "document-text" : "lock-closed"} 
+                size={22} 
+                color="#fff" 
+                style={{ marginRight: 10 }} 
+              />
+              <Text style={styles.summaryButtonText}>
+                {isComplete ? "Generate Summary" : "Complete 4 Subjects to Unlock"}
+              </Text>
+            </TouchableOpacity>
+            
+            {!isComplete && (
+              <Text style={styles.lockHint}>
+                Please wait for all subjects to be graded.
+              </Text>
+            )}
+          </>
+        ) : (
+          <Text style={{ textAlign: "center", marginTop: 40, color: "#94a3b8", fontSize: 16, fontWeight: "600" }}>
+            No progress records available yet for this student.
           </Text>
         )}
       </ScrollView>
@@ -214,7 +227,6 @@ const styles = StyleSheet.create({
   weekLabel: { fontSize: 26, fontWeight: "900", color: "#4A90E2" },
   weekDates: { fontSize: 14, color: "#64748b", fontWeight: "600" },
 
-  // Card Styling
   card: { 
     width: "100%", 
     backgroundColor: "#fff", 
@@ -241,7 +253,6 @@ const styles = StyleSheet.create({
   headerTitleRow: { flexDirection: 'row', alignItems: 'center' },
   subjectText: { color: "#fff", fontSize: 18, fontWeight: "800" },
   dateText: { color: "rgba(255,255,255,0.8)", fontSize: 11, fontWeight: "700" },
-  
   cardBody: { padding: 20 },
   row: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
   label: { fontSize: 14, fontWeight: "800", color: "#94a3b8", width: 70 },

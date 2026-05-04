@@ -52,9 +52,17 @@ export default function SelectStudentScreen({ navigation, route }: any) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
-        <Text style={styles.welcomeText}>Parent Portal</Text>
-        <Text style={styles.title}>Who's learning today?</Text>
+
+      {/* Header with Back Button */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#1A365D" />
+        </TouchableOpacity>
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.welcomeText}>Parent Portal</Text>
+          <Text style={styles.title}>Who's learning today?</Text>
+        </View>
+        <View style={{ width: 45 }} /> {/* Spacer for symmetry */}
       </View>
 
       <FlatList
@@ -101,7 +109,23 @@ export default function SelectStudentScreen({ navigation, route }: any) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F0F9FF" },
-  header: { padding: 30, marginTop: 20 },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+  },
+  backButton: {
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 15,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+  headerTextContainer: { flex: 1, alignItems: "center" },
   welcomeText: {
     fontSize: 13,
     color: "#94a3b8",
@@ -123,8 +147,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   activeCard: {
-    borderColor: "#4A90E2", // highlight border
-    backgroundColor: "#E6F0FA", // light background
+    borderColor: "#4A90E2",
+    backgroundColor: "#E6F0FA",
   },
   avatar: {
     width: 65,

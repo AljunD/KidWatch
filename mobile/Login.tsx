@@ -8,14 +8,13 @@ import {
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StackNavigationProp } from "@react-navigation/stack";
 
-import { apiRequest, ENDPOINTS, LoginResponse } from "./api"; // centralized API client
-import { AuthContext } from "./App"; // import context
+import { apiRequest, ENDPOINTS, LoginResponse } from "./api";
+import { AuthContext } from "./App";
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -33,32 +32,46 @@ export default function Login({ navigation }: LoginProps) {
   const [password, setPassword] = useState<string>("");
   const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+  const [bannerType, setBannerType] = useState<"success" | "error" | null>(null);
 
   const { setIsAuthenticated } = useContext(AuthContext);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Missing Fields", "Please enter both email and password.");
+      setBannerMessage("Please enter both email and password.");
+      setBannerType("error");
       return;
     }
 
     setLoading(true);
+    setBannerMessage(null);
 
     try {
-      const data = await apiRequest<LoginResponse>(
+      const res = await apiRequest<LoginResponse>(
         ENDPOINTS.guardianLogin,
         "POST",
         { email, password }
       );
 
-      if (data.success && data.data?.token) {
-        await AsyncStorage.setItem("token", data.data.token);
-        setIsAuthenticated(true); // flip to AppStack, Dashboard loads automatically
+      if (res.success && res.data?.token) {
+        await AsyncStorage.setItem("token", res.data.token);
+        setIsAuthenticated(true);
+
+        setBannerMessage(res.message || "Login successful!");
+        setBannerType("success");
+
+        navigation.replace("SelectStudent");
       } else {
-        Alert.alert("Login Failed", data.message || "Invalid credentials");
+        const errorDetails = res.errors?.join("\n") || "";
+        setBannerMessage(
+          `${res.message || "Login failed."}${errorDetails ? "\n" + errorDetails : ""}`
+        );
+        setBannerType("error");
       }
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Unable to connect to server.");
+      setBannerMessage(error.message || "Unable to connect to server.");
+      setBannerType("error");
     } finally {
       setLoading(false);
     }
@@ -80,6 +93,18 @@ export default function Login({ navigation }: LoginProps) {
 
         <View style={styles.overlay}>
           <View style={styles.card}>
+            {/* ✅ Inline Banner */}
+            {bannerMessage && (
+              <View
+                style={[
+                  styles.banner,
+                  bannerType === "success" ? styles.bannerSuccess : styles.bannerError,
+                ]}
+              >
+                <Text style={styles.bannerText}>{bannerMessage}</Text>
+              </View>
+            )}
+
             <Text style={styles.title}>Welcome Back!</Text>
             <Text style={styles.subtitle}>
               Track your child's weekly learning progress
@@ -152,6 +177,15 @@ const styles = StyleSheet.create({
   },
   backButton: { padding: 20, width: 60 },
   card: { width: "100%", padding: 25, borderRadius: 20, alignItems: "center" },
+  banner: {
+    width: "100%",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  bannerSuccess: { backgroundColor: "#4CAF50" },
+  bannerError: { backgroundColor: "#F44336" },
+  bannerText: { color: "#fff", fontWeight: "700", textAlign: "center" },
   title: { fontSize: 25, fontWeight: "bold", color: "#fff", marginBottom: 8 },
   subtitle: {
     fontSize: 15,

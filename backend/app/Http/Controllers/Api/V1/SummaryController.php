@@ -23,12 +23,10 @@ class SummaryController extends Controller
     {
         $guardian = Auth::user()->guardian;
 
-        // ✅ Guardian must exist and not be trashed
         if (!$guardian || $guardian->trashed_at !== null) {
             return $this->unauthorizedResponse('Guardian account is inactive or deleted');
         }
 
-        // ✅ Ensure guardian owns this student and student is active
         if ($student->guardian_id !== $guardian->id || $student->trashed_at !== null) {
             return $this->unauthorizedResponse('You cannot access this student\'s summary');
         }
@@ -40,7 +38,8 @@ class SummaryController extends Controller
             ->first();
 
         if (!$summary) {
-            return $this->notFoundResponse('Weekly summary');
+            // ✅ Return 200 OK with empty array instead of 404
+            return $this->successResponse([], 'No weekly summary available');
         }
 
         return $this->successResponse(
@@ -56,12 +55,10 @@ class SummaryController extends Controller
     {
         $guardian = Auth::user()->guardian;
 
-        // ✅ Guardian must exist and not be trashed
         if (!$guardian || $guardian->trashed_at !== null) {
             return $this->unauthorizedResponse('Guardian account is inactive or deleted');
         }
 
-        // ✅ Ensure guardian owns this student and student is active
         if ($student->guardian_id !== $guardian->id || $student->trashed_at !== null) {
             return $this->unauthorizedResponse('You cannot access this student\'s summaries');
         }
@@ -71,10 +68,6 @@ class SummaryController extends Controller
             ->with('week')
             ->paginate(10);
 
-        if ($summaries->isEmpty()) {
-            return $this->notFoundResponse('Weekly summaries');
-        }
-
         $meta = [
             'pagination' => [
                 'current_page' => $summaries->currentPage(),
@@ -83,6 +76,11 @@ class SummaryController extends Controller
                 'total'        => $summaries->total(),
             ]
         ];
+
+        if ($summaries->isEmpty()) {
+            // ✅ Return 200 OK with empty array
+            return $this->successResponse([], 'No weekly summaries available', 200, $meta);
+        }
 
         return $this->successResponse(
             WeeklySummaryResource::collection($summaries),
@@ -99,12 +97,10 @@ class SummaryController extends Controller
     {
         $guardian = Auth::user()->guardian;
 
-        // ✅ Guardian and student must be active and linked
         if (!$guardian || $guardian->trashed_at !== null || $student->guardian_id !== $guardian->id || $student->trashed_at !== null) {
             return $this->unauthorizedResponse('You cannot generate a summary for this student');
         }
 
-        // ✅ Prevent duplicate summaries
         $existing = WeeklySummary::where('student_id', $student->id)
             ->where('week_id', $weekId)
             ->whereNull('trashed_at')
@@ -114,7 +110,6 @@ class SummaryController extends Controller
             return $this->errorResponse('Conflict', 409, ['Summary already exists for this week']);
         }
 
-        // ✅ Basic generation logic (placeholder)
         $summaryText = "Auto-generated summary for week {$weekId} based on student progress.";
         $activitiesText = "Recommended activities will be generated here.";
 

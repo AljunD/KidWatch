@@ -43,10 +43,6 @@ class ProgressController extends Controller
 
         $progress = $query->paginate(10);
 
-        if ($progress->isEmpty()) {
-            return $this->notFoundResponse('Progress records');
-        }
-
         $meta = [
             'pagination' => [
                 'current_page' => $progress->currentPage(),
@@ -55,6 +51,11 @@ class ProgressController extends Controller
                 'total'        => $progress->total(),
             ]
         ];
+
+        if ($progress->isEmpty()) {
+            // ✅ Return 200 OK with empty array
+            return $this->successResponse([], 'No progress records available', 200, $meta);
+        }
 
         return $this->successResponse(
             ProgressResource::collection($progress),

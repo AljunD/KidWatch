@@ -26,7 +26,7 @@ export const ENDPOINTS = {
   guardianLogout: "guardian/logout",
   guardianProfile: "guardian/profile",
   guardianUpdateProfile: "guardian/profile",
-  guardianStudents: "guardian/students", // ✅ renamed to match Dashboard.tsx
+  guardianStudents: "guardian/students",
   studentDetails: (id: number) => `guardian/students/${id}`,
   studentProgress: (id: number) => `guardian/students/${id}/progress`,
   studentSummaries: (id: number) => `guardian/students/${id}/summaries`,
@@ -87,17 +87,30 @@ export async function apiRequest<T>(
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  // If backend returns HTML (e.g. 404 page), this will throw
+  // ✅ Handle 404 gracefully
+  if (response.status === 404) {
+    return {
+      success: false,
+      message: "No records found",
+      data: [] as any,
+      errors: ["Resource not found"],
+    };
+  }
+
   const text = await response.text();
   let data: ApiResponse<T>;
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error(`Invalid JSON response: ${text.substring(0, 100)}...`);
+    return {
+      success: false,
+      message: "Invalid JSON response",
+      errors: [text.substring(0, 100) + "..."],
+    };
   }
 
-  if (!response.ok) {
-    throw new Error(data.message || "Request failed");
-  }
-  return data;
+  return {
+    ...data,
+    success: response.ok && data.success !== false,
+  };
 }
