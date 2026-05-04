@@ -5,8 +5,9 @@
         <h1 class="text-3xl font-black text-[#003366] mb-8 border-b pb-4">
             ✏️ Edit Progress for
             <span class="text-emerald-600">
-                {{ $progressRecord->student->first_name }} {{ $progressRecord->student->last_name }}
+                {{ $student->first_name }} {{ $student->last_name }}
             </span>
+            (Week {{ $week->week_number }})
         </h1>
 
         <div class="mb-6">
@@ -32,7 +33,12 @@
             </div>
         @endif
 
-        <form id="progressForm" action="{{ route('progress.update', $progressRecord->id) }}" method="POST" class="space-y-6">
+        {{-- Default to first available record for initial form action --}}
+        @php
+            $firstRecord = $records->first();
+        @endphp
+
+        <form id="progressForm" action="{{ $firstRecord ? route('progress.update', $firstRecord->id) : '#' }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
 
@@ -41,16 +47,13 @@
                 <select id="subject" name="subject" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('subject') border-red-500 @enderror" required>
                     @foreach($subjects as $subject)
                         @php
-                            $record = $progressRecord->student->progressRecords
-                                ->where('week_id', $progressRecord->week_id)
-                                ->where('subject', $subject)
-                                ->first();
+                            $record = $records->get($subject);
                         @endphp
                         <option value="{{ $subject }}"
                                 data-id="{{ $record->id ?? '' }}"
                                 data-rating="{{ $record->rating_level ?? '' }}"
                                 data-remarks="{{ $record->remarks ?? '' }}"
-                                {{ $progressRecord->subject === $subject ? 'selected' : '' }}
+                                {{ $record ? 'selected' : '' }}
                                 {{ !$record ? 'disabled' : '' }}>
                             {{ $subject }} {{ !$record ? '(Not graded yet)' : '' }}
                         </option>
@@ -65,14 +68,14 @@
                 <label for="rating_level" class="block text-sm font-bold text-[#003366] mb-2">Rating Level</label>
                 <select name="rating_level" id="rating_level" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('rating_level') border-red-500 @enderror" required>
                     @foreach($ratings as $level => $label)
-                        <option value="{{ $level }}" {{ old('rating_level', $progressRecord->rating_level) == $level ? 'selected' : '' }}>
+                        <option value="{{ $level }}">
                             {{ $label }}
                         </option>
                     @endforeach
                 </select>
                 <p class="text-xs text-slate-500 mt-2">
                     Current rating: <span id="current-rating" class="font-semibold text-blue-700">
-                        {{ $ratings[$progressRecord->rating_level] ?? 'No Classes' }}
+                        {{ $firstRecord ? $ratings[$firstRecord->rating_level] : 'No Classes' }}
                     </span>
                 </p>
                 @error('rating_level')
@@ -84,10 +87,10 @@
                 <label for="remarks" class="block text-sm font-bold text-[#003366] mb-2">Remarks</label>
                 <textarea name="remarks" id="remarks" rows="3"
                           class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('remarks') border-red-500 @enderror"
-                          placeholder="Enter remarks for this subject">{{ old('remarks', $progressRecord->remarks) }}</textarea>
+                          placeholder="Enter remarks for this subject">{{ old('remarks', $firstRecord->remarks ?? '') }}</textarea>
                 <p class="text-xs text-slate-500 mt-2">
                     Current remarks: <em id="current-remarks" class="text-emerald-700">
-                        {{ $progressRecord->remarks ?: 'No remarks yet' }}
+                        {{ $firstRecord->remarks ?? 'No remarks yet' }}
                     </em>
                 </p>
                 @error('remarks')
@@ -97,7 +100,8 @@
 
             <div class="flex justify-center items-center mt-8">
                 <button type="submit"
-                        class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition">
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition"
+                        {{ !$firstRecord ? 'disabled' : '' }}>
                     💾 Save Changes
                 </button>
             </div>
