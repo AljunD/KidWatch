@@ -1,0 +1,140 @@
+import React, { useEffect, useState, useContext } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  Image,
+  FlatList,
+  StatusBar,
+  ActivityIndicator,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { apiRequest, ENDPOINTS } from "./api";
+import { AuthContext } from "./App";
+
+export default function SelectStudentScreen({ navigation, route }: any) {
+  const { setIsAuthenticated } = useContext(AuthContext);
+
+  const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState<any[]>([]);
+
+  // 👇 Get currently selected student from Dashboard
+  const currentStudent = route.params?.currentStudent;
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const res = await apiRequest<any>(ENDPOINTS.guardianStudents, "GET");
+        if (res.success) {
+          setStudents(res.data);
+        }
+      } catch (err) {
+        console.error("Error fetching students:", err);
+        setIsAuthenticated(false); // fallback if token invalid
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ActivityIndicator size="large" color="#4A90E2" style={{ flex: 1 }} />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.header}>
+        <Text style={styles.welcomeText}>Parent Portal</Text>
+        <Text style={styles.title}>Who's learning today?</Text>
+      </View>
+
+      <FlatList
+        data={students}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.list}
+        renderItem={({ item }) => {
+          const isActive = currentStudent && currentStudent.id === item.id;
+          return (
+            <TouchableOpacity
+              style={[styles.card, isActive && styles.activeCard]}
+              onPress={() =>
+                navigation.replace("Dashboard", {
+                  selectedStudent: item,
+                })
+              }
+            >
+              <Image
+                source={
+                  item.photo_path
+                    ? { uri: item.photo_path }
+                    : require("./assets/cjpic.jpg")
+                }
+                style={styles.avatar}
+              />
+              <View style={styles.info}>
+                <Text style={styles.nameText}>
+                  {item.last_name}, {item.first_name}
+                </Text>
+                <Text style={styles.subText}>
+                  {isActive ? "Currently Active" : "View Progress Records"}
+                </Text>
+              </View>
+              <View style={styles.arrowContainer}>
+                <Ionicons name="chevron-forward" size={20} color="#4A90E2" />
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: "#F0F9FF" },
+  header: { padding: 30, marginTop: 20 },
+  welcomeText: {
+    fontSize: 13,
+    color: "#94a3b8",
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+  },
+  title: { fontSize: 26, fontWeight: "900", color: "#1A365D", marginTop: 5 },
+  list: { paddingHorizontal: 20 },
+  card: {
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+    borderRadius: 25,
+    marginBottom: 15,
+    borderWidth: 2,
+    borderColor: "#e2e8f0",
+    elevation: 3,
+  },
+  activeCard: {
+    borderColor: "#4A90E2", // highlight border
+    backgroundColor: "#E6F0FA", // light background
+  },
+  avatar: {
+    width: 65,
+    height: 65,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: "#F0F9FF",
+  },
+  info: { flex: 1, marginLeft: 15 },
+  nameText: { fontSize: 17, fontWeight: "900", color: "#1A365D" },
+  subText: { fontSize: 13, color: "#64748B", marginTop: 2 },
+  arrowContainer: { backgroundColor: "#F0F9FF", padding: 8, borderRadius: 12 },
+});

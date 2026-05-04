@@ -39,7 +39,7 @@ return new class extends Migration
             $table->string('contact_number', 20);
             $table->text('address');
             $table->timestamps();
-            $table->timestamp('trashed_at')->nullable();  
+            $table->timestamp('trashed_at')->nullable();
         });
 
         Schema::create('students', function (Blueprint $table) {
@@ -109,10 +109,23 @@ return new class extends Migration
 
             $table->index(['entity_type', 'entity_id'], 'idx_entity_logs');
         });
+
+        // Sanctum personal access tokens (needed for login)
+        Schema::create('personal_access_tokens', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('tokenable'); // tokenable_id + tokenable_type
+            $table->string('name');
+            $table->string('token', 64)->unique();
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('personal_access_tokens');
         Schema::dropIfExists('logs');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('weekly_summaries');

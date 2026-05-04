@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   View, 
   Text, 
@@ -7,9 +7,12 @@ import {
   SafeAreaView, 
   StatusBar, 
   ScrollView,
+  ActivityIndicator,
   Alert 
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { apiRequest, ENDPOINTS } from "./api"; // centralized API client
+import dayjs from "dayjs";
 
 const SubjectCard = ({ subject, date, score, remarks, isPending }: any) => (
   <View style={[styles.card, isPending && styles.pendingCard]}>
@@ -51,25 +54,75 @@ const SubjectCard = ({ subject, date, score, remarks, isPending }: any) => (
   </View>
 );
 
-export default function WeeklyProgressScreen({ navigation }: any) {
-  // Mock Data: Toggle the 'score' to null to see the "Pending" state
-  const [subjects] = useState([
-    { id: 1, name: "Mathematics", date: "April 1, 2026", score: "Excellent", remarks: "Great with numbers!" },
-    { id: 2, name: "English", date: "April 2, 2026", score: "Excellent", remarks: "Reading is improving." },
-    { id: 3, name: "Science", date: "April 3, 2026", score: "Excellent", remarks: "Loves the plant lesson." },
-    { id: 4, name: "Arts", date: "April 4, 2026", score: null, remarks: null }, // PENDING SUBJECT
-  ]);
+export default function WeeklyProgressScreen({ navigation, route }: any) {
+  const student = route.params?.student;
+  const [progressRecords, setProgressRecords] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Logic: Check if all 4 are completed
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        // ✅ Fetch all progress records for this student
+        const res = await apiRequest<any>(
+          ENDPOINTS.studentProgress(student.id),
+          "GET"
+        );
+
+        if (res.success) {
+          // Map DB records to UI format
+          const records = res.data.map((rec: any) => ({
+            id: rec.id,
+            name: rec.subject,
+            date: dayjs(rec.created_at).format("MMM D, YYYY"),
+            score: rec.rating_label !== "No Classes" ? rec.rating_label : null,
+            remarks: rec.remarks,
+            week: rec.week,
+          }));
+          setProgressRecords(records);
+        } else {
+          Alert.alert("Error", res.message || "Failed to load progress records.");
+        }
+      } catch (err: any) {
+        Alert.alert("Error", err.message || "Unable to connect to server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProgress();
+  }, [student]);
+
+  // ✅ Logic: At least 4 subjects graded (rating_level > 0)
   const isComplete = useMemo(() => {
-    return subjects.filter(s => s.score !== null).length >= 4;
-  }, [subjects]);
+    return progressRecords.filter(s => s.score !== null).length >= 4;
+  }, [progressRecords]);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (isComplete) {
-      Alert.alert("Awesome! 🎉", "Generating your weekly summary report...");
+      try {
+        const weekId = progressRecords[0]?.week?.id;
+        const res = await apiRequest<any>(
+          ENDPOINTS.generateSummary(student.id, weekId),
+          "POST"
+        );
+        if (res.success) {
+          Alert.alert("Awesome! 🎉", "Weekly summary generated successfully.");
+        } else {
+          Alert.alert("Error", res.message || "Failed to generate summary.");
+        }
+      } catch (err: any) {
+        Alert.alert("Error", err.message || "Unable to connect to server.");
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ActivityIndicator size="large" color="#4A90E2" style={{ flex: 1 }} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -85,12 +138,19 @@ export default function WeeklyProgressScreen({ navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.weekInfo}>
-          <Text style={styles.weekLabel}>Week 1 Progress</Text>
-          <Text style={styles.weekDates}>April 1 - April 4, 2026</Text>
-        </View>
+        {progressRecords.length > 0 && (
+          <View style={styles.weekInfo}>
+            <Text style={styles.weekLabel}>
+              Week {progressRecords[0].week?.week_number} Progress
+            </Text>
+            <Text style={styles.weekDates}>
+              {dayjs(progressRecords[0].week?.start_date).format("MMM D")} -{" "}
+              {dayjs(progressRecords[0].week?.end_date).format("MMM D, YYYY")}
+            </Text>
+          </View>
+        )}
 
-        {subjects.map((item) => (
+        {progressRecords.map((item) => (
           <SubjectCard 
             key={item.id}
             subject={item.name} 

@@ -23,9 +23,18 @@ class StudentController extends Controller
     {
         $guardian = Auth::user()->guardian;
 
+        // ✅ Guardian must exist and not be trashed
+        if (!$guardian || $guardian->trashed_at !== null) {
+            return $this->unauthorizedResponse('Guardian account is inactive or deleted');
+        }
+
         $students = Student::where('guardian_id', $guardian->id)
             ->whereNull('trashed_at') // skip trashed students
             ->paginate(10);
+
+        if ($students->isEmpty()) {
+            return $this->notFoundResponse('Students');
+        }
 
         return $this->successResponse(
             StudentResource::collection($students),
@@ -50,15 +59,28 @@ class StudentController extends Controller
      */
     public function show(Student $student): JsonResponse
     {
-        // Ensure guardian can only access their own student
         $guardian = Auth::user()->guardian;
-        if ($student->guardian_id !== $guardian->id || $student->trashed_at !== null) {
-            return $this->errorResponse('Unauthorized', 403, ['You cannot access this student']);
+
+        // ✅ Guardian must exist and not be trashed
+        if (!$guardian || $guardian->trashed_at !== null) {
+            return $this->unauthorizedResponse('Guardian account is inactive or deleted');
         }
 
-        $student->load(['guardian', 'progressRecords' => function ($query) {
-            $query->whereNull('trashed_at');
-        }]);
+        // ✅ Ensure guardian owns this student and student is active
+        if ($student->guardian_id !== $guardian->id || $student->trashed_at !== null) {
+            return $this->unauthorizedResponse('You cannot access this student');
+        }
+
+        // ✅ Load guardian + active progress records + weekly summaries
+        $student->load([
+            'guardian',
+            'progressRecords' => function ($query) {
+                $query->whereNull('trashed_at')->with('week');
+            },
+            'weeklySummaries' => function ($query) {
+                $query->whereNull('trashed_at')->with('week');
+            }
+        ]);
 
         return $this->successResponse(
             new StudentResource($student),

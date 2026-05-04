@@ -27,10 +27,11 @@ class GuardianController extends Controller
                 'user_id' => null,
                 'action' => 'login_failed',
                 'entity_type' => 'guardian',
+                'entity_id' => null,
                 'details' => 'Invalid credentials for '.$request->email,
             ]);
 
-            return $this->errorResponse('Invalid credentials', 401, ['email or password incorrect']);
+            return $this->errorResponse('Invalid credentials', 401, ['Email or password incorrect']);
         }
 
         $user = Auth::user();
@@ -78,14 +79,19 @@ class GuardianController extends Controller
 
         return $this->successResponse([
             'user' => [
-                'id'    => $user->id,
-                'email' => $user->email,
-                'role'  => $user->role,
+                'id'                => $user->id,
+                'email'             => $user->email,
+                'role'              => $user->role,
+                'email_verified_at' => $user->email_verified_at,
             ],
             'guardian' => [
-                'id' => $guardian->id,
-                'first_name' => $guardian->first_name,
-                'last_name'  => $guardian->last_name,
+                'id'                   => $guardian->id,
+                'first_name'           => $guardian->first_name,
+                'middle_name'          => $guardian->middle_name,
+                'last_name'            => $guardian->last_name,
+                'relationship_to_child'=> $guardian->relationship_to_child,
+                'contact_number'       => $guardian->contact_number,
+                'address'              => $guardian->address,
             ],
             'token'      => $token,
             'token_type' => 'Bearer',
@@ -98,7 +104,6 @@ class GuardianController extends Controller
     public function logout(Request $request)
     {
         $user = $request->user();
-
         $request->user()->currentAccessToken()->delete();
 
         Log::create([
@@ -119,6 +124,10 @@ class GuardianController extends Controller
     {
         $guardian = $request->user()->guardian()->with('students')->first();
 
+        if (!$guardian) {
+            return $this->notFoundResponse('Guardian');
+        }
+
         return $this->successResponse($guardian, 'Guardian profile retrieved successfully');
     }
 
@@ -128,6 +137,10 @@ class GuardianController extends Controller
     public function updateProfile(Request $request)
     {
         $guardian = $request->user()->guardian;
+
+        if (!$guardian) {
+            return $this->notFoundResponse('Guardian');
+        }
 
         $guardian->update($request->only([
             'first_name','middle_name','last_name','contact_number','address','relationship_to_child'
