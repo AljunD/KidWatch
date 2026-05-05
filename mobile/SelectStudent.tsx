@@ -21,11 +21,12 @@ export default function SelectStudentScreen({ navigation, route }: any) {
   const [students, setStudents] = useState<any[]>([]);
 
   const currentStudent = route.params?.currentStudent;
+  const fromDashboard = route.params?.fromDashboard || false; // ✅ flag
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await apiRequest<any>(ENDPOINTS.students, "GET"); // ✅ correct endpoint
+        const res = await apiRequest<any>(ENDPOINTS.students, "GET");
         if (res.success) {
           setStudents(res.data);
         }
@@ -52,11 +53,14 @@ export default function SelectStudentScreen({ navigation, route }: any) {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
 
-      {/* Header with Back Button */}
+      {/* Header */}
       <View style={styles.headerContainer}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1A365D" />
-        </TouchableOpacity>
+        {/* ✅ Show back button only if fromDashboard */}
+        {fromDashboard && (
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color="#1A365D" />
+          </TouchableOpacity>
+        )}
         <View style={styles.headerTextContainer}>
           <Text style={styles.welcomeText}>Parent Portal</Text>
           <Text style={styles.title}>Who's learning today?</Text>
@@ -80,7 +84,12 @@ export default function SelectStudentScreen({ navigation, route }: any) {
               {item.photo_path ? (
                 <Image source={{ uri: item.photo_path }} style={styles.avatar} />
               ) : (
-                <View style={[styles.avatar, { backgroundColor: "#e5e7eb", justifyContent: "center", alignItems: "center" }]}>
+                <View
+                  style={[
+                    styles.avatar,
+                    { backgroundColor: "#e5e7eb", justifyContent: "center", alignItems: "center" },
+                  ]}
+                >
                   <Ionicons name="person" size={28} color="#9ca3af" />
                 </View>
               )}

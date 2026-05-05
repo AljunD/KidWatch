@@ -183,7 +183,7 @@ export default function DashboardScreen({ navigation, route }: any) {
           <TouchableOpacity
             style={styles.switchButton}
             onPress={() =>
-              navigation.navigate("SelectStudent", { currentStudent: student })
+              navigation.navigate("SelectStudent", { currentStudent: student, fromDashboard: true })
             }
           >
             <Ionicons name="people-outline" size={20} color="#4A90E2" />
