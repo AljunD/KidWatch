@@ -36,9 +36,10 @@ function AuthStack() {
 
 function AppStack() {
   return (
-    <Stack.Navigator initialRouteName="Dashboard" screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Dashboard" component={DashboardScreen} />
+    // ✅ Start at SelectStudent instead of Dashboard
+    <Stack.Navigator initialRouteName="SelectStudent" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="SelectStudent" component={SelectStudentScreen} />
+      <Stack.Screen name="Dashboard" component={DashboardScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />   
       <Stack.Screen name="WeeklyProgress" component={WeeklyProgressScreen} />
       <Stack.Screen name="ProgressHistory" component={ProgressHistoryScreen} />

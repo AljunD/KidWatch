@@ -48,7 +48,7 @@ export default function Login({ navigation }: LoginProps) {
 
     try {
       const res = await apiRequest<LoginResponse>(
-        ENDPOINTS.guardianLogin,
+        ENDPOINTS.login,
         "POST",
         { email, password }
       );
