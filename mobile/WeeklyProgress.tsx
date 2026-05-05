@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { apiRequest, ENDPOINTS } from "./api";
 import dayjs from "dayjs";
 
-const SubjectCard = ({ subject, date, score, remarks, isPending }: any) => (
+const SubjectCard = ({ subject, rating, remarks, isPending }: any) => (
   <View style={[styles.card, isPending && styles.pendingCard]}>
     <View style={[styles.cardHeader, isPending && { backgroundColor: '#94a3b8' }]}>
       <View style={styles.headerTitleRow}>
@@ -24,9 +24,8 @@ const SubjectCard = ({ subject, date, score, remarks, isPending }: any) => (
           color="#fff" 
           style={{ marginRight: 8 }} 
         />
-        <Text style={styles.subjectText}>{subject}</Text>
+        <Text style={styles.subjectText}>{subject || "No subjects yet"}</Text>
       </View>
-      <Text style={styles.dateText}>{date}</Text>
     </View>
 
     <View style={styles.cardBody}>
@@ -37,9 +36,10 @@ const SubjectCard = ({ subject, date, score, remarks, isPending }: any) => (
       ) : (
         <>
           <View style={styles.row}>
-            <Text style={styles.label}>Score:</Text>
+            {/* ✅ Changed label from Score → Rating */}
+            <Text style={styles.label}>Rating:</Text>
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{score}</Text>
+              <Text style={styles.badgeText}>{rating || "-"}</Text>
             </View>
           </View>
           <View style={styles.row}>
@@ -56,6 +56,7 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
   const student = route.params?.student;
   const [progressRecords, setProgressRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [summaryExists, setSummaryExists] = useState(false);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -65,29 +66,44 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
           "GET"
         );
 
-        if (res.success && res.data && res.data.length > 0) {
+        if (res.success && res.data) {
           const records = res.data.map((rec: any) => ({
             id: rec.id,
             name: rec.subject,
-            date: dayjs(rec.created_at).format("MMM D, YYYY"),
-            score: rec.rating_label !== "No Classes" ? rec.rating_label : null,
+            rating: rec.rating_label !== "No Classes" ? rec.rating_label : null,
             remarks: rec.remarks,
             week: rec.week,
           }));
 
-          // ✅ Find the latest week by max week_number
           const latestWeekNumber = Math.max(
             ...records.map((r: any) => r.week?.week_number || 0)
           );
 
-          // ✅ Keep only records from the latest week
-          const latestRecords = records.filter(
+          let latestRecords = records.filter(
             (r: any) => r.week?.week_number === latestWeekNumber
           );
 
+          // ✅ If no records exist for current week, add placeholder
+          if (latestRecords.length === 0 && latestWeekNumber > 0) {
+            latestRecords = [{
+              id: `week-${latestWeekNumber}`,
+              name: null,
+              rating: null,
+              remarks: null,
+              week: {
+                week_number: latestWeekNumber,
+                start_date: null,
+                end_date: null,
+              }
+            }];
+          }
+
           setProgressRecords(latestRecords);
+
+          if (latestRecords.length > 0 && latestRecords[0].week?.summary_exists) {
+            setSummaryExists(true);
+          }
         } else {
-          // ✅ No records case
           setProgressRecords([]);
         }
       } catch (err: any) {
@@ -101,9 +117,8 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
     fetchProgress();
   }, [student]);
 
-  // ✅ Logic: At least 4 subjects graded
   const isComplete = useMemo(() => {
-    return progressRecords.filter(s => s.score !== null).length >= 4;
+    return progressRecords.filter(s => s.rating !== null).length >= 4;
   }, [progressRecords]);
 
   const handleGenerate = async () => {
@@ -115,7 +130,11 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
           "POST"
         );
         if (res.success) {
-          Alert.alert("Awesome! 🎉", "Weekly summary generated successfully.");
+          setSummaryExists(true);
+          Alert.alert("Awesome! 🎉", summaryExists 
+            ? "Weekly summary regenerated successfully." 
+            : "Weekly summary generated successfully."
+          );
         } else {
           Alert.alert("Error", res.message || "Failed to generate summary.");
         }
@@ -152,20 +171,23 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
               <Text style={styles.weekLabel}>
                 Week {progressRecords[0].week?.week_number} Progress
               </Text>
-              <Text style={styles.weekDates}>
-                {dayjs(progressRecords[0].week?.start_date).format("MMM D")} -{" "}
-                {dayjs(progressRecords[0].week?.end_date).format("MMM D, YYYY")}
-              </Text>
+              {progressRecords[0].week?.start_date && progressRecords[0].week?.end_date ? (
+                <Text style={styles.weekDates}>
+                  {dayjs(progressRecords[0].week?.start_date).format("MMM D")} -{" "}
+                  {dayjs(progressRecords[0].week?.end_date).format("MMM D, YYYY")}
+                </Text>
+              ) : (
+                <Text style={styles.weekDates}>No dates available</Text>
+              )}
             </View>
 
             {progressRecords.map((item) => (
               <SubjectCard 
                 key={item.id}
                 subject={item.name} 
-                date={item.date} 
-                score={item.score} 
+                rating={item.rating} 
                 remarks={item.remarks} 
-                isPending={item.score === null}
+                isPending={item.rating === null}
               />
             ))}
 
@@ -182,7 +204,11 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
                 style={{ marginRight: 10 }} 
               />
               <Text style={styles.summaryButtonText}>
-                {isComplete ? "Generate Summary" : "Complete 4 Subjects to Unlock"}
+                {isComplete 
+                  ? summaryExists 
+                    ? "Regenerate Summary" 
+                    : "Generate Summary"
+                  : "Complete 4 Ratings to Unlock"}
               </Text>
             </TouchableOpacity>
             
@@ -252,7 +278,7 @@ const styles = StyleSheet.create({
   },
   headerTitleRow: { flexDirection: 'row', alignItems: 'center' },
   subjectText: { color: "#fff", fontSize: 18, fontWeight: "800" },
-  dateText: { color: "rgba(255,255,255,0.8)", fontSize: 11, fontWeight: "700" },
+  // ✅ Removed dateText since we no longer display dates
   cardBody: { padding: 20 },
   row: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
   label: { fontSize: 14, fontWeight: "800", color: "#94a3b8", width: 70 },

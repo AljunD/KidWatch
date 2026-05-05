@@ -3,11 +3,20 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Models\Week;
 
 class ProgressResource extends JsonResource
 {
     public function toArray($request)
     {
+        // ✅ Determine latest week for status
+        $latestWeek = Week::orderBy('week_number', 'desc')->first();
+        $status = 'Completed';
+
+        if ($latestWeek && $this->week_id === $latestWeek->id) {
+            $status = 'Current Week';
+        }
+
         return [
             'id'            => $this->id,
             'student_id'    => $this->student_id,
@@ -29,6 +38,9 @@ class ProgressResource extends JsonResource
                     'end_date'    => $this->week->end_date,
                 ];
             }),
+
+            // ✅ New field for frontend
+            'status' => $status,
         ];
     }
 }

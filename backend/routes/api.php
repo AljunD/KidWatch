@@ -2,30 +2,34 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\GuardianController;
-use App\Http\Controllers\Api\V1\StudentController;
+use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProgressController;
 use App\Http\Controllers\Api\V1\SummaryController;
+use App\Http\Controllers\Api\V1\ProgressHistoryController;
 
 Route::prefix('v1/guardian')->group(function () {
     // Authentication (public)
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [ProfileController::class, 'login']);
 
     // Protected routes
     Route::middleware(['auth:sanctum'])->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/logout', [ProfileController::class, 'logout']);
 
         // Guardian profile
-        Route::get('/profile', [GuardianController::class, 'profile']);
-        Route::put('/profile', [GuardianController::class, 'updateProfile']);
+        Route::get('/profile', [ProfileController::class, 'profile']);
+        Route::put('/profile', [ProfileController::class, 'updateProfile']);
 
         // Students linked to guardian (view only)
-        Route::get('/students', [StudentController::class, 'index']);
-        Route::get('/students/{student}', [StudentController::class, 'show'])
+        Route::get('/students', [ProfileController::class, 'students']);
+        Route::get('/students/{student}', [ProfileController::class, 'studentDetail'])
             ->middleware('check.student.access');
 
-        // Progress records (view only)
+        // Progress records (raw records per week)
         Route::get('/students/{student}/progress', [ProgressController::class, 'index'])
+            ->middleware('check.student.access');
+
+        // Progress history (all weeks + status overview)
+        Route::get('/students/{student}/progress-history', [ProgressHistoryController::class, 'index'])
             ->middleware('check.student.access');
 
         // Weekly summaries (view + generate)

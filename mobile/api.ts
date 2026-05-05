@@ -19,21 +19,29 @@ function getBaseUrl(): string {
 const BASE_URL = getBaseUrl();
 
 /**
- * Centralized endpoints (match Laravel routes)
+ * Centralized endpoints (match Laravel routes with ProfileController)
  */
 export const ENDPOINTS = {
-  guardianLogin: "guardian/login",
-  guardianLogout: "guardian/logout",
-  guardianProfile: "guardian/profile",
-  guardianUpdateProfile: "guardian/profile",
-  guardianStudents: "guardian/students",
-  studentDetails: (id: number) => `guardian/students/${id}`,
+  // Authentication
+  login: "guardian/login",
+  logout: "guardian/logout",
+
+  // Guardian profile
+  profile: "guardian/profile",
+  updateProfile: "guardian/profile",
+
+  // Students linked to guardian
+  students: "guardian/students",
+  studentDetail: (id: number) => `guardian/students/${id}`,
+
+  // Progress records
   studentProgress: (id: number) => `guardian/students/${id}/progress`,
+  studentProgressHistory: (id: number) => `guardian/students/${id}/progress-history`,
+
+  // Weekly summaries
   studentSummaries: (id: number) => `guardian/students/${id}/summaries`,
-  studentSummary: (id: number, week: number) =>
-    `guardian/students/${id}/summaries/${week}`,
-  generateSummary: (id: number, week: number) =>
-    `guardian/students/${id}/summaries/${week}/generate`,
+  studentSummary: (id: number, week: number) => `guardian/students/${id}/summaries/${week}`,
+  generateSummary: (id: number, week: number) => `guardian/students/${id}/summaries/${week}/generate`,
 };
 
 /**

@@ -20,19 +20,18 @@ export default function SelectStudentScreen({ navigation, route }: any) {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<any[]>([]);
 
-  // 👇 Get currently selected student from Dashboard
   const currentStudent = route.params?.currentStudent;
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await apiRequest<any>(ENDPOINTS.guardianStudents, "GET");
+        const res = await apiRequest<any>(ENDPOINTS.students, "GET"); // ✅ correct endpoint
         if (res.success) {
           setStudents(res.data);
         }
       } catch (err) {
         console.error("Error fetching students:", err);
-        setIsAuthenticated(false); // fallback if token invalid
+        setIsAuthenticated(false);
       } finally {
         setLoading(false);
       }
@@ -62,7 +61,7 @@ export default function SelectStudentScreen({ navigation, route }: any) {
           <Text style={styles.welcomeText}>Parent Portal</Text>
           <Text style={styles.title}>Who's learning today?</Text>
         </View>
-        <View style={{ width: 45 }} /> {/* Spacer for symmetry */}
+        <View style={{ width: 45 }} />
       </View>
 
       <FlatList
@@ -75,19 +74,16 @@ export default function SelectStudentScreen({ navigation, route }: any) {
             <TouchableOpacity
               style={[styles.card, isActive && styles.activeCard]}
               onPress={() =>
-                navigation.replace("Dashboard", {
-                  selectedStudent: item,
-                })
+                navigation.replace("Dashboard", { selectedStudent: item })
               }
             >
-              <Image
-                source={
-                  item.photo_path
-                    ? { uri: item.photo_path }
-                    : require("./assets/cjpic.jpg")
-                }
-                style={styles.avatar}
-              />
+              {item.photo_path ? (
+                <Image source={{ uri: item.photo_path }} style={styles.avatar} />
+              ) : (
+                <View style={[styles.avatar, { backgroundColor: "#e5e7eb", justifyContent: "center", alignItems: "center" }]}>
+                  <Ionicons name="person" size={28} color="#9ca3af" />
+                </View>
+              )}
               <View style={styles.info}>
                 <Text style={styles.nameText}>
                   {item.last_name}, {item.first_name}
@@ -102,6 +98,9 @@ export default function SelectStudentScreen({ navigation, route }: any) {
             </TouchableOpacity>
           );
         }}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No students linked to this guardian yet.</Text>
+        }
       />
     </SafeAreaView>
   );
@@ -161,4 +160,11 @@ const styles = StyleSheet.create({
   nameText: { fontSize: 17, fontWeight: "900", color: "#1A365D" },
   subText: { fontSize: 13, color: "#64748B", marginTop: 2 },
   arrowContainer: { backgroundColor: "#F0F9FF", padding: 8, borderRadius: 12 },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 40,
+    color: "#94a3b8",
+    fontSize: 16,
+    fontWeight: "600",
+  },
 });

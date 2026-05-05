@@ -9,7 +9,7 @@ import WelcomeScreen from './WelcomeScreen';
 import LoginScreen from './Login'; 
 import SelectStudentScreen from './SelectStudent'; 
 import DashboardScreen from './Dashboard';
-import StudentProfileScreen from './StudentProfile';
+import ProfileScreen from './Profile';  
 import WeeklyProgressScreen from './WeeklyProgress';
 import ProgressHistoryScreen from './ProgressHistory';
 import ProgressDetailScreen from './ProgressDetail';
@@ -39,7 +39,7 @@ function AppStack() {
     <Stack.Navigator initialRouteName="Dashboard" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
       <Stack.Screen name="SelectStudent" component={SelectStudentScreen} />
-      <Stack.Screen name="StudentProfile" component={StudentProfileScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />   
       <Stack.Screen name="WeeklyProgress" component={WeeklyProgressScreen} />
       <Stack.Screen name="ProgressHistory" component={ProgressHistoryScreen} />
       <Stack.Screen name="ProgressDetail" component={ProgressDetailScreen} />

@@ -7,29 +7,35 @@ use App\Models\Student;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * Student Controller
- *
- * Handles retrieval of students linked to the authenticated guardian.
- */
 class StudentController extends Controller
 {
     /**
-     * List students linked to the authenticated guardian.
-     *
-     * @return JsonResponse
+     * Validate guardian access.
      */
-    public function index(): JsonResponse
+    private function validateGuardian(): ?JsonResponse
     {
         $guardian = Auth::user()->guardian;
 
-        // ✅ Guardian must exist and not be trashed
         if (!$guardian || $guardian->trashed_at !== null) {
             return $this->unauthorizedResponse('Guardian account is inactive or deleted');
         }
 
+        return null;
+    }
+
+    /**
+     * List students linked to the authenticated guardian.
+     */
+    public function index(): JsonResponse
+    {
+        if ($resp = $this->validateGuardian()) {
+            return $resp;
+        }
+
+        $guardian = Auth::user()->guardian;
+
         $students = Student::where('guardian_id', $guardian->id)
-            ->whereNull('trashed_at') // skip trashed students
+            ->whereNull('trashed_at')
             ->paginate(10);
 
         if ($students->isEmpty()) {
@@ -53,33 +59,23 @@ class StudentController extends Controller
 
     /**
      * Show details for a specific student.
-     *
-     * @param Student $student
-     * @return JsonResponse
      */
     public function show(Student $student): JsonResponse
     {
-        $guardian = Auth::user()->guardian;
-
-        // ✅ Guardian must exist and not be trashed
-        if (!$guardian || $guardian->trashed_at !== null) {
-            return $this->unauthorizedResponse('Guardian account is inactive or deleted');
+        if ($resp = $this->validateGuardian()) {
+            return $resp;
         }
 
-        // ✅ Ensure guardian owns this student and student is active
+        $guardian = Auth::user()->guardian;
+
         if ($student->guardian_id !== $guardian->id || $student->trashed_at !== null) {
             return $this->unauthorizedResponse('You cannot access this student');
         }
 
-        // ✅ Load guardian + active progress records + weekly summaries
         $student->load([
             'guardian',
-            'progressRecords' => function ($query) {
-                $query->whereNull('trashed_at')->with('week');
-            },
-            'weeklySummaries' => function ($query) {
-                $query->whereNull('trashed_at')->with('week');
-            }
+            'progressRecords' => fn($query) => $query->whereNull('trashed_at')->with('week'),
+            'weeklySummaries' => fn($query) => $query->whereNull('trashed_at')->with('week'),
         ]);
 
         return $this->successResponse(

@@ -9,6 +9,7 @@ import {
   StatusBar,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -42,6 +43,7 @@ export default function DashboardScreen({ navigation, route }: any) {
 
   const [loading, setLoading] = useState(true);
   const [guardian, setGuardian] = useState<any>(null);
+  const [students, setStudents] = useState<any[]>([]);
   const [student, setStudent] = useState<any>(null);
 
   const handleLogout = async () => {
@@ -58,17 +60,16 @@ export default function DashboardScreen({ navigation, route }: any) {
           return;
         }
 
-        const profile = await apiRequest<any>(ENDPOINTS.guardianProfile, "GET");
-        if (profile.success) {
-          setGuardian(profile.data);
-        }
+        // ✅ Fetch guardian profile (includes linked students)
+        const profileRes = await apiRequest<any>(ENDPOINTS.profile, "GET");
+        if (profileRes.success && profileRes.data) {
+          setGuardian(profileRes.data);
+          setStudents(profileRes.data.students || []);
 
-        const studentsRes = await apiRequest<any>(ENDPOINTS.guardianStudents, "GET");
-        if (studentsRes.success && studentsRes.data.length > 0) {
-          // ✅ only set default student if none is already chosen
-          setStudent((prev: any) => {
-            return prev ? prev : studentsRes.data[0];
-          });
+          // ✅ Default student selection
+          setStudent((prev: any) => prev || (profileRes.data.students?.[0] || null));
+        } else {
+          Alert.alert("Error", profileRes.message || "Unable to fetch profile.");
         }
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -118,14 +119,21 @@ export default function DashboardScreen({ navigation, route }: any) {
         {student && (
           <View style={styles.card}>
             <View style={styles.cardContent}>
-              <Image
-                source={
-                  student.photo_path
-                    ? { uri: student.photo_path }
-                    : require("./assets/cjpic.jpg")
-                }
-                style={styles.profileImage}
-              />
+              {student.photo_path ? (
+                <Image
+                  source={{ uri: student.photo_path }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <View
+                  style={[
+                    styles.profileImage,
+                    { backgroundColor: "#e5e7eb", justifyContent: "center", alignItems: "center" },
+                  ]}
+                >
+                  <Ionicons name="person" size={40} color="#9ca3af" />
+                </View>
+              )}
               <View style={styles.nameContainer}>
                 <Text style={styles.childLabel}>Current Student</Text>
                 <Text style={styles.childName}>
@@ -152,18 +160,20 @@ export default function DashboardScreen({ navigation, route }: any) {
           description="Look back at the fun times"
           icon="book"
           color="#4ECDC4"
-          onPress={() => navigation.navigate("ProgressHistory", { student })}
+          onPress={() =>
+            navigation.navigate("ProgressHistory", { studentId: student.id })
+          }
         />
 
         <MenuButton
           title="Account Profile"
-          description="View your settings"
+          description="View guardian + students"
           icon="happy"
           color="#FFBE0B"
           onPress={() =>
-            navigation.navigate("StudentProfile", {
-              guardian,
-              student,
+            navigation.navigate("Profile", {
+              studentId: student.id,
+              guardianId: guardian.id,
             })
           }
         />
@@ -172,7 +182,9 @@ export default function DashboardScreen({ navigation, route }: any) {
         <View style={styles.footerActions}>
           <TouchableOpacity
             style={styles.switchButton}
-            onPress={() => navigation.navigate("SelectStudent", { currentStudent: student })}
+            onPress={() =>
+              navigation.navigate("SelectStudent", { currentStudent: student })
+            }
           >
             <Ionicons name="people-outline" size={20} color="#4A90E2" />
             <Text style={styles.switchText}>Switch Student</Text>
@@ -187,6 +199,7 @@ export default function DashboardScreen({ navigation, route }: any) {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F0F9FF" },

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Resources\ProgressResource;
 use App\Models\Student;
+use App\Models\Week;
+use App\Models\ProgressRecord;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,23 +13,31 @@ use Illuminate\Support\Facades\Auth;
 class ProgressController extends Controller
 {
     /**
-     * List progress records for a student.
-     *
-     * @param Student $student
-     * @param Request $request
-     * @return JsonResponse
+     * Validate guardian and student ownership.
      */
-    public function index(Student $student, Request $request): JsonResponse
+    private function validateGuardianAccess(Student $student): ?JsonResponse
     {
         $guardian = Auth::user()->guardian;
 
-        // ✅ Ensure guardian owns this student and account is active
         if (!$guardian || $guardian->trashed_at !== null) {
             return $this->unauthorizedResponse('Guardian account is inactive or deleted');
         }
 
         if ($student->guardian_id !== $guardian->id || $student->trashed_at !== null) {
-            return $this->unauthorizedResponse('You cannot access progress records for this student');
+            return $this->unauthorizedResponse('You cannot access this student');
+        }
+
+        return null;
+    }
+
+    /**
+     * List progress records for a student in fixed subject order.
+     * Always include the latest week, even if no progress exists.
+     */
+    public function index(Student $student, Request $request): JsonResponse
+    {
+        if ($resp = $this->validateGuardianAccess($student)) {
+            return $resp;
         }
 
         $weekId = $request->query('week');
@@ -41,24 +51,54 @@ class ProgressController extends Controller
             $query->where('week_id', $weekId);
         }
 
-        $progress = $query->paginate(10);
+        $progress = $query->get();
+
+        // ✅ Fixed subject order
+        $subjectOrder = ['Math', 'Science', 'English', 'Filipino'];
+        $progress = $progress->sortBy(function ($record) use ($subjectOrder) {
+            return array_search($record->subject, $subjectOrder);
+        })->values();
+
+        // ✅ Always include latest week
+        $latestWeek = Week::orderBy('week_number', 'desc')->first();
+        if (!$latestWeek) {
+            return $this->successResponse([], 'No weeks defined yet');
+        }
+
+        $latestWeekProgress = $progress->where('week_id', $latestWeek->id);
+
+        if ($latestWeekProgress->isEmpty()) {
+            // Create placeholder ProgressRecord model
+            $placeholder = new ProgressRecord([
+                'student_id'   => $student->id,
+                'week_id'      => $latestWeek->id,
+                'subject'      => null,
+                'rating_level' => null,
+                'remarks'      => null,
+            ]);
+
+            // Attach week relation so ProgressResource can serialize
+            $placeholder->setRelation('week', $latestWeek);
+
+            $progress->prepend($placeholder);
+        }
+
+        // ✅ Manual pagination
+        $perPage = 10;
+        $page = (int) $request->query('page', 1);
+        $paged = $progress->forPage($page, $perPage);
 
         $meta = [
             'pagination' => [
-                'current_page' => $progress->currentPage(),
-                'last_page'    => $progress->lastPage(),
-                'per_page'     => $progress->perPage(),
-                'total'        => $progress->total(),
+                'current_page' => $page,
+                'last_page'    => ceil($progress->count() / $perPage),
+                'per_page'     => $perPage,
+                'total'        => $progress->count(),
             ]
         ];
 
-        if ($progress->isEmpty()) {
-            // ✅ Return 200 OK with empty array
-            return $this->successResponse([], 'No progress records available', 200, $meta);
-        }
-
         return $this->successResponse(
-            ProgressResource::collection($progress),
+            ProgressResource::collection($paged),
             'Progress records retrieved successfully',
             200,
             $meta

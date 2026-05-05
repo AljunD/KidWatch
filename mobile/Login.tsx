@@ -19,7 +19,6 @@ import { AuthContext } from "./App";
 type RootStackParamList = {
   Welcome: undefined;
   Login: undefined;
-  SelectStudent: undefined;
   Dashboard: undefined;
 };
 
@@ -56,12 +55,10 @@ export default function Login({ navigation }: LoginProps) {
 
       if (res.success && res.data?.token) {
         await AsyncStorage.setItem("token", res.data.token);
-        setIsAuthenticated(true);
+        setIsAuthenticated(true); // ✅ flips to AppStack automatically
 
         setBannerMessage(res.message || "Login successful!");
         setBannerType("success");
-
-        navigation.replace("SelectStudent");
       } else {
         const errorDetails = res.errors?.join("\n") || "";
         setBannerMessage(
