@@ -5,18 +5,23 @@ import Constants from "expo-constants";
  * Detect environment: emulator vs physical device vs web
  */
 function getBaseUrl(): string {
-  // Default for emulator
-  let url = "http://localhost:8000/api/v1";
+  const debuggerHost = Constants.manifest?.debuggerHost;
 
-  // If running on physical device (Expo Go), use LAN IP
-  if (!Constants.manifest?.debuggerHost?.includes("localhost")) {
-    url = "http://192.168.1.5:8000/api/v1"; // replace with your LAN IP
+  if (debuggerHost) {
+    if (debuggerHost.includes("localhost")) {
+      // ✅ Android emulator → use 10.0.2.2
+      return "http://10.0.2.2:8000/api/v1";
+    } else {
+      // ✅ Physical device (Expo Go) → use LAN IP of your PC
+      return "http://192.168.1.5:8000/api/v1"; // replace with your actual LAN IP
+    }
   }
 
-  return url;
+  // ✅ Fallback for browser/PC testing
+  return "http://127.0.0.1:8000/api/v1";
 }
 
-const BASE_URL = getBaseUrl();
+export const BASE_URL = getBaseUrl();
 
 /**
  * Centralized endpoints (match Laravel routes with ProfileController)
@@ -89,11 +94,20 @@ export async function apiRequest<T>(
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`${BASE_URL}/${endpoint}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${BASE_URL}/${endpoint}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (err: any) {
+    return {
+      success: false,
+      message: "Network error",
+      errors: [err.message || "Failed to connect to server"],
+    };
+  }
 
   // ✅ Handle 404 gracefully
   if (response.status === 404) {
