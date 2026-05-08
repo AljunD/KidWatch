@@ -15,18 +15,39 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #ffffff; 
-            overflow: hidden; 
+            background-color: #000; /* Fallback */
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Blurred Background Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Your requested link */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('https://wallpapers.com/images/high/kids-background-phhsee8es7zh9v2w.webp');
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px); /* Adjust this number (e.g., 4px, 12px) to change blur intensity */
+            transform: scale(1.1); /* Prevents white edges caused by blurring */
+            z-index: -1;
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
         .modal-highlight {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
-<body class="h-full w-full flex items-center justify-center p-0 md:p-12 overflow-hidden" 
+<body class="h-full w-full p-0 md:p-12" 
       x-data="{ 
         loading: false, 
         email: '', 
@@ -43,9 +64,9 @@
         }
       }">
 
-    <div class="bg-white w-full max-w-6xl h-full md:h-[min(800px,95vh)] md:max-h-[800px] md:rounded-[3rem] overflow-hidden modal-highlight flex flex-col md:flex-row border border-gray-200 relative">
+    <div class="bg-white w-full max-w-6xl h-full md:h-[min(800px,95vh)] md:max-h-[800px] md:rounded-[3rem] overflow-hidden modal-highlight flex flex-col md:flex-row border border-gray-200/50 relative">
         
-        <div class="w-full md:w-1/2 p-8 md:p-16 lg:p-24 flex flex-col bg-white overflow-y-auto no-scrollbar relative" x-data="{ showPassword: false }">
+        <div class="w-full md:w-1/2 p-8 md:p-16 lg:p-24 flex flex-col bg-white/95 backdrop-blur-sm overflow-y-auto no-scrollbar relative" x-data="{ showPassword: false }">
             
             <div class="flex-grow flex flex-col justify-center">
                 
@@ -60,7 +81,7 @@
                     <div class="group">
                         <label for="email" class="text-sm font-semibold text-gray-500 ml-1">Email Address</label>
                         <input type="email" id="email" name="email" x-model="email"
-                               placeholder="your@email.com"
+                               placeholder="username@gmail.com"
                                :class="showError && !email ? 'border-red-500 bg-red-50/50' : 'border-gray-100 bg-gray-50/50 focus:border-gray-900 focus:ring-4 focus:ring-gray-50'"
                                class="w-full px-5 py-4 rounded-2xl border transition-all outline-none text-base">
                         
@@ -101,7 +122,7 @@
 
                     <div class="pt-4">
                         <button type="submit" 
-                            class="w-full bg-gray-900 hover:bg-black text-white font-bold py-4.5 rounded-2xl transition-all shadow-xl shadow-gray-200 active:scale-[0.98] h-14 flex items-center justify-center gap-2">
+                            class="w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-2xl transition-all shadow-xl shadow-gray-200 active:scale-[0.98] h-14 flex items-center justify-center gap-2">
                             <span x-show="!loading">Sign in</span>
                             <span x-show="loading" class="flex items-center gap-2">
                                 <i class="fas fa-circle-notch fa-spin text-xs"></i> Authenticating...

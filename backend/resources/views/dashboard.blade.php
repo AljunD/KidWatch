@@ -14,9 +14,9 @@
             <div>
                 <h1 class="text-5xl font-black tracking-[-2px] text-[#003366]">Dashboard</h1>
                 <p class="mt-2 text-xl text-slate-600">
-                    Good {{ $greetingTime }}, <span class="font-semibold">{{ $displayName }}</span> 👋
+                    Good {{ $greetingTime }}, <span class="font-semibold">{{ $displayName }}</span>
                 </p>
-                <p class="text-slate-500">Here's what's happening with your kids this week</p>
+                <p class="text-slate-500">Here's what's happening with your Students this week</p>
             </div>
 
             <div class="flex items-center gap-x-4 bg-white rounded-3xl px-6 py-4 shadow-sm border border-slate-100">
