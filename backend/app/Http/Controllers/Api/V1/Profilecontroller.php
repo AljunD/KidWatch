@@ -12,9 +12,6 @@ use Illuminate\Http\JsonResponse;
 
 class ProfileController extends Controller
 {
-    /**
-     * Guardian login
-     */
     public function login(Request $request): JsonResponse
     {
         $request->validate([
@@ -85,16 +82,13 @@ class ProfileController extends Controller
                 'relationship_to_child'=> $guardian->relationship_to_child,
                 'contact_number'       => $guardian->contact_number,
                 'address'              => $guardian->address,
-                'email'                => $user->email, // ✅ include email from users table
+                'email'                => $user->email,
             ],
             'token'      => $token,
             'token_type' => 'Bearer',
         ], 'Login successful');
     }
 
-    /**
-     * Guardian logout
-     */
     public function logout(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -111,14 +105,11 @@ class ProfileController extends Controller
         return $this->successResponse(null, 'Logged out successfully');
     }
 
-    /**
-     * Guardian profile with linked students + user email
-     */
     public function profile(Request $request): JsonResponse
     {
         $guardian = $request->user()
             ->guardian()
-            ->with(['students', 'user']) // ✅ eager-load user relation
+            ->with(['students', 'user'])
             ->first();
 
         if (!$guardian) {
@@ -128,9 +119,6 @@ class ProfileController extends Controller
         return $this->successResponse($guardian, 'Guardian profile retrieved successfully');
     }
 
-    /**
-     * Update guardian profile
-     */
     public function updateProfile(Request $request): JsonResponse
     {
         $guardian = $request->user()->guardian;
@@ -154,9 +142,6 @@ class ProfileController extends Controller
         return $this->successResponse($guardian->load('user'), 'Profile updated successfully'); // ✅ include user relation
     }
 
-    /**
-     * List students linked to guardian
-     */
     public function students(): JsonResponse
     {
         $guardian = Auth::user()->guardian;
@@ -188,9 +173,6 @@ class ProfileController extends Controller
         );
     }
 
-    /**
-     * Show specific student details
-     */
     public function studentDetail(Student $student): JsonResponse
     {
         $guardian = Auth::user()->guardian;

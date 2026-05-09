@@ -4,35 +4,33 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   Image,
   FlatList,
   StatusBar,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // ✅ fixed import
 import { Ionicons } from "@expo/vector-icons";
 import { apiRequest, ENDPOINTS } from "./api";
-import { AuthContext } from "./App";
+import { AuthContext } from "./AuthContext";
 
-export default function SelectStudentScreen({ navigation, route }: any) {
-  const { setIsAuthenticated } = useContext(AuthContext);
+export default function SelectStudentScreen({ navigation }: any) {
+  const { setAuthenticated, setSelectedStudent, selectedStudent } =
+    useContext(AuthContext);
 
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<any[]>([]);
-
-  const currentStudent = route.params?.currentStudent;
-  const fromDashboard = route.params?.fromDashboard || false; // ✅ flag
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
         const res = await apiRequest<any>(ENDPOINTS.students, "GET");
-        if (res.success) {
+        if (res.success && res.data) {
           setStudents(res.data);
         }
       } catch (err) {
         console.error("Error fetching students:", err);
-        setIsAuthenticated(false);
+        setAuthenticated(false); // fallback if token invalid
       } finally {
         setLoading(false);
       }
@@ -55,17 +53,10 @@ export default function SelectStudentScreen({ navigation, route }: any) {
 
       {/* Header */}
       <View style={styles.headerContainer}>
-        {/* ✅ Show back button only if fromDashboard */}
-        {fromDashboard && (
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#1A365D" />
-          </TouchableOpacity>
-        )}
         <View style={styles.headerTextContainer}>
           <Text style={styles.welcomeText}>Parent Portal</Text>
           <Text style={styles.title}>Who's learning today?</Text>
         </View>
-        <View style={{ width: 45 }} />
       </View>
 
       <FlatList
@@ -73,13 +64,14 @@ export default function SelectStudentScreen({ navigation, route }: any) {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => {
-          const isActive = currentStudent && currentStudent.id === item.id;
+          const isActive = selectedStudent && selectedStudent.id === item.id;
           return (
             <TouchableOpacity
               style={[styles.card, isActive && styles.activeCard]}
-              onPress={() =>
-                navigation.replace("Dashboard", { selectedStudent: item })
-              }
+              onPress={() => {
+                setSelectedStudent(item); // ✅ store in context
+                navigation.replace("Dashboard"); // ✅ go to Dashboard
+              }}
             >
               {item.photo_path ? (
                 <Image source={{ uri: item.photo_path }} style={styles.avatar} />
@@ -87,7 +79,11 @@ export default function SelectStudentScreen({ navigation, route }: any) {
                 <View
                   style={[
                     styles.avatar,
-                    { backgroundColor: "#e5e7eb", justifyContent: "center", alignItems: "center" },
+                    {
+                      backgroundColor: "#e5e7eb",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    },
                   ]}
                 >
                   <Ionicons name="person" size={28} color="#9ca3af" />
@@ -108,7 +104,9 @@ export default function SelectStudentScreen({ navigation, route }: any) {
           );
         }}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No students linked to this guardian yet.</Text>
+          <Text style={styles.emptyText}>
+            No students linked to this guardian yet.
+          </Text>
         }
       />
     </SafeAreaView>
@@ -120,20 +118,11 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
-  backButton: {
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 15,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-  },
-  headerTextContainer: { flex: 1, alignItems: "center" },
+  headerTextContainer: { alignItems: "center" },
   welcomeText: {
     fontSize: 13,
     color: "#94a3b8",

@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   Image,
   ImageBackground,
   ScrollView,
@@ -14,9 +13,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import { apiRequest, ENDPOINTS } from "./api";
 
-// Reusable Info Row
 const InfoRow = ({ label, value, icon, color }: any) => (
   <View style={styles.infoRow}>
     <View style={styles.labelContainer}>
@@ -41,15 +41,16 @@ export default function ProfileScreen({ navigation, route }: any) {
         const token = await AsyncStorage.getItem("token");
         if (!token) return;
 
-        // ✅ Fetch guardian profile
         const guardianRes = await apiRequest<any>(ENDPOINTS.profile, "GET");
         if (guardianRes.success && guardianRes.data) {
           setGuardian(guardianRes.data);
         }
 
-        // ✅ Fetch specific student details using studentId
         if (studentId) {
-          const studentRes = await apiRequest<any>(ENDPOINTS.studentDetail(studentId), "GET");
+          const studentRes = await apiRequest<any>(
+            ENDPOINTS.studentDetail(studentId),
+            "GET"
+          );
           if (studentRes.success && studentRes.data) {
             setStudent(studentRes.data);
           }
@@ -75,45 +76,72 @@ export default function ProfileScreen({ navigation, route }: any) {
   if (!student || !guardian) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <Text style={{ textAlign: "center", marginTop: 50, color: "#FF6B6B", fontWeight: "700" }}>
+        <Text
+          style={{
+            textAlign: "center",
+            marginTop: 50,
+            color: "#FF6B6B",
+            fontWeight: "700",
+          }}
+        >
           Missing profile data. Please go back to Dashboard.
         </Text>
       </SafeAreaView>
     );
   }
 
-  const fullName = `${student.first_name} ${student.middle_name ? student.middle_name + " " : ""}${student.last_name}`;
-  const guardianName = `${guardian.first_name} ${guardian.middle_name ? guardian.middle_name + " " : ""}${guardian.last_name}`;
-  const age = student.date_of_birth ? dayjs().diff(dayjs(student.date_of_birth), "year") : null;
+  const fullName = `${student.first_name} ${
+    student.middle_name ? student.middle_name + " " : ""
+  }${student.last_name}`;
+  const guardianName = `${guardian.first_name} ${
+    guardian.middle_name ? guardian.middle_name + " " : ""
+  }${guardian.last_name}`;
+  const age = student.date_of_birth
+    ? dayjs().diff(dayjs(student.date_of_birth), "year")
+    : null;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color="#1A365D" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* Banner + Student Profile Image */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         <ImageBackground
           source={require("./assets/doodle.jpg")}
           style={styles.doodleBanner}
-          imageStyle={{ borderBottomLeftRadius: 40, borderBottomRightRadius: 40 }}
+          imageStyle={{
+            borderBottomLeftRadius: 40,
+            borderBottomRightRadius: 40,
+          }}
           resizeMode="cover"
         >
           <View style={styles.imageWrapper}>
             {student.photo_path ? (
-              <Image source={{ uri: student.photo_path }} style={styles.profileImage} />
+              <Image
+                source={{ uri: student.photo_path }}
+                style={styles.profileImage}
+              />
             ) : (
               <View
                 style={[
                   styles.profileImage,
-                  { backgroundColor: "#e5e7eb", justifyContent: "center", alignItems: "center" },
+                  {
+                    backgroundColor: "#e5e7eb",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  },
                 ]}
               >
                 <Ionicons name="person" size={40} color="#9ca3af" />
@@ -123,7 +151,6 @@ export default function ProfileScreen({ navigation, route }: any) {
         </ImageBackground>
 
         <View style={styles.content}>
-          {/* Student Details */}
           <View style={styles.infoCard}>
             <View style={styles.cardHeaderContainer}>
               <View style={styles.headerIconCircle}>
@@ -132,28 +159,83 @@ export default function ProfileScreen({ navigation, route }: any) {
               <Text style={styles.cardHeader}>Student Details</Text>
             </View>
 
-            <InfoRow label="Full Name" value={fullName} icon="person-outline" color="#FF6B6B" />
-            <InfoRow label="Age" value={age ? `${age} Years Old` : "—"} icon="calendar-outline" color="#4A90E2" />
-            <InfoRow label="Gender" value={student.gender} icon="male-female-outline" color="#FFBE0B" />
-            <InfoRow label="Birth Date" value={dayjs(student.date_of_birth).format("MMM D, YYYY")} icon="gift-outline" color="#4ECDC4" />
-            <InfoRow label="Nationality" value={student.nationality} icon="flag-outline" color="#FF9F1C" />
-            <InfoRow label="Religion" value={student.religion} icon="book-outline" color="#9b59b6" />
+            <InfoRow
+              label="Full Name"
+              value={fullName}
+              icon="person-outline"
+              color="#FF6B6B"
+            />
+            <InfoRow
+              label="Age"
+              value={age ? `${age} Years Old` : "—"}
+              icon="calendar-outline"
+              color="#4A90E2"
+            />
+            <InfoRow
+              label="Gender"
+              value={student.gender}
+              icon="male-female-outline"
+              color="#FFBE0B"
+            />
+            <InfoRow
+              label="Birth Date"
+              value={dayjs(student.date_of_birth).format("MMM D, YYYY")}
+              icon="gift-outline"
+              color="#4ECDC4"
+            />
+            <InfoRow
+              label="Nationality"
+              value={student.nationality}
+              icon="flag-outline"
+              color="#FF9F1C"
+            />
+            <InfoRow
+              label="Religion"
+              value={student.religion}
+              icon="book-outline"
+              color="#9b59b6"
+            />
           </View>
-
-          {/* Guardian Details */}
           <View style={styles.infoCard}>
             <View style={styles.cardHeaderContainer}>
-              <View style={[styles.headerIconCircle, { backgroundColor: "#4ECDC4" }]}>
+              <View
+                style={[styles.headerIconCircle, { backgroundColor: "#4ECDC4" }]}
+              >
                 <Ionicons name="heart" size={20} color="#fff" />
               </View>
               <Text style={styles.cardHeader}>Guardian Details</Text>
             </View>
 
-            <InfoRow label="Name" value={guardianName} icon="business-outline" color="#4A90E2" />
-            <InfoRow label="Relationship" value={guardian.relationship_to_child} icon="people-outline" color="#FF6B6B" />
-            <InfoRow label="Email" value={guardian.user?.email} icon="mail-outline" color="#4ECDC4" />
-            <InfoRow label="Contact" value={guardian.contact_number} icon="call-outline" color="#FFBE0B" />
-            <InfoRow label="Home Address" value={guardian.address} icon="home-outline" color="#FF9F1C" />
+            <InfoRow
+              label="Name"
+              value={guardianName}
+              icon="business-outline"
+              color="#4A90E2"
+            />
+            <InfoRow
+              label="Relationship"
+              value={guardian.relationship_to_child}
+              icon="people-outline"
+              color="#FF6B6B"
+            />
+            <InfoRow
+              label="Email"
+              value={guardian.user?.email}
+              icon="mail-outline"
+              color="#4ECDC4"
+            />
+            <InfoRow
+              label="Contact"
+              value={guardian.contact_number}
+              icon="call-outline"
+              color="#FFBE0B"
+            />
+            <InfoRow
+              label="Home Address"
+              value={guardian.address}
+              icon="home-outline"
+              color="#FF9F1C"
+            />
           </View>
         </View>
       </ScrollView>
@@ -172,7 +254,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0F9FF",
   },
   headerTitle: { color: "#1A365D", fontSize: 20, fontWeight: "900" },
-  backButton: { backgroundColor: "#fff", padding: 8, borderRadius: 15, elevation: 2 },
+  backButton: {
+    backgroundColor: "#fff",
+    padding: 8,
+    borderRadius: 15,
+    elevation: 2,
+  },
   doodleBanner: {
     height: 180,
     width: "100%",
@@ -190,7 +277,13 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 12,
   },
-  profileImage: { width: 110, height: 110, borderRadius: 35, borderWidth: 4, borderColor: "#fff" },
+  profileImage: {
+    width: 110,
+    height: 110,
+    borderRadius: 35,
+    borderWidth: 4,
+    borderColor: "#fff",
+  },
   content: { padding: 20, marginTop: 10 },
   infoCard: {
     backgroundColor: "#fff",

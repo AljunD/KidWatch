@@ -71,7 +71,7 @@
             <div class="flex justify-center items-center mt-8">
                 <button type="submit"
                         class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition">
-                    ✅ Save Progress
+                    Save Progress
                 </button>
             </div>
         </form>

@@ -1,6 +1,11 @@
 <x-layout>
     <x-slot:title>KidWatch | Trash Bin</x-slot>
 
+        <div>
+            <h1 class="text-4xl font-black text-[#003366] tracking-[-1px] leading-none uppercase italic">Trash Bin</h1>
+            <p class="text-slate-500"></p>
+        </div>
+
     <div class="max-w-6xl mx-auto mb-6">
         @if(session('success'))
             <div class="mb-4 p-4 rounded-lg bg-green-100 text-green-800 border border-green-300">

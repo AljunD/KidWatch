@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class ProgressHistoryController extends Controller
 {
-    /**
-     * Validate guardian and student ownership.
-     */
     private function validateGuardianAccess(Student $student): ?JsonResponse
     {
         $guardian = Auth::user()->guardian;
@@ -38,8 +35,6 @@ class ProgressHistoryController extends Controller
         if ($resp = $this->validateGuardianAccess($student)) {
             return $resp;
         }
-
-        // ✅ Fetch all weeks ordered by week_number descending
         $weeks = Week::orderBy('week_number', 'desc')->get();
         $latestWeek = $weeks->first();
 
@@ -49,7 +44,6 @@ class ProgressHistoryController extends Controller
                 ->whereNull('trashed_at')
                 ->count();
 
-            // ✅ Latest week is always "Current Week"
             if ($week->id === $latestWeek->id) {
                 $status = 'Current Week';
             } else {

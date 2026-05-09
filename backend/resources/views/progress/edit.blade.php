@@ -3,7 +3,7 @@
 
     <div class="max-w-3xl mx-auto bg-white rounded-3xl shadow-lg p-10 space-y-8">
         <h1 class="text-3xl font-black text-[#003366] mb-8 border-b pb-4">
-            ✏️ Edit Progress for
+            Edit Progress for
             <span class="text-emerald-600">
                 {{ $student->first_name }} {{ $student->last_name }}
             </span>
@@ -32,8 +32,6 @@
                 {{ session('success') }}
             </div>
         @endif
-
-        {{-- Default to first available record for initial form action --}}
         @php
             $firstRecord = $records->first();
         @endphp
@@ -102,7 +100,7 @@
                 <button type="submit"
                         class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition"
                         {{ !$firstRecord ? 'disabled' : '' }}>
-                    💾 Save Changes
+                    Save Changes
                 </button>
             </div>
         </form>

@@ -36,8 +36,6 @@ class SummaryGeneratorService
             3 => 'Very Good',
             4 => 'Excellent',
         ];
-
-        // Collect ratings + remarks
         $ratings        = [];
         $remarksSummary = [];
         foreach ($records as $record) {
@@ -46,8 +44,6 @@ class SummaryGeneratorService
                 $remarksSummary[] = "{$record->subject}: {$record->remarks}";
             }
         }
-
-        // Subject ratings section
         foreach ($records as $record) {
             $label = $labels[$record->rating_level] ?? (string) $record->rating_level;
             $narrative .= strtoupper($record->subject) . ": {$label}";

@@ -1,29 +1,23 @@
 import 'react-native-gesture-handler';
-import React, { useEffect, useState, createContext } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { AuthContext } from './AuthContext';
+import { apiRequest, ENDPOINTS } from './api';
 
-import WelcomeScreen from './WelcomeScreen'; 
-import LoginScreen from './Login'; 
-import SelectStudentScreen from './SelectStudent'; 
+// Screens
+import WelcomeScreen from './WelcomeScreen';
+import LoginScreen from './Login';
+import SelectStudentScreen from './SelectStudent';
 import DashboardScreen from './Dashboard';
-import ProfileScreen from './Profile';  
+import ProfileScreen from './Profile';
 import WeeklyProgressScreen from './WeeklyProgress';
 import ProgressHistoryScreen from './ProgressHistory';
 import ProgressDetailScreen from './ProgressDetail';
 
 const Stack = createStackNavigator();
-
-// Auth context to share login state globally
-export const AuthContext = createContext<{
-  isAuthenticated: boolean;
-  setIsAuthenticated: (value: boolean) => void;
-}>({
-  isAuthenticated: false,
-  setIsAuthenticated: () => {},
-});
 
 function AuthStack() {
   return (
@@ -36,11 +30,10 @@ function AuthStack() {
 
 function AppStack() {
   return (
-    // ✅ Start at SelectStudent instead of Dashboard
     <Stack.Navigator initialRouteName="SelectStudent" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="SelectStudent" component={SelectStudentScreen} />
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
-      <Stack.Screen name="Profile" component={ProfileScreen} />   
+      <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="WeeklyProgress" component={WeeklyProgressScreen} />
       <Stack.Screen name="ProgressHistory" component={ProgressHistoryScreen} />
       <Stack.Screen name="ProgressDetail" component={ProgressDetailScreen} />
@@ -49,21 +42,48 @@ function AppStack() {
 }
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
 
-  // Check token on startup
+  // ✅ Logout function
+  const logout = useCallback(async () => {
+    try {
+      await AsyncStorage.removeItem('token');
+      setSelectedStudent(null);
+      setAuthenticated(false);
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  }, []);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        setIsAuthenticated(!!token);
+
+        if (token) {
+          // ✅ Validate token with backend before trusting it
+          const res = await apiRequest<any>(ENDPOINTS.profile, "GET");
+
+          if (res.success && res.data) {
+            setAuthenticated(true);
+          } else {
+            // ❌ Invalid token → clear and force login
+            await AsyncStorage.removeItem('token');
+            setAuthenticated(false);
+          }
+        } else {
+          setAuthenticated(false);
+        }
       } catch (error) {
         console.error('Error checking auth token:', error);
+        setAuthenticated(false);
       } finally {
         setLoading(false);
       }
     };
+
     checkAuth();
   }, []);
 
@@ -73,11 +93,21 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>
-        <NavigationContainer>
-          {isAuthenticated ? <AppStack /> : <AuthStack />}
-        </NavigationContainer>
-      </AuthContext.Provider>
+      <SafeAreaView style={{ flex: 1 }}>
+        <AuthContext.Provider
+          value={{
+            authenticated,
+            setAuthenticated,
+            selectedStudent,
+            setSelectedStudent,
+            logout, // ✅ expose logout in context
+          }}
+        >
+          <NavigationContainer>
+            {authenticated ? <AppStack /> : <AuthStack />}
+          </NavigationContainer>
+        </AuthContext.Provider>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }

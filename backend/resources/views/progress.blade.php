@@ -66,7 +66,7 @@
         <div class="bg-white rounded-3xl shadow-lg p-8 space-y-6">
             <div class="flex justify-between items-center mb-6 border-b pb-3">
                 <h2 class="text-2xl font-black text-[#003366] flex items-center gap-2">
-                    👩‍🎓 Student List
+                    Student List
                 </h2>
                 <span class="text-sm text-slate-500 font-medium">
                     Total: {{ $students->count() }} students

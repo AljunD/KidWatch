@@ -5,13 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller as LaravelController;
 
-/**
- * Base API Controller
- *
- * Provides standardized JSON responses for all API endpoints.
- * Ensures consistent structure for success and error cases.
- * Aligned with Database v1.6 schema.
- */
 abstract class Controller extends LaravelController
 {
     /**

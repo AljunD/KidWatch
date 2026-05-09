@@ -17,8 +17,6 @@ class WeeklySummaryResource extends JsonResource
             'trashed_at'      => $this->trashed_at,
             'created_at'      => $this->created_at,
             'updated_at'      => $this->updated_at,
-
-            // ✅ Include week details when eager-loaded
             'week' => $this->whenLoaded('week', function () {
                 return [
                     'id'          => $this->week->id,
@@ -27,8 +25,6 @@ class WeeklySummaryResource extends JsonResource
                     'end_date'    => $this->week->end_date,
                 ];
             }),
-
-            // ✅ Optionally include student info when eager-loaded
             'student' => $this->whenLoaded('student', function () {
                 return [
                     'id'          => $this->student->id,

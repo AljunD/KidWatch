@@ -3,7 +3,7 @@
 
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-[#003366] tracking-tight">Student Directory</h1>
+            <h1 class="text-4xl font-black text-[#003366] tracking-[-1px] leading-none uppercase italic">Student Directory</h1>
             <p class="text-gray-500 text-sm">
                 Monitor and manage student profiles and guardian connections. ({{ $students->count() }} total)
             </p>

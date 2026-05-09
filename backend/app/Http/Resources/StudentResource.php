@@ -21,12 +21,9 @@ class StudentResource extends JsonResource
             'photo_path'     => $this->photo_path
                                 ? asset('storage/' . $this->photo_path)
                                 : null,
-
             'trashed_at'     => $this->trashed_at,
             'created_at'     => $this->created_at,
             'updated_at'     => $this->updated_at,
-
-            // ✅ Guardian relationship
             'guardian' => $this->whenLoaded('guardian', function () {
                 return [
                     'id'                    => $this->guardian->id,

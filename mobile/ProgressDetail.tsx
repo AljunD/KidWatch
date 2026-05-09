@@ -4,28 +4,28 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ScrollView,
   ActivityIndicator,
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { apiRequest, ENDPOINTS } from "./api";
+import { SafeAreaView } from "react-native-safe-area-context"; // ✅ fixed import
 import dayjs from "dayjs";
+
+import { apiRequest, ENDPOINTS } from "./api";
 
 const COLORS = {
   bg: "#F0F9FF",
   white: "#FFFFFF",
   primary: "#1A365D",
-  accent: "#4A90E2",   // blue
-  teal: "#4ECDC4",     // green
-  amber: "#FFBE0B",    // yellow
-  rose: "#FF6B6B",     // red
+  accent: "#4A90E2",
+  teal: "#4ECDC4",
+  amber: "#FFBE0B",
+  rose: "#FF6B6B",
   textSecondary: "#64748b",
 };
 
-// Rating Badge with consistent colors
 const RatingBadge = ({ rating }: { rating: string }) => {
   let bgColor = COLORS.textSecondary;
 
@@ -55,8 +55,7 @@ const RatingBadge = ({ rating }: { rating: string }) => {
 };
 
 export default function ProgressDetailScreen({ navigation, route }: any) {
-  const { studentId, weekId, weekName } = route.params;
-
+  const { studentId, weekId } = route.params;
   const [progressRecords, setProgressRecords] = useState<any[]>([]);
   const [summary, setSummary] = useState<any | null>(null);
   const [recommendations, setRecommendations] = useState<any[]>([]);
@@ -132,19 +131,24 @@ export default function ProgressDetailScreen({ navigation, route }: any) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
-      {/* Header consistent with ProgressHistory */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
           <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Progress Detail</Text>
         <View style={styles.filterButton}>
-          <Ionicons name="document-text-outline" size={24} color={COLORS.accent} />
+          <Ionicons
+            name="document-text-outline"
+            size={24}
+            color={COLORS.accent}
+          />
         </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Week Info */}
         {weekInfo && (
           <View style={styles.weekCard}>
             <Text style={styles.weekTitle}>Week {weekInfo.week_number}</Text>
@@ -158,7 +162,6 @@ export default function ProgressDetailScreen({ navigation, route }: any) {
           </View>
         )}
 
-        {/* Progress Records */}
         <Text style={styles.sectionTitle}>Progress Records</Text>
         <Text style={styles.subtitle}>Ratings and remarks per subject</Text>
 
@@ -169,14 +172,17 @@ export default function ProgressDetailScreen({ navigation, route }: any) {
         ) : (
           progressRecords.map((item: any) => (
             <View key={item.id} style={styles.recordCard}>
-              <Text style={styles.subjectText}>{item.subject || "No subject"}</Text>
+              <Text style={styles.subjectText}>
+                {item.subject || "No subject"}
+              </Text>
               <RatingBadge rating={item.rating_label || "No Rating"} />
-              <Text style={styles.remarkText}>{item.remarks || "No remarks"}</Text>
+              <Text style={styles.remarkText}>
+                {item.remarks || "No remarks"}
+              </Text>
             </View>
           ))
         )}
 
-        {/* Weekly Summary */}
         <Text style={styles.sectionTitle}>Weekly Summary</Text>
         <Text style={styles.subtitle}>Analysis and recommendations</Text>
 
@@ -198,7 +204,10 @@ export default function ProgressDetailScreen({ navigation, route }: any) {
           </View>
         ) : (
           <TouchableOpacity
-            style={[styles.generateBtn, !canGenerate && { backgroundColor: "#94a3b8" }]}
+            style={[
+              styles.generateBtn,
+              !canGenerate && { backgroundColor: "#94a3b8" },
+            ]}
             onPress={handleGenerateSummary}
             disabled={!canGenerate}
           >
@@ -218,18 +227,66 @@ export default function ProgressDetailScreen({ navigation, route }: any) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: COLORS.bg },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 20 },
-  backButton: { backgroundColor: COLORS.white, padding: 10, borderRadius: 15, elevation: 2 },
-  filterButton: { backgroundColor: COLORS.white, padding: 10, borderRadius: 15, elevation: 2 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 20,
+  },
+  backButton: {
+    backgroundColor: COLORS.white,
+    padding: 10,
+    borderRadius: 15,
+    elevation: 2,
+  },
+  filterButton: {
+    backgroundColor: COLORS.white,
+    padding: 10,
+    borderRadius: 15,
+    elevation: 2,
+  },
   headerTitle: { fontSize: 20, fontWeight: "900", color: COLORS.primary },
   content: { flex: 1, paddingHorizontal: 20 },
-  weekCard: { backgroundColor: COLORS.white, borderRadius: 20, padding: 15, marginBottom: 20, elevation: 2 },
+  weekCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: 15,
+    marginBottom: 20,
+    elevation: 2,
+  },
   weekTitle: { fontSize: 18, fontWeight: "800", color: COLORS.accent },
-  dateRangeText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: "600", marginTop: 2 },
-  sectionTitle: { fontSize: 22, fontWeight: "900", color: COLORS.accent, marginTop: 10 },
-  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginBottom: 15, fontWeight: "500" },
-  recordCard: { flexDirection: "row", alignItems: "center", backgroundColor: COLORS.white, borderRadius: 20, padding: 15, marginBottom: 10, elevation: 2 },
-  subjectText: { flex: 1, fontSize: 16, fontWeight: "700", color: COLORS.primary },
+  dateRangeText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: COLORS.accent,
+    marginTop: 10,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 15,
+    fontWeight: "500",
+  },
+  recordCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: 15,
+    marginBottom: 10,
+    elevation: 2,
+  },
+  subjectText: { 
+    flex: 1, 
+    fontSize: 16, 
+    fontWeight: "700", 
+    color: COLORS.primary },
   badge: { 
     paddingHorizontal: 10, 
     paddingVertical: 4, 

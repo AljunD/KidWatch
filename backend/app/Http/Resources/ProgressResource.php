@@ -9,7 +9,6 @@ class ProgressResource extends JsonResource
 {
     public function toArray($request)
     {
-        // ✅ Determine latest week for status
         $latestWeek = Week::orderBy('week_number', 'desc')->first();
         $status = 'Completed';
 
@@ -21,15 +20,13 @@ class ProgressResource extends JsonResource
             'id'            => $this->id,
             'student_id'    => $this->student_id,
             'week_id'       => $this->week_id,
-            'subject'       => $this->subject,        // e.g. Math, Science, English
-            'rating_level'  => $this->rating_level,   // numeric tinyint from DB
-            'rating_label'  => $this->rating_label,   // accessor from ProgressRecord
+            'subject'       => $this->subject,
+            'rating_level'  => $this->rating_level,
+            'rating_label'  => $this->rating_label,
             'remarks'       => $this->remarks,
             'trashed_at'    => $this->trashed_at,
             'created_at'    => $this->created_at,
             'updated_at'    => $this->updated_at,
-
-            // ✅ Include week details when eager-loaded
             'week' => $this->whenLoaded('week', function () {
                 return [
                     'id'          => $this->week->id,
@@ -38,8 +35,6 @@ class ProgressResource extends JsonResource
                     'end_date'    => $this->week->end_date,
                 ];
             }),
-
-            // ✅ New field for frontend
             'status' => $status,
         ];
     }

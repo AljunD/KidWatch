@@ -9,9 +9,6 @@ use App\Models\Log;
 
 class AuthController extends Controller
 {
-    /**
-     * Guardian login
-     */
     public function login(Request $request)
     {
         $request->validate([
@@ -126,10 +123,6 @@ class AuthController extends Controller
             ]
         ], 200);
     }
-
-    /**
-     * Guardian logout
-     */
     public function logout(Request $request)
     {
         $user = $request->user();

@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
-    /**
-     * Validate guardian access.
-     */
     private function validateGuardian(): ?JsonResponse
     {
         $guardian = Auth::user()->guardian;
@@ -22,10 +19,6 @@ class StudentController extends Controller
 
         return null;
     }
-
-    /**
-     * List students linked to the authenticated guardian.
-     */
     public function index(): JsonResponse
     {
         if ($resp = $this->validateGuardian()) {
@@ -56,10 +49,6 @@ class StudentController extends Controller
             ]
         );
     }
-
-    /**
-     * Show details for a specific student.
-     */
     public function show(Student $student): JsonResponse
     {
         if ($resp = $this->validateGuardian()) {

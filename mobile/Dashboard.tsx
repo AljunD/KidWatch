@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   Image,
   StatusBar,
   ScrollView,
@@ -12,10 +11,10 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AuthContext } from "./App";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { AuthContext } from "./AuthContext";
 import { apiRequest, ENDPOINTS } from "./api";
-import { useFocusEffect } from "@react-navigation/native";
 
 const MenuButton = ({ title, description, icon, color, onPress }: any) => (
   <TouchableOpacity
@@ -38,41 +37,32 @@ const MenuButton = ({ title, description, icon, color, onPress }: any) => (
   </TouchableOpacity>
 );
 
-export default function DashboardScreen({ navigation, route }: any) {
-  const { setIsAuthenticated } = useContext(AuthContext);
+export default function DashboardScreen({ navigation }: any) {
+  const { logout, setAuthenticated, selectedStudent, setSelectedStudent } =
+    useContext(AuthContext);
 
   const [loading, setLoading] = useState(true);
   const [guardian, setGuardian] = useState<any>(null);
-  const [students, setStudents] = useState<any[]>([]);
-  const [student, setStudent] = useState<any>(null);
-
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("token");
-    setIsAuthenticated(false);
-  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
-        if (!token) {
-          setIsAuthenticated(false);
-          return;
-        }
-
         // ✅ Fetch guardian profile (includes linked students)
         const profileRes = await apiRequest<any>(ENDPOINTS.profile, "GET");
         if (profileRes.success && profileRes.data) {
           setGuardian(profileRes.data);
-          setStudents(profileRes.data.students || []);
 
-          // ✅ Default student selection
-          setStudent((prev: any) => prev || (profileRes.data.students?.[0] || null));
+          // ✅ Default student selection if none chosen yet
+          if (!selectedStudent && profileRes.data.students?.length > 0) {
+            setSelectedStudent(profileRes.data.students[0]);
+          }
         } else {
           Alert.alert("Error", profileRes.message || "Unable to fetch profile.");
+          setAuthenticated(false);
         }
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
+        setAuthenticated(false);
       } finally {
         setLoading(false);
       }
@@ -80,15 +70,6 @@ export default function DashboardScreen({ navigation, route }: any) {
 
     fetchData();
   }, []);
-
-  // ✅ Update student when coming back from SelectStudentScreen
-  useFocusEffect(
-    React.useCallback(() => {
-      if (route.params?.selectedStudent) {
-        setStudent(route.params.selectedStudent);
-      }
-    }, [route.params])
-  );
 
   if (loading) {
     return (
@@ -107,7 +88,6 @@ export default function DashboardScreen({ navigation, route }: any) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* --- HEADER --- */}
         <View style={styles.welcomeSection}>
           <Text style={styles.welcomeText}>
             Hi, {guardian?.first_name || "Parent"} 👋
@@ -115,36 +95,29 @@ export default function DashboardScreen({ navigation, route }: any) {
           <Text style={styles.subtitle}>Let's see how the day is going!</Text>
         </View>
 
-        {/* --- STUDENT PROFILE CARD --- */}
-        {student && (
+        {selectedStudent && (
           <View style={styles.card}>
             <View style={styles.cardContent}>
-              {student.photo_path ? (
+              {selectedStudent.photo_path ? (
                 <Image
-                  source={{ uri: student.photo_path }}
+                  source={{ uri: selectedStudent.photo_path }}
                   style={styles.profileImage}
                 />
               ) : (
-                <View
-                  style={[
-                    styles.profileImage,
-                    { backgroundColor: "#e5e7eb", justifyContent: "center", alignItems: "center" },
-                  ]}
-                >
+                <View style={styles.profileImagePlaceholder}>
                   <Ionicons name="person" size={40} color="#9ca3af" />
                 </View>
               )}
               <View style={styles.nameContainer}>
                 <Text style={styles.childLabel}>Current Student</Text>
                 <Text style={styles.childName}>
-                  {student.first_name} {student.last_name}
+                  {selectedStudent.first_name} {selectedStudent.last_name}
                 </Text>
               </View>
             </View>
           </View>
         )}
 
-        {/* --- MAIN NAVIGATION MENU --- */}
         <Text style={styles.sectionLabel}>MAIN MENU</Text>
 
         <MenuButton
@@ -152,7 +125,9 @@ export default function DashboardScreen({ navigation, route }: any) {
           description="See all the great learning!"
           icon="stats-chart"
           color="#FF6B6B"
-          onPress={() => navigation.navigate("WeeklyProgress", { student })}
+          onPress={() =>
+            navigation.navigate("WeeklyProgress", { student: selectedStudent })
+          }
         />
 
         <MenuButton
@@ -161,7 +136,9 @@ export default function DashboardScreen({ navigation, route }: any) {
           icon="book"
           color="#4ECDC4"
           onPress={() =>
-            navigation.navigate("ProgressHistory", { studentId: student.id })
+            navigation.navigate("ProgressHistory", {
+              studentId: selectedStudent?.id,
+            })
           }
         />
 
@@ -172,25 +149,22 @@ export default function DashboardScreen({ navigation, route }: any) {
           color="#FFBE0B"
           onPress={() =>
             navigation.navigate("Profile", {
-              studentId: student.id,
-              guardianId: guardian.id,
+              studentId: selectedStudent?.id,
+              guardianId: guardian?.id,
             })
           }
         />
 
-        {/* --- FOOTER ACTIONS (Switch & Logout) --- */}
         <View style={styles.footerActions}>
           <TouchableOpacity
             style={styles.switchButton}
-            onPress={() =>
-              navigation.navigate("SelectStudent", { currentStudent: student, fromDashboard: true })
-            }
+            onPress={() => navigation.navigate("SelectStudent")}
           >
             <Ionicons name="people-outline" size={20} color="#4A90E2" />
             <Text style={styles.switchText}>Switch Student</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
             <Text style={styles.logoutText}>Sign Out</Text>
             <MaterialCommunityIcons name="exit-run" size={20} color="#FF6B6B" />
           </TouchableOpacity>
@@ -199,7 +173,6 @@ export default function DashboardScreen({ navigation, route }: any) {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F0F9FF" },
@@ -232,14 +205,32 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#fff",
   },
-  nameContainer: { marginLeft: 18, flex: 1 },
+  profileImagePlaceholder: {
+    width: 85,
+    height: 85,
+    borderRadius: 30,
+    backgroundColor: "#e5e7eb",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#fff",
+  },
+  nameContainer: {
+    marginLeft: 18,
+    flex: 1,
+  },
   childLabel: {
     color: "rgba(255,255,255,0.85)",
     fontSize: 10,
     fontWeight: "800",
     textTransform: "uppercase",
   },
-  childName: { fontSize: 18, fontWeight: "900", color: "#fff", lineHeight: 26 },
+  childName: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#fff",
+    lineHeight: 26,
+  },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",

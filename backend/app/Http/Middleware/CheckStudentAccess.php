@@ -16,12 +16,10 @@ class CheckStudentAccess
     {
         $user = $request->user();
 
-        // ✅ Allow admins and teachers full access
         if (!$user || in_array($user->role, ['admin', 'teacher'])) {
             return $next($request);
         }
 
-        // ✅ Only guardians are restricted
         if ($user->role !== 'guardian') {
             return response()->json([
                 'success' => false,
@@ -30,7 +28,6 @@ class CheckStudentAccess
             ], 403);
         }
 
-        // ✅ Resolve student ID from route or request
         $studentId = $request->route('student')?->id
             ?? $request->route('student_id')
             ?? $request->query('student_id')
@@ -43,7 +40,6 @@ class CheckStudentAccess
             ], 400);
         }
 
-        // ✅ Get guardian profile
         $guardian = Guardian::where('user_id', $user->id)->first();
 
         if (!$guardian) {
@@ -52,8 +48,6 @@ class CheckStudentAccess
                 'message' => 'Guardian profile not found.'
             ], 403);
         }
-
-        // ✅ Check direct ownership via guardian_id column
         $student = Student::find($studentId);
 
         if (!$student || $student->guardian_id !== $guardian->id) {

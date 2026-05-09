@@ -14,12 +14,12 @@
             </div>
         @endif
     </div>
+            <div>
+                <h1 class="text-4xl font-black text-[#003366] tracking-[-1px] leading-none uppercase italic">System Logs</h1>
+                <p class="text-slate-500">Here's what's happening in your system</p>
+            </div>
 
     <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-        <h1 class="text-2xl font-bold text-[#003366] mb-6 flex items-center gap-2">
-            <i class="fas fa-clipboard-list text-blue-600"></i> Audit Trail Logs
-        </h1>
-
         @forelse($logs as $log)
             <div class="bg-gray-50 rounded-lg p-4 mb-4 shadow-sm">
                 <div class="flex justify-between items-center">

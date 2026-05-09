@@ -3,7 +3,7 @@
 
     <div class="max-w-6xl mx-auto bg-white rounded-3xl shadow-lg p-10 space-y-10">
         <h1 class="text-3xl font-black text-[#003366] mb-6 border-b pb-4">
-            📊 Progress Records for
+            Progress Records for
             <span class="text-emerald-600">
                 {{ $student->first_name }} {{ $student->last_name }}
             </span>
@@ -134,13 +134,13 @@
                         <form action="{{ route('progress.generateRecommendation', ['student' => $student->id, 'week' => $week->id]) }}" method="POST">
                             @csrf
                             <button class="px-6 py-2 {{ $summary ? 'bg-amber-600 hover:bg-amber-700' : 'bg-purple-600 hover:bg-purple-700' }} text-white rounded-lg font-bold shadow transition">
-                                {{ $summary ? '🔄 Regenerate Recommendation' : '📌 Generate Recommendation' }}
+                                {{ $summary ? 'Regenerate Recommendation' : 'Generate Recommendation' }}
                             </button>
                         </form>
                     @else
                         <button disabled
                                 class="px-6 py-2 bg-gray-200 text-gray-400 rounded-lg font-bold cursor-not-allowed">
-                            📌 Generate Recommendation
+                            Generate Recommendation
                         </button>
                     @endif
                 </div>

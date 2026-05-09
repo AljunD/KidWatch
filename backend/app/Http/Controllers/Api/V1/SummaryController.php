@@ -14,9 +14,6 @@ use Illuminate\Support\Facades\Auth;
 
 class SummaryController extends Controller
 {
-    /**
-     * Validate guardian and student ownership.
-     */
     private function validateGuardianAccess(Student $student): ?JsonResponse
     {
         $guardian = Auth::user()->guardian;
@@ -32,10 +29,6 @@ class SummaryController extends Controller
         return null;
     }
 
-    /**
-     * Build week metadata for frontend uniformity.
-     * ✅ Format dates to show only YYYY-MM-DD
-     */
     private function buildWeekInfo(Week $week, int $summaryCount = 0): array
     {
         return [
@@ -46,9 +39,6 @@ class SummaryController extends Controller
         ];
     }
 
-    /**
-     * Show a weekly summary for a specific student and week.
-     */
     public function show(Student $student, int $weekId): JsonResponse
     {
         if ($resp = $this->validateGuardianAccess($student)) {
@@ -67,11 +57,8 @@ class SummaryController extends Controller
             ->with('week')
             ->get();
 
-        // Ensure fixed subject order
         $subjectOrder = ['Math', 'Science', 'English', 'Filipino'];
         $progress = $progress->sortBy(fn($record) => array_search($record->subject, $subjectOrder))->values();
-
-        // Add placeholder if latest week has no records
         $latestWeek = Week::orderBy('week_number', 'desc')->first();
         if ($latestWeek && $latestWeek->id == $weekId && $progress->isEmpty()) {
             $placeholder = new ProgressRecord([
@@ -96,9 +83,6 @@ class SummaryController extends Controller
         ], $summary ? 'Weekly summary retrieved successfully' : 'No weekly summary available');
     }
 
-    /**
-     * List all weekly summaries for a specific student.
-     */
     public function index(Student $student): JsonResponse
     {
         if ($resp = $this->validateGuardianAccess($student)) {
@@ -128,9 +112,6 @@ class SummaryController extends Controller
         );
     }
 
-    /**
-     * Generate or regenerate a weekly summary for a student and week.
-     */
     public function generate(Student $student, int $weekId, Request $request): JsonResponse
     {
         if ($resp = $this->validateGuardianAccess($student)) {

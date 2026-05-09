@@ -1,5 +1,4 @@
 import { registerRootComponent } from 'expo';
-import App from './App'; // This imports your navigation setup from App.tsx
+import App from './App';
 
-// This tells Expo to start from App.tsx instead of Login.tsx
 registerRootComponent(App);

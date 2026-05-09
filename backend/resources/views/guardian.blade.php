@@ -3,14 +3,13 @@
 
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
   <div>
-    <h1 class="text-3xl font-extrabold text-[#003366] tracking-tight">Guardian Directory</h1>
+    <h1 class="text-4xl font-black text-[#003366] tracking-[-1px] leading-none uppercase italic">Guardian Directory</h1>
     <p class="text-gray-500 text-sm">
       Manage guardian accounts and linked students. ({{ $guardians->total() }} total)
     </p>
   </div>
 
   <div class="flex items-center gap-3 w-full md:w-auto">
-    <!-- Search -->
   <div class="relative flex-1 md:w-72">
     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
       <i class="fas fa-search text-gray-400 text-sm"></i>
@@ -187,10 +186,7 @@
             <input type="email" name="guardian_email" placeholder="Email" required class="w-full px-4 py-3 border rounded-xl">
             <input type="password" name="guardian_password" placeholder="Password" class="w-full px-4 py-3 border rounded-xl">
             <input type="password" name="guardian_password_confirmation" placeholder="Confirm Password" class="w-full px-4 py-3 border rounded-xl">
-            <input type="tel" name="guardian_contact_number" placeholder="09xxxxxxxxx"
-                   maxlength="11" pattern="^09\d{9}$" required
-                   class="w-full px-4 py-3 border rounded-xl">
-
+            <input type="tel" name="guardian_contact_number" placeholder="09xxxxxxxxx" maxlength="11" pattern="^09\d{9}$" required class="w-full px-4 py-3 border rounded-xl">
             <input type="text" name="guardian_address" placeholder="Address" required class="w-full px-4 py-3 border rounded-xl md:col-span-2">
             <input type="text" name="guardian_relationship" placeholder="Relationship to Child" required class="w-full px-4 py-3 border rounded-xl md:col-span-2">
           </div>
@@ -231,7 +227,6 @@
 <div id="viewGuardianModal" class="hidden fixed inset-0 z-[100] overflow-hidden">
   <div class="flex items-center justify-center min-h-screen p-4 text-center">
     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl overflow-hidden">
-
       <div class="bg-blue-50/50 px-10 py-6 border-b flex justify-between items-center">
         <h2 class="text-2xl font-black text-[#003366]">Guardian Profile</h2>
         <button type="button" onclick="closeViewGuardianModal()"
@@ -239,43 +234,34 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-
       <div class="p-10 text-left max-h-[70vh] overflow-y-auto space-y-6">
-
         <div>
           <span class="font-medium text-gray-400">Full Name:</span><br>
           <span id="viewGuardianName" class="font-semibold"></span>
         </div>
-
         <div>
           <span class="font-medium text-gray-400">Email:</span><br>
           <span id="viewGuardianEmail" class="font-semibold"></span><br>
           <span id="viewGuardianEmailStatus" class="flex items-center gap-1 mt-1"></span>
         </div>
-
         <div>
           <span class="font-medium text-gray-400">Account Created:</span><br>
           <span id="viewGuardianCreatedAt" class="font-semibold"></span>
         </div>
-
         <div>
           <span class="font-medium text-gray-400">Residential Address:</span><br>
           <span id="viewGuardianAddress" class="font-semibold"></span>
         </div>
-
         <div>
           <span class="font-medium text-gray-400">Relationship to Child:</span><br>
           <span id="viewGuardianRelationship" class="font-semibold"></span>
         </div>
-
         <div>
             <span class="font-medium text-gray-400">Linked Students:</span><br>
             <ul id="viewGuardianStudents" class="space-y-3 text-sm">
-
             </ul>
         </div>
       </div>
-
       <div class="px-10 py-6 border-t flex justify-end">
         <button type="button" onclick="closeViewGuardianModal()"
                 class="px-8 py-3 rounded-xl font-bold text-[#003366] hover:bg-gray-100">Close</button>

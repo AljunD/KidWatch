@@ -15,13 +15,9 @@ class RouteServiceProvider extends ServiceProvider
     public function boot(): void
     {
         parent::boot();
-
-        // API rate limiting
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });
-
-        // Register routes
         $this->routes(function () {
             Route::middleware('web')
                 ->namespace($this->namespace)
@@ -34,16 +30,11 @@ class RouteServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Override redirect for unauthenticated requests.
-     * Ensures API calls return JSON instead of HTML login page.
-     */
     protected function redirectTo(Request $request): ?string
     {
         if ($request->is('api/*')) {
-            return null; // return JSON 401 Unauthorized
+            return null;
         }
-
-        return '/login'; // fallback for web routes
+        return '/login';
     }
 }

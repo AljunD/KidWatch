@@ -110,10 +110,9 @@ return new class extends Migration
             $table->index(['entity_type', 'entity_id'], 'idx_entity_logs');
         });
 
-        // Sanctum personal access tokens (needed for login)
         Schema::create('personal_access_tokens', function (Blueprint $table) {
             $table->id();
-            $table->morphs('tokenable'); // tokenable_id + tokenable_type
+            $table->morphs('tokenable'); 
             $table->string('name');
             $table->string('token', 64)->unique();
             $table->text('abilities')->nullable();

@@ -41,8 +41,6 @@ class ProgressController extends Controller
         }
 
         $weekId = $request->query('week');
-
-        // ✅ Fetch active progress records, eager load week
         $query = $student->progressRecords()
             ->whereNull('trashed_at')
             ->with('week');
@@ -53,13 +51,11 @@ class ProgressController extends Controller
 
         $progress = $query->get();
 
-        // ✅ Fixed subject order
         $subjectOrder = ['Math', 'Science', 'English', 'Filipino'];
         $progress = $progress->sortBy(function ($record) use ($subjectOrder) {
             return array_search($record->subject, $subjectOrder);
         })->values();
 
-        // ✅ Always include latest week
         $latestWeek = Week::orderBy('week_number', 'desc')->first();
         if (!$latestWeek) {
             return $this->successResponse([], 'No weeks defined yet');
@@ -68,7 +64,6 @@ class ProgressController extends Controller
         $latestWeekProgress = $progress->where('week_id', $latestWeek->id);
 
         if ($latestWeekProgress->isEmpty()) {
-            // Create placeholder ProgressRecord model
             $placeholder = new ProgressRecord([
                 'student_id'   => $student->id,
                 'week_id'      => $latestWeek->id,
@@ -77,13 +72,11 @@ class ProgressController extends Controller
                 'remarks'      => null,
             ]);
 
-            // Attach week relation so ProgressResource can serialize
             $placeholder->setRelation('week', $latestWeek);
 
             $progress->prepend($placeholder);
         }
 
-        // ✅ Manual pagination
         $perPage = 10;
         $page = (int) $request->query('page', 1);
         $paged = $progress->forPage($page, $perPage);

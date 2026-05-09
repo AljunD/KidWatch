@@ -3,7 +3,7 @@
 
     <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-lg p-10 space-y-8">
         <h1 class="text-3xl font-black text-[#003366] mb-4 border-b pb-4">
-            📊 Progress for
+            Progress for
             <span class="text-emerald-600">
                 {{ $student->first_name }} {{ $student->last_name }}
             </span>

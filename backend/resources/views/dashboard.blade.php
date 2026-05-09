@@ -12,11 +12,11 @@
 
         <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div>
-                <h1 class="text-5xl font-black tracking-[-2px] text-[#003366]">Dashboard</h1>
+                <h1 class="text-4xl font-black text-[#003366] tracking-[-1px] leading-none uppercase italic">Dashboard</h1>
                 <p class="mt-2 text-xl text-slate-600">
-                    Good {{ $greetingTime }}, <span class="font-semibold">{{ $displayName }}</span> 👋
+                    Good {{ $greetingTime }}, <span class="font-semibold">{{ $displayName }}</span>
                 </p>
-                <p class="text-slate-500">Here's what's happening with your kids this week</p>
+                <p class="text-slate-500">Here's what's happening with your Students this week</p>
             </div>
 
             <div class="flex items-center gap-x-4 bg-white rounded-3xl px-6 py-4 shadow-sm border border-slate-100">
@@ -181,8 +181,6 @@
         </div>
 
             <div class="xl:col-span-5 space-y-8">
-
-                {{-- Weekly Summary Card --}}
                 <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 h-full">
                     <h2 class="text-2xl font-semibold text-[#003366] mb-4">This Week’s Summary</h2>
                     <div class="bg-slate-50 rounded-3xl p-5 text-slate-600 text-[15px] leading-relaxed">

@@ -85,8 +85,6 @@ export default function ProgressHistoryScreen({ navigation, route }: any) {
             status: week.status,
             isCurrent: week.status === "Current Week",
           }));
-
-          // ✅ Pin current week at top
           const currentWeekIndex = formatted.findIndex((item) => item.isCurrent);
           if (currentWeekIndex > -1) {
             const currentWeekItem = formatted.splice(currentWeekIndex, 1)[0];

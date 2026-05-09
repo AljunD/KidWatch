@@ -11,7 +11,6 @@ class TeacherAuthMiddleware
     public function handle(Request $request, Closure $next)
     {
         if (!Auth::check()) {
-            // Redirect to login form if not authenticated
             return redirect()->route('login.form')->with('status', 'Please log in first.');
         }
 

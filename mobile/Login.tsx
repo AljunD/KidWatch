@@ -6,20 +6,19 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { apiRequest, ENDPOINTS, LoginResponse } from "./api";
-import { AuthContext } from "./App";
+import { AuthContext } from "./AuthContext";
 
 type RootStackParamList = {
   Welcome: undefined;
   Login: undefined;
-  Dashboard: undefined;
 };
 
 type LoginProps = {
@@ -34,7 +33,7 @@ export default function Login({ navigation }: LoginProps) {
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
   const [bannerType, setBannerType] = useState<"success" | "error" | null>(null);
 
-  const { setIsAuthenticated } = useContext(AuthContext);
+  const { setAuthenticated } = useContext(AuthContext);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -47,22 +46,23 @@ export default function Login({ navigation }: LoginProps) {
     setBannerMessage(null);
 
     try {
-      const res = await apiRequest<LoginResponse>(
-        ENDPOINTS.login,
-        "POST",
-        { email, password }
-      );
+      const res = await apiRequest<LoginResponse>(ENDPOINTS.login, "POST", {
+        email,
+        password,
+      });
 
       if (res.success && res.data?.token) {
         await AsyncStorage.setItem("token", res.data.token);
-        setIsAuthenticated(true); // ✅ flips to AppStack automatically
+        setAuthenticated(true); // ✅ triggers AppStack → SelectStudent
 
         setBannerMessage(res.message || "Login successful!");
         setBannerType("success");
       } else {
         const errorDetails = res.errors?.join("\n") || "";
         setBannerMessage(
-          `${res.message || "Login failed."}${errorDetails ? "\n" + errorDetails : ""}`
+          `${res.message || "Login failed."}${
+            errorDetails ? "\n" + errorDetails : ""
+          }`
         );
         setBannerType("error");
       }
@@ -90,12 +90,13 @@ export default function Login({ navigation }: LoginProps) {
 
         <View style={styles.overlay}>
           <View style={styles.card}>
-            {/* ✅ Inline Banner */}
             {bannerMessage && (
               <View
                 style={[
                   styles.banner,
-                  bannerType === "success" ? styles.bannerSuccess : styles.bannerError,
+                  bannerType === "success"
+                    ? styles.bannerSuccess
+                    : styles.bannerError,
                 ]}
               >
                 <Text style={styles.bannerText}>{bannerMessage}</Text>

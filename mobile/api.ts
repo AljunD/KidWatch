@@ -1,57 +1,42 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 
-/**
- * Detect environment: emulator vs physical device vs web
- */
-function getBaseUrl(): string {
-  const debuggerHost = Constants.manifest?.debuggerHost;
+function getBaseUrl(primary = true): string {
+  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
 
-  if (debuggerHost) {
-    if (debuggerHost.includes("localhost")) {
-      // ✅ Android emulator → use 10.0.2.2
-      return "http://10.0.2.2:8000/api/v1";
+  if (hostUri) {
+    const host = hostUri.split(":")[0]; 
+
+    if (host.includes("localhost") || host === "127.0.0.1") {
+      return primary
+        ? "http://10.0.2.2:8000/api/v1" 
+        : "http://127.0.0.1:8000/api/v1"; 
     } else {
-      // ✅ Physical device (Expo Go) → use LAN IP of your PC
-      return "http://192.168.1.5:8000/api/v1"; // replace with your actual LAN IP
+      return primary
+        ? `http://${host}:8000/api/v1`
+        : "http://127.0.0.1:8000/api/v1";
     }
   }
 
-  // ✅ Fallback for browser/PC testing
   return "http://127.0.0.1:8000/api/v1";
 }
 
-export const BASE_URL = getBaseUrl();
+let BASE_URL = getBaseUrl();
 
-/**
- * Centralized endpoints (match Laravel routes with ProfileController)
- */
 export const ENDPOINTS = {
-  // Authentication
   login: "guardian/login",
   logout: "guardian/logout",
-
-  // Guardian profile
   profile: "guardian/profile",
   updateProfile: "guardian/profile",
-
-  // Students linked to guardian
   students: "guardian/students",
   studentDetail: (id: number) => `guardian/students/${id}`,
-
-  // Progress records
   studentProgress: (id: number) => `guardian/students/${id}/progress`,
   studentProgressHistory: (id: number) => `guardian/students/${id}/progress-history`,
-
-  // Weekly summaries
   studentSummaries: (id: number) => `guardian/students/${id}/summaries`,
   studentSummary: (id: number, week: number) => `guardian/students/${id}/summaries/${week}`,
   generateSummary: (id: number, week: number) => `guardian/students/${id}/summaries/${week}/generate`,
 };
 
-/**
- * TypeScript interfaces for API responses
- */
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -79,9 +64,6 @@ export interface LoginResponse {
   token_type: string;
 }
 
-/**
- * Generic request function
- */
 export async function apiRequest<T>(
   endpoint: string,
   method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
@@ -94,22 +76,34 @@ export async function apiRequest<T>(
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  let response: Response;
-  try {
-    response = await fetch(`${BASE_URL}/${endpoint}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
-  } catch (err: any) {
+  async function tryFetch(url: string): Promise<Response | null> {
+    try {
+      return await fetch(`${url}/${endpoint}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  let response = await tryFetch(BASE_URL);
+
+  if (!response) {
+    const fallbackUrl = getBaseUrl(false);
+    BASE_URL = fallbackUrl;
+    response = await tryFetch(fallbackUrl);
+  }
+
+  if (!response) {
     return {
       success: false,
       message: "Network error",
-      errors: [err.message || "Failed to connect to server"],
+      errors: ["Failed to connect to server"],
     };
   }
 
-  // ✅ Handle 404 gracefully
   if (response.status === 404) {
     return {
       success: false,
