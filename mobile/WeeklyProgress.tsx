@@ -76,7 +76,7 @@ export default function WeeklyProgressScreen({ navigation, route }: any) {
           const records = res.data.map((rec: any) => ({
             id: rec.id,
             name: rec.subject,
-            rating: rec.rating_label !== "No Classes" ? rec.rating_label : null,
+            rating: rec.rating_label, 
             remarks: rec.remarks,
             week: rec.week,
           }));

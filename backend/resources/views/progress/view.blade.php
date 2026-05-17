@@ -22,6 +22,16 @@
             {{ \Carbon\Carbon::parse($week->end_date)->format('M d, Y') }}
         </p>
 
+        @php
+            $classMap = [
+                0 => 'bg-gray-200 text-gray-600',
+                1 => 'bg-red-100 text-red-700',
+                2 => 'bg-amber-100 text-amber-700',
+                3 => 'bg-blue-100 text-blue-700',
+                4 => 'bg-emerald-100 text-emerald-700',
+            ];
+        @endphp
+
         <div class="overflow-hidden border border-slate-200 rounded-xl shadow-sm">
             <table class="w-full">
                 <thead>
@@ -34,20 +44,17 @@
                 <tbody class="divide-y divide-slate-100">
                     @foreach($subjects as $subject)
                         @php
-                            $record = $student->progressRecords->where('week_id', $week->id)->where('subject', $subject)->first();
+                            $record = $student->progressRecords
+                                ->where('week_id', $week->id)
+                                ->where('subject', $subject)
+                                ->first();
+                            $ratingClass = $record ? ($classMap[$record->rating_level] ?? 'bg-gray-50 text-gray-400') : '';
                         @endphp
                         <tr class="hover:bg-slate-50 transition">
                             <td class="px-6 py-4 font-semibold text-[#003366]">{{ $subject }}</td>
                             <td class="px-6 py-4 text-center">
                                 @if($record)
-                                    <span class="inline-block px-4 py-1 rounded-full text-xs font-bold uppercase
-                                        @switch($record->rating_level)
-                                            @case(0) bg-gray-200 text-gray-600 @break
-                                            @case(1) bg-red-100 text-red-700 @break
-                                            @case(2) bg-amber-100 text-amber-700 @break
-                                            @case(3) bg-blue-100 text-blue-700 @break
-                                            @case(4) bg-emerald-100 text-emerald-700 @break
-                                        @endswitch">
+                                    <span class="inline-block px-4 py-1 rounded-full text-xs font-bold uppercase {{ $ratingClass }}">
                                         {{ $ratings[$record->rating_level] ?? 'Lvl '.$record->rating_level }}
                                     </span>
                                 @else
@@ -62,25 +69,5 @@
                 </tbody>
             </table>
         </div>
-
-        @php
-            $summary = $week->weeklySummaries->firstWhere('student_id', $student->id);
-            $recommendations = $summary ? explode("\n", $summary->summary_text) : [];
-        @endphp
-
-        @if($recommendations)
-            <div class="mt-8 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                <h3 class="text-lg font-black text-[#003366] mb-4 flex items-center gap-2">
-                    <i class="fas fa-lightbulb text-amber-500"></i> Generated Recommendations
-                </h3>
-                <ul class="space-y-3">
-                    @foreach($recommendations as $rec)
-                        <li class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-700">
-                            {{ $rec }}
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
     </div>
 </x-layout>

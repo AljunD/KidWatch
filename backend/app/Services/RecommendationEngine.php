@@ -8,51 +8,45 @@ use Illuminate\Support\Facades\Config;
 
 class RecommendationEngine
 {
-    public function getActivities(array $ratings): array
+    /**
+     * Generate structured recommendation activities based on subject ratings.
+     *
+     * @param array $ratings  Subject ratings for the current week
+     * @param int   $weekId   Current week ID
+     *
+     * @return array
+     */
+    public function getActivities(array $ratings, int $weekId): array
     {
         $rules      = Config::get('recommendation_rules');
         $activities = [];
 
+        // Rating labels for readability
+        $labels = [
+            0 => 'No Classes',
+            1 => 'Needs Attention',
+            2 => 'For Improvement',
+            3 => 'Very Good',
+            4 => 'Excellent',
+        ];
+
         foreach ($ratings as $subject => $rating) {
             $subjectKey = strtolower($subject);
 
-            if (isset($rules[$subjectKey][$rating])) {
-                $rule = $rules[$subjectKey][$rating];
+            // Ensure subject and rating rule exist
+            if (isset($rules['weeks'][$weekId][$subjectKey]['rating_rules'][$rating])) {
+                $rule = $rules['weeks'][$weekId][$subjectKey]['rating_rules'][$rating];
 
-                $activities[] = [
+                $activities[$subjectKey] = [
                     'subject'      => ucfirst($subjectKey),
-                    'rating'       => $rating,
-                    'activity'     => $rule['activity']     ?? '',
-                    'category'     => $rule['category']     ?? 'general',
-                    'priority'     => $rule['priority']     ?? 'medium',
+                    'rating'       => $labels[$rating] ?? null,
+                    'activity'     => $rule['activity'] ?? null,
+                    'narrative'    => $rule['narrative'] ?? null,
+                    'priority'     => $rule['priority'] ?? null,
                     'guardian_tip' => $rule['guardian_tip'] ?? null,
-                    'student_tip'  => $rule['student_tip']  ?? null,
+                    'student_tip'  => $rule['student_tip'] ?? null,
                 ];
             }
-        }
-
-        if (in_array(1, $ratings, true)) {
-            $activities[] = [
-                'subject'      => 'General',
-                'rating'       => 1,
-                'activity'     => "Organize a parent-teacher conference to address persistent Needs Attention ratings.",
-                'category'     => 'intervention',
-                'priority'     => 'high',
-                'guardian_tip' => "Coordinate with teachers to create a targeted support plan.",
-                'student_tip'  => "Be open to feedback and commit to improvement strategies.",
-            ];
-        }
-
-        if (!empty($ratings) && min($ratings) >= 3) {
-            $activities[] = [
-                'subject'      => 'General',
-                'rating'       => max($ratings),
-                'activity'     => "Encourage enrichment activities such as clubs, competitions, or peer tutoring.",
-                'category'     => 'enrichment',
-                'priority'     => 'low',
-                'guardian_tip' => "Support participation in academic clubs or competitions.",
-                'student_tip'  => "Challenge yourself with enrichment tasks and help peers.",
-            ];
         }
 
         return $activities;

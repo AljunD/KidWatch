@@ -60,7 +60,7 @@ Route::middleware([TeacherAuthMiddleware::class, 'verified'])->group(function ()
     Route::get('/progress/create', [ProgressController::class, 'create'])->name('progress.create');
     Route::post('/progress', [ProgressController::class, 'store'])->name('progress.store');
     Route::get('/progress/{student}/{week}/edit', [ProgressController::class, 'edit'])->name('progress.edit');
-    Route::put('/progress/{id}', [ProgressController::class, 'update'])->name('progress.update');
+    Route::put('/progress/update', [ProgressController::class, 'update'])->name('progress.update');
     Route::delete('/progress/{progressRecord}', [ProgressController::class, 'destroy'])->name('progress.destroy');
     Route::get('/progress/{student_id}/{week_id}/view', [ProgressController::class, 'view'])->name('progress.view');
     Route::get('/progress/view-all', [ProgressController::class, 'viewAll'])->name('progress.viewAll');

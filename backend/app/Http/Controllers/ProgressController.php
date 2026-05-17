@@ -85,15 +85,19 @@ class ProgressController extends Controller
         ));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         $validated = $request->validate([
+            'record_id'    => 'required|exists:progress_records,id',
             'rating_level' => 'required|integer|min:0|max:4',
             'remarks'      => 'nullable|string|max:500',
         ]);
 
-        $progressRecord = ProgressRecord::findOrFail($id);
-        $progressRecord->update($validated);
+        $progressRecord = ProgressRecord::findOrFail($validated['record_id']);
+        $progressRecord->update([
+            'rating_level' => $validated['rating_level'],
+            'remarks'      => $validated['remarks'],
+        ]);
 
         return redirect()->back()->with('success', $progressRecord->subject.' updated successfully.');
     }

@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Student;
 use App\Models\ProgressRecord;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 
 class SummaryGeneratorService
 {
@@ -25,88 +26,125 @@ class SummaryGeneratorService
             ];
         }
 
-        $narrative  = "Weekly Progress Summary – Week {$weekId}\n";
-        $narrative .= "Student: {$student->full_name}\n";
-        $narrative .= "Generated on " . now()->format('F j, Y') . "\n\n";
-
-        $labels = [
-            0 => 'No Classes',
-            1 => 'Needs Attention',
-            2 => 'Good',
-            3 => 'Very Good',
-            4 => 'Excellent',
-        ];
-        $ratings        = [];
-        $remarksSummary = [];
+        // Collect ratings
+        $ratings = [];
         foreach ($records as $record) {
             $ratings[strtolower($record->subject)] = $record->rating_level;
-            if ($record->remarks) {
-                $remarksSummary[] = "{$record->subject}: {$record->remarks}";
-            }
-        }
-        foreach ($records as $record) {
-            $label = $labels[$record->rating_level] ?? (string) $record->rating_level;
-            $narrative .= strtoupper($record->subject) . ": {$label}";
-            if ($record->remarks) {
-                $narrative .= " – {$record->remarks}";
-            }
-            $narrative .= ".\n";
         }
 
-        $summaryText = "Performance Analysis:\n";
+        // Categorize
+        $strengths    = array_keys(array_filter($ratings, fn($r) => $r >= 3));
+        $improvements = array_keys(array_filter($ratings, fn($r) => $r === 2));
+        $weaknesses   = array_keys(array_filter($ratings, fn($r) => $r === 1));
 
-        $strengths  = array_keys(array_filter($ratings, fn($r) => $r >= 3));
-        $weaknesses = array_keys(array_filter($ratings, fn($r) => $r <= 1));
+        $rules = Config::get('recommendation_rules');
+        $engine = new RecommendationEngine();
+        $allActivities = $engine->getActivities($ratings, $weekId);
 
-        if ($strengths) {
-            $summaryText .= "Strengths in " . implode(', ', $strengths) . " show mastery and readiness for advanced tasks.\n";
+        $name = $student->first_name;
+
+// =========================
+// FRIENDLY PARAGRAPH OUTPUT (FIXED)
+// =========================
+
+$narrative = "Week {$weekId} Progress Summary for {$student->full_name}\n\n";
+
+// Paragraph 1: Overview
+$narrative .= "This week, {$name} participated in different learning activities designed to support growth in various areas. ";
+
+if (!empty($strengths)) {
+    $narrative .= "{$name} showed strong performance in " . implode(', ', $strengths) . ". ";
+}
+
+if (!empty($improvements)) {
+    $narrative .= "{$name} is also showing steady progress in " . implode(', ', $improvements) . ". ";
+}
+
+if (!empty($weaknesses)) {
+    $narrative .= "Some areas like " . implode(', ', $weaknesses) . " may need a little more guidance and practice.";
+} else {
+    $narrative .= "There are no major areas of concern this week.";
+}
+
+$narrative .= "\n\n";
+
+// Paragraph 2: Activities (FIX punctuation)
+$activityParts = [];
+
+foreach ($ratings as $subject => $rating) {
+    $weekly = $rules['weeks'][$weekId][$subject]['weekly_activity']['activity'] ?? null;
+
+    if ($weekly) {
+        $clean = rtrim(strtolower($weekly), '.'); // remove trailing dot
+        $activityParts[] = $clean;
+    }
+}
+
+if (!empty($activityParts)) {
+    $narrative .= "During the week, {$name} engaged in activities such as "
+        . implode(', ', $activityParts)
+        . ". These activities help build confidence, curiosity, and essential learning skills.\n\n";
+}
+
+// Paragraph 3: Recommendations (FIX STRUCTURE)
+$narrative .= "To continue supporting {$name}'s development, here are some simple suggestions:\n\n";
+
+foreach ($ratings as $subject => $rating) {
+    $recommendation = $allActivities[$subject] ?? null;
+    $ruleNarrative = $rules['weeks'][$weekId][$subject]['rating_rules'][$rating]['narrative'] ?? null;
+
+    if ($recommendation && $ruleNarrative) {
+
+        $activityText = rtrim($recommendation['activity'], '.');
+        $guardianTip = lcfirst($recommendation['guardian_tip']);
+        $studentTip = lcfirst($recommendation['student_tip']);
+
+        $narrative .= ucfirst($subject) . ":\n";
+        $narrative .= "{$ruleNarrative}\n";
+        $narrative .= "Try this activity at home: {$activityText}.\n";
+        $narrative .= "Guardian Tip: {$guardianTip}.\n";
+        $narrative .= "Student Tip: {$studentTip}.\n\n";
+    }
+}
+
+// Paragraph 4: Closing
+$narrative .= "Overall, {$name} is making meaningful progress. By continuing to celebrate achievements, supporting areas for improvement, and engaging in fun learning activities, {$name} will keep building a strong foundation for future learning.";
+        // =========================
+        // STRUCTURED ACTIVITIES (UNCHANGED LOGIC)
+        // =========================
+
+        $structuredActivities = [
+            'strengths'    => [],
+            'improvements' => [],
+            'weaknesses'   => [],
+        ];
+
+        foreach ($strengths as $subject) {
+            $structuredActivities['strengths'][$subject] = $this->buildActivity($rules, $allActivities, $ratings, $weekId, $subject);
         }
-        if ($weaknesses) {
-            $summaryText .= "Weaknesses in " . implode(', ', $weaknesses) . " require closer attention and support.\n";
+
+        foreach ($improvements as $subject) {
+            $structuredActivities['improvements'][$subject] = $this->buildActivity($rules, $allActivities, $ratings, $weekId, $subject);
         }
 
-        if ($previousRatings) {
-            $summaryText .= "\nWeek-to-Week Comparison:\n";
-            foreach ($ratings as $subject => $rating) {
-                if (isset($previousRatings[$subject])) {
-                    $prev = $previousRatings[$subject];
-                    if ($rating > $prev) {
-                        $summaryText .= ucfirst($subject) . " improved from {$labels[$prev]} to {$labels[$rating]}.\n";
-                    } elseif ($rating < $prev) {
-                        $summaryText .= ucfirst($subject) . " declined from {$labels[$prev]} to {$labels[$rating]}.\n";
-                    } else {
-                        $summaryText .= ucfirst($subject) . " remained steady at {$labels[$rating]}.\n";
-                    }
-                }
-            }
+        foreach ($weaknesses as $subject) {
+            $structuredActivities['weaknesses'][$subject] = $this->buildActivity($rules, $allActivities, $ratings, $weekId, $subject);
         }
-
-        if (!empty($remarksSummary)) {
-            $summaryText .= "\nRemarks Summary:\n";
-            foreach ($remarksSummary as $remark) {
-                $summaryText .= "- {$remark}\n";
-            }
-        }
-
-        $engine     = new RecommendationEngine();
-        $activities = $engine->getActivities($ratings);
-
-        if (in_array(1, $ratings, true)) {
-            $activities[] = [
-                'activity'     => "Organize a parent-teacher conference to address persistent Needs Attention ratings.",
-                'category'     => 'intervention',
-                'priority'     => 'high',
-                'guardian_tip' => "Schedule a meeting with teachers to discuss targeted support.",
-                'student_tip'  => "Be open to feedback and commit to improvement plans.",
-            ];
-        }
-
-        $narrative .= "\nSummary:\n{$summaryText}\n";
-        $narrative .= "End of summary.";
 
         return [
             'summary'    => $narrative,
-            'activities' => $activities
+            'activities' => $structuredActivities,
+        ];
+    }
+
+    private function buildActivity(array $rules, array $allActivities, array $ratings, int $weekId, string $subject): array
+    {
+        return [
+            'weekly_activity' => $rules['weeks'][$weekId][$subject]['weekly_activity']['activity'] ?? null,
+            'recommendation'  => $allActivities[$subject]['activity'] ?? null,
+            'narrative'       => $rules['weeks'][$weekId][$subject]['rating_rules'][$ratings[$subject]]['narrative'] ?? null,
+            'guardian_tip'    => $allActivities[$subject]['guardian_tip'] ?? null,
+            'student_tip'     => $allActivities[$subject]['student_tip'] ?? null,
         ];
     }
 }

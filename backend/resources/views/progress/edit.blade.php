@@ -32,79 +32,67 @@
                 {{ session('success') }}
             </div>
         @endif
-        @php
-            $firstRecord = $records->first();
-        @endphp
 
-        <form id="progressForm" action="{{ $firstRecord ? route('progress.update', $firstRecord->id) : '#' }}" method="POST" class="space-y-6">
+        <form id="progressForm" action="{{ route('progress.update') }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
 
+            <input type="hidden" id="record_id" name="record_id" value="">
+
+            {{-- Subject Dropdown --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Subject</label>
-                <select id="subject" name="subject" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('subject') border-red-500 @enderror" required>
+                <select id="subject" name="subject" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400" required>
+                    <option value="" disabled selected>Select a subject...</option>
                     @foreach($subjects as $subject)
-                        @php
-                            $record = $records->get($subject);
-                        @endphp
+                        @php $record = $records->get($subject); @endphp
                         <option value="{{ $subject }}"
                                 data-id="{{ $record->id ?? '' }}"
                                 data-rating="{{ $record->rating_level ?? '' }}"
                                 data-remarks="{{ $record->remarks ?? '' }}"
-                                {{ $record ? 'selected' : '' }}
                                 {{ !$record ? 'disabled' : '' }}>
                             {{ $subject }} {{ !$record ? '(Not graded yet)' : '' }}
                         </option>
                     @endforeach
                 </select>
-                @error('subject')
-                    <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
-                @enderror
             </div>
 
+            {{-- Rating Level --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label for="rating_level" class="block text-sm font-bold text-[#003366] mb-2">Rating Level</label>
-                <select name="rating_level" id="rating_level" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('rating_level') border-red-500 @enderror" required>
+                <select name="rating_level" id="rating_level" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400" required>
+                    <option value="" disabled selected>Select rating...</option>
                     @foreach($ratings as $level => $label)
-                        <option value="{{ $level }}">
-                            {{ $label }}
-                        </option>
+                        <option value="{{ $level }}">{{ $label }}</option>
                     @endforeach
                 </select>
                 <p class="text-xs text-slate-500 mt-2">
-                    Current rating: <span id="current-rating" class="font-semibold text-blue-700">
-                        {{ $firstRecord ? $ratings[$firstRecord->rating_level] : 'No Classes' }}
-                    </span>
+                    Current rating: <span id="current-rating" class="font-semibold text-blue-700">—</span>
                 </p>
-                @error('rating_level')
-                    <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
-                @enderror
             </div>
 
+            {{-- Remarks --}}
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label for="remarks" class="block text-sm font-bold text-[#003366] mb-2">Remarks</label>
                 <textarea name="remarks" id="remarks" rows="3"
-                          class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400 @error('remarks') border-red-500 @enderror"
-                          placeholder="Enter remarks for this subject">{{ old('remarks', $firstRecord->remarks ?? '') }}</textarea>
+                          class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400"
+                          placeholder="Enter remarks..."></textarea>
                 <p class="text-xs text-slate-500 mt-2">
-                    Current remarks: <em id="current-remarks" class="text-emerald-700">
-                        {{ $firstRecord->remarks ?? 'No remarks yet' }}
-                    </em>
+                    Current remarks: <em id="current-remarks" class="text-emerald-700">—</em>
                 </p>
-                @error('remarks')
-                    <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
-                @enderror
             </div>
 
-            <div class="flex justify-center items-center mt-8">
-                <button type="submit"
-                        class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition"
-                        {{ !$firstRecord ? 'disabled' : '' }}>
-                    Save Changes
-                </button>
-            </div>
-        </form>
-    </div>
+{{-- Save Button --}}
+<div class="flex justify-center items-center mt-8">
+    <button type="submit"
+            id="saveButton"
+            class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled>
+        Save Changes
+    </button>
+</div>
+</form>
+</div>
 </x-layout>
 
 <script>
@@ -114,7 +102,15 @@
         const remarksTextarea = document.getElementById('remarks');
         const currentRatingText = document.getElementById('current-rating');
         const currentRemarksText = document.getElementById('current-remarks');
-        const form = document.getElementById('progressForm');
+        const recordIdInput = document.getElementById('record_id');
+        const saveButton = document.getElementById('saveButton');
+
+        // Reset everything to blank initially
+        ratingSelect.value = '';
+        remarksTextarea.value = '';
+        currentRatingText.textContent = '—';
+        currentRemarksText.textContent = '—';
+        saveButton.disabled = true;
 
         subjectSelect.addEventListener('change', function () {
             const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
@@ -123,19 +119,20 @@
             const remarks = selectedOption.getAttribute('data-remarks');
 
             if (recordId) {
-                form.action = `/progress/${recordId}`;
+                recordIdInput.value = recordId;
+                saveButton.disabled = false; // enable button once subject chosen
             }
 
-            if (rating) {
+            if (rating !== '') {
                 ratingSelect.value = rating;
                 currentRatingText.textContent = ratingSelect.options[ratingSelect.selectedIndex].text;
             } else {
                 ratingSelect.value = '';
-                currentRatingText.textContent = 'No Classes';
+                currentRatingText.textContent = '—';
             }
 
             remarksTextarea.value = remarks || '';
-            currentRemarksText.textContent = remarks || 'No remarks yet';
+            currentRemarksText.textContent = remarks || '—';
         });
     });
 </script>
