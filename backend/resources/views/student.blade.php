@@ -141,7 +141,9 @@
                 <div class="p-10 text-left max-h-[70vh] overflow-y-auto space-y-10">
                     <div class="flex justify-center mb-6">
                         <img id="viewStudentPhoto"
-                            src="{{ asset('images/default-avatar.png') }}"
+                            src="{{ $student->photo_path && Storage::disk('public')->exists($student->photo_path) 
+                                ? asset('storage/' . $student->photo_path) 
+                                : asset('images/default-avatar.png') }}"
                             alt="Student Photo"
                             class="w-32 h-32 rounded-full object-cover border-4 border-blue-200 shadow-md">
                     </div>

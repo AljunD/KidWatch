@@ -88,8 +88,6 @@
                         @endif
                         <span>
                           {{ $student->full_name }}
-                          ({{ $student->gender }},
-                          {{ $student->date_of_birth->toDateString() }})
                         </span>
                       </li>
                     @endforeach

@@ -3,7 +3,7 @@
 
     <div class="max-w-3xl mx-auto bg-white rounded-3xl shadow-lg p-10 space-y-8">
         <h1 class="text-3xl font-black text-[#003366] mb-8 border-b pb-4">
-            📘 Add Progress for
+            Add Progress for
             <span class="text-emerald-600">
                 {{ $student->first_name }} {{ $student->last_name }}
             </span>
@@ -18,6 +18,7 @@
         <form action="{{ route('progress.store') }}" method="POST" class="space-y-6">
             @csrf
 
+            <!-- Student -->
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Student</label>
                 <input type="hidden" name="student_id" value="{{ $student->id }}">
@@ -25,13 +26,16 @@
                        class="border rounded-lg px-4 py-2 w-full bg-gray-100 font-semibold text-[#003366]" readonly>
             </div>
 
+            <!-- Week with formatted dates -->
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Week</label>
                 <input type="hidden" name="week_id" value="{{ $week->id }}">
-                <input type="text" value="Week {{ $week->week_number }} ({{ $week->start_date }} - {{ $week->end_date }})"
+                <input type="text"
+                       value="Week {{ $week->week_number }} ({{ \Carbon\Carbon::parse($week->start_date)->format('M d') }} - {{ \Carbon\Carbon::parse($week->end_date)->format('M d, Y') }})"
                        class="border rounded-lg px-4 py-2 w-full bg-gray-100 font-semibold text-[#003366]" readonly>
             </div>
 
+            <!-- Subject -->
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Subject</label>
                 <select name="subject" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400" required>
@@ -51,6 +55,7 @@
                 </select>
             </div>
 
+            <!-- Rating -->
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Rating</label>
                 <select name="rating_level" class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400" required>
@@ -61,6 +66,7 @@
                 </select>
             </div>
 
+            <!-- Remarks -->
             <div class="bg-slate-50 border border-blue-100 rounded-xl p-5">
                 <label class="block text-sm font-bold text-[#003366] mb-2">Remarks</label>
                 <textarea name="remarks" rows="3"
@@ -68,6 +74,7 @@
                           placeholder="Enter remarks for this subject"></textarea>
             </div>
 
+            <!-- Submit -->
             <div class="flex justify-center items-center mt-8">
                 <button type="submit"
                         class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition">

@@ -256,7 +256,7 @@ class GuardianController extends Controller
             'student_date_of_birth'   => 'required|date|before:today',
             'student_nationality'     => 'required|string|max:100',
             'student_religion'        => 'required|string|max:100',
-            'student_photo'           => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'student_photo'           => 'required|image|mimes:jpg,jpeg,png|max:10240',
         ]);
 
         $defaultPassword = $request->filled('guardian_password')
